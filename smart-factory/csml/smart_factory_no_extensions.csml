@@ -34,22 +34,6 @@
                     "initial": true,
                     "entry": [
                         {
-                            "type": "match",
-                            "value": "productsCompleted >= totalProducts || jobDone",
-                            "cases": [
-                                {
-                                    "case": "true",
-                                    "action": {
-                                        "type": "assign",
-                                        "variable": {
-                                            "name": "productsCompleted",
-                                            "value": "0"
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
                             "type": "assign",
                             "variable": {
                                 "name": "jobDone",
@@ -71,6 +55,23 @@
                         }
                     ],
                     "always": [
+                        {
+                            "target": "running",
+                            "guards": [
+                                {
+                                    "expression": "productsCompleted >= totalProducts"
+                                }
+                            ],
+                            "actions": [
+                                {
+                                    "type": "assign",
+                                    "variable": {
+                                        "name": "productsCompleted",
+                                        "value": "0"
+                                    }
+                                }
+                            ]
+                        },
                         {
                             "target": "running"
                         }
@@ -387,32 +388,36 @@
                                 {
                                     "event": "eCheckValidObject",
                                     "target": "idle",
+                                    "guards": [
+                                        {
+                                            "expression": "validObject"
+                                        }
+                                    ],
                                     "actions": [
                                         {
-                                            "type": "match",
-                                            "value": "validObject",
-                                            "cases": [
-                                                {
-                                                    "case": "false",
-                                                    "action": {
-                                                        "type": "raise",
-                                                        "event": {
-                                                            "name": "eObjectInvalid",
-                                                            "channel": "global"
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "case": "true",
-                                                    "action": {
-                                                        "type": "raise",
-                                                        "event": {
-                                                            "name": "eObjectValid",
-                                                            "channel": "global"
-                                                        }
-                                                    }
-                                                }
-                                            ]
+                                            "type": "raise",
+                                            "event": {
+                                                "name": "eObjectValid",
+                                                "channel": "global"
+                                            }
+                                        }
+                                    ]
+                                },
+                                {
+                                    "event": "eCheckValidObject",
+                                    "target": "idle",
+                                    "guards": [
+                                        {
+                                            "expression": "!validObject"
+                                        }
+                                    ],
+                                    "actions": [
+                                        {
+                                            "type": "raise",
+                                            "event": {
+                                                "name": "eObjectInvalid",
+                                                "channel": "global"
+                                            }
                                         }
                                     ]
                                 }
@@ -421,8 +426,7 @@
                     ]
                 },
                 {
-                    "name": "photoelectricSensor",
-                    "abstract": true, 
+                    "name": "photoelectricSensorStart",
                     "localContext": {
                         "variables": [
                             {
@@ -435,14 +439,27 @@
                         {
                             "name": "idle",
                             "initial": true,
-                            "virtual": true,
+                            "after": [
+                                {
+                                    "name": "startTriggerBeamDetection",
+                                    "type": "timeout",
+                                    "delay": "400",
+                                    "action": {
+                                        "type": "raise",
+                                        "event": {
+                                            "name": "eBeamDetection",
+                                            "channel": "internal"
+                                        }
+                                    }
+                                }
+                            ],
                             "on": [
                                 {
                                     "event": "eBeamDetection",
                                     "target": "detecting",
                                     "guards": [
                                         {
-                                            "reference": "guard.allowBeamDetection"
+                                            "reference": "!isUnloading && !isScanning"
                                         }
                                     ]
                                 }
@@ -451,7 +468,23 @@
                         {
                             "name": "detecting",
                             "initial": false,
-                            "virtual": true,
+                            "entry": [
+                                {
+                                    "type": "invoke",
+                                    "serviceType": "beamDetectionStart",
+                                    "output": [
+                                        {
+                                            "reference": "isBeamInterrupted"
+                                        }
+                                    ],
+                                    "done": [
+                                        {
+                                            "name": "eCheckBeamDetection",
+                                            "channel": "internal"
+                                        }
+                                    ]
+                                }
+                            ],
                             "on": [
                                 {
                                     "event": "eCheckBeamDetection",
@@ -460,8 +493,16 @@
                                         {
                                             "expression": "isBeamInterrupted"
                                         }
-                                    ],
-                                    "else": "idle"
+                                    ]
+                                },
+                                {
+                                    "event": "eCheckBeamDetection",
+                                    "target": "idle",
+                                    "guards": [
+                                        {
+                                            "expression": "!isBeamInterrupted"
+                                        }
+                                    ]
                                 }
                             ]
                         },
@@ -470,7 +511,11 @@
                             "initial": false,
                             "entry": [
                                 {
-                                    "reference": "action.onDetected"
+                                    "type": "raise",
+                                    "event": {
+                                        "name": "eStartScan",
+                                        "channel": "global"
+                                    }
                                 }
                             ],
                             "always": [
@@ -488,89 +533,22 @@
                                 }
                             ]
                         }
-                    ],
-                    "guards": [
-                        {
-                            "name": "guard.allowBeamDetection",
-                            "expression": "!isUnloading"
-                        }
-                    ],
-                    "actions": [
-                        {
-                            "name": "action.onDetected",
-                            "type": "raise",
-                            "event": {
-                                "name": "eNoOp",
-                                "channel": "internal"
-                            }
-                        }
-                    ]
-                },
-                {
-                    "name": "photoelectricSensorStart",
-                    "extends": "photoelectricSensor",
-                    "states": [
-                        {
-                            "name": "idle",
-                            "after": [
-                                {
-                                    "name": "startTriggerBeamDetection",
-                                    "type": "timeout",
-                                    "delay": "400",
-                                    "action": {
-                                        "type": "raise",
-                                        "event": {
-                                            "name": "eBeamDetection",
-                                            "channel": "internal"
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "detecting",
-                            "entry": [
-                                {
-                                    "type": "invoke",
-                                    "serviceType": "beamDetectionStart",
-                                    "output": [
-                                        {
-                                            "reference": "isBeamInterrupted"
-                                        }
-                                    ],
-                                    "done": [
-                                        {
-                                            "name": "eCheckBeamDetection",
-                                            "channel": "internal"
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ],
-                    "guards": [
-                        {
-                            "name": "guard.allowBeamDetection",
-                            "expression": "!isUnloading && !isScanning"
-                        }
-                    ],
-                    "actions": [
-                        {
-                            "name": "action.onDetected",
-                            "type": "raise",
-                            "event": {
-                                "name": "eStartScan",
-                                "channel": "global"
-                            }
-                        }
                     ]
                 },
                 {
                     "name": "photoelectricSensorEnd",
-                    "extends": "photoelectricSensor",
+                    "localContext": {
+                        "variables": [
+                            {
+                                "name": "isBeamInterrupted",
+                                "value": "false"
+                            }
+                        ]
+                    },
                     "states": [
                         {
                             "name": "idle",
+                            "initial": true,
                             "after": [
                                 {
                                     "name": "endTriggerBeamDetection",
@@ -584,10 +562,22 @@
                                         }
                                     }
                                 }
+                            ],
+                            "on": [
+                                {
+                                    "event": "eBeamDetection",
+                                    "target": "detecting",
+                                    "guards": [
+                                        {
+                                            "reference": "!isUnloading"
+                                        }
+                                    ]
+                                }
                             ]
                         },
                         {
                             "name": "detecting",
+                            "initial": false,
                             "entry": [
                                 {
                                     "type": "invoke",
@@ -604,31 +594,61 @@
                                         }
                                     ]
                                 }
+                            ],
+                            "on": [
+                                {
+                                    "event": "eCheckBeamDetection",
+                                    "target": "detected",
+                                    "guards": [
+                                        {
+                                            "expression": "isBeamInterrupted"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "event": "eCheckBeamDetection",
+                                    "target": "idle",
+                                    "guards": [
+                                        {
+                                            "expression": "!isBeamInterrupted"
+                                        }
+                                    ]
+                                }
                             ]
-                        }
-                    ],
-                    "guards": [
+                        },
                         {
-                            "name": "guard.allowBeamDetection",
-                            "expression": "!isUnloading"
-                        }
-                    ],
-                    "actions": [
-                        {
-                            "name": "action.onDetected",
-                            "type": "raise",
-                            "event": {
-                                "name": "eStartUnload",
-                                "channel": "global"
-                            }
+                            "name": "detected",
+                            "initial": false,
+                            "entry": [
+                                {
+                                    "type": "raise",
+                                    "event": {
+                                        "name": "eStartUnload",
+                                        "channel": "global"
+                                    }
+                                }
+                            ],
+                            "always": [
+                                {
+                                    "target": "idle",
+                                    "actions": [
+                                        {
+                                            "type": "assign",
+                                            "variable": {
+                                                "name": "isBeamInterrupted",
+                                                "value": "false"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
                         }
                     ]
                 }
             ]
         },
         {
-            "name": "messageProcessor",
-            "abstract": true,
+            "name": "smsProcessor",
             "states": [
                 {
                     "name": "idle",
@@ -644,21 +664,6 @@
                         }
                     ]
                 },
-                {
-                    "name": "process",
-                    "abstract": true
-                },
-                {
-                    "name": "jobDone",
-                    "initial": false,
-                    "terminal": true
-                }
-            ]
-        },
-        {
-            "name": "smsProcessor",
-            "extends": "messageProcessor",
-            "states": [
                 {
                     "name": "process",
                     "initial": false,
@@ -679,13 +684,31 @@
                             "target": "idle"
                         }
                     ]
+                },
+                {
+                    "name": "jobDone",
+                    "initial": false,
+                    "terminal": true
                 }
             ]
         },
         {
             "name": "eMailProcessor",
-            "extends": "messageProcessor",
             "states": [
+                {
+                    "name": "idle",
+                    "initial": true,
+                    "on": [
+                        {
+                            "event": "eProcessMessage",
+                            "target": "process"
+                        },
+                        {
+                            "event": "eJobDone",
+                            "target": "jobDone"
+                        }
+                    ]
+                },
                 {
                     "name": "process",
                     "initial": false,
@@ -706,13 +729,31 @@
                             "target": "idle"
                         }
                     ]
+                },
+                {
+                    "name": "jobDone",
+                    "initial": false,
+                    "terminal": true
                 }
             ]
         },
         {
             "name": "logProcessor",
-            "extends": "messageProcessor",
             "states": [
+                {
+                    "name": "idle",
+                    "initial": true,
+                    "on": [
+                        {
+                            "event": "eProcessMessage",
+                            "target": "process"
+                        },
+                        {
+                            "event": "eJobDone",
+                            "target": "jobDone"
+                        }
+                    ]
+                },
                 {
                     "name": "process",
                     "initial": false,
@@ -730,6 +771,11 @@
                             "target": "idle"
                         }
                     ]
+                },
+                {
+                    "name": "jobDone",
+                    "initial": false,
+                    "terminal": true
                 }
             ]
         },
@@ -829,8 +875,16 @@
                                 {
                                     "expression": "pickUpSuccess"
                                 }
-                            ],
-                            "else": "return"
+                            ]
+                        },
+                        {
+                            "event": "eRetry",
+                            "target": "return",
+                            "guards": [
+                                {
+                                    "expression": "!pickUpSuccess"
+                                }
+                            ]
                         },
                         {
                             "event": "eJobDone",
@@ -852,20 +906,11 @@
                             ]
                         },
                         {
-                            "type": "match",
-                            "value": "pickUpSuccess",
-                            "cases": [
-                                {
-                                    "case": "false",
-                                    "action": {
-                                        "type": "assign",
-                                        "variable": {
-                                            "name": "errorMsg",
-                                            "value": "'Pickup failed'"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "assign",
+                            "variable": {
+                                "name": "errorMsg",
+                                "value": "'Pickup failed'"
+                            }
                         },
                         {
                             "type": "raise",
@@ -892,8 +937,16 @@
                                         "channel": "global"
                                     }
                                 }
-                            ],
-                            "else": "error"
+                            ]
+                        },
+                        {
+                            "event": "eCheckPickUpSuccess",
+                            "target": "error",
+                            "guards": [
+                                {
+                                    "expression": "!pickUpSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -911,20 +964,11 @@
                             ]
                         },
                         {
-                            "type": "match",
-                            "value": "assembleSuccess",
-                            "cases": [
-                                {
-                                    "case": "false",
-                                    "action": {
-                                        "type": "assign",
-                                        "variable": {
-                                            "name": "errorMsg",
-                                            "value": "'Assemble failed'"
-                                        }
-                                    }
-                                }
-                            ]
+                            "type": "assign",
+                            "variable": {
+                                "name": "errorMsg",
+                                "value": "'Assemble failed'"
+                            }
                         },
                         {
                             "type": "raise",
@@ -958,8 +1002,16 @@
                                         "channel": "global"
                                     }
                                 }
-                            ],
-                            "else": "error"
+                            ]
+                        },
+                        {
+                            "event": "eCheckAssembleSuccess",
+                            "target": "error",
+                            "guards": [
+                                {
+                                    "expression": "!assembleSuccess"
+                                }
+                            ]
                         }
                     ]
                 },
@@ -995,8 +1047,10 @@
                                         "channel": "global"
                                     }
                                 }
-                            ],
-                            "else": "idle"
+                            ]
+                        },
+                        {
+                            "target": "idle"
                         }
                     ]
                 },
