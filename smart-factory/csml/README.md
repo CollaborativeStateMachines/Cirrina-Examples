@@ -1,20 +1,14 @@
-# PKL File
-
-Contains the smart factory PKL file which can be used to generate a corresponding CSML file.
-
-## Generate CSML
-
-```
-pkl eval -f json smart-factory.pkl > smart-factory.csml
-```
-
 # CSML Files
 
 Contains the smart factory CSML files:
-
-- `smart_factory_default.csml`: Default version.
-- `smart_factory_develop.csml`: Development version with testing features.
-- `smart_factory_experiment.csml`: Version used for the experiment on Grid`5000.
+- CSML 1.0
+  - `smart_factory_default.csml`: Default JSON version.
+  - `smart_factory_develop.csml`: Default JSON version without comments.
+  - `smart_factory_experiment.csml`: JSON Version used for the experiment on Grid`5000.
+  - `smart_factory_no_extensions.csml`: JSON Version that does not use inheritance, abstraction, `output`, `match`, and `else`.
+- CSML 2.0
+  - `smart-factory.pkl`: Default Pkl version.
+  - `smart-factory-job.pkl`: Default Pkl job description (ZooKeeper).
 
 Also contains `service_implementations.json` which can be used to map service types to the `simulation-server` 
 endpoints if run locally.

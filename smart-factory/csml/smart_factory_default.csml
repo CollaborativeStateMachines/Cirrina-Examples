@@ -1,1254 +1,1255 @@
 {
-    "version": "0.1",
-    "name": "Industrial automation",
-    // Industrial automation use case.
-    "persistentContext": {
+  "version": "0.1",
+  "name": "Industrial automation",
+  // Industrial automation use case.
+  "persistentContext": {
+    "variables": [
+      {
+        "name": "productsCompleted",
+        "value": "0"
+      },
+      {
+        "name": "jobDone",
+        "value": "false"
+      },
+      {
+        "name": "log",
+        "value": "[...]"
+      }
+    ]
+  },
+  "stateMachines": [
+    {
+      "name": "jobControlSystem",
+      // Represents a conveyor belt used in an industrial automation setting.
+      "localContext": {
         "variables": [
+          {
+            "name": "totalProducts",
+            "value": "1"
+          }
+        ]
+      },
+      "states": [
+        {
+          "name": "starting",
+          // Start a new job and run the automation process.
+          "initial": true,
+          "entry": [
             {
-                "name": "productsCompleted",
-                "value": "0"
+              "type": "match",
+              "value": "productsCompleted >= totalProducts || jobDone",
+              "cases": [
+                {
+                  "case": "true",
+                  "action": {
+                    "type": "assign",
+                    "variable": {
+                      "name": "productsCompleted",
+                      "value": "0"
+                    }
+                  }
+                }
+              ]
             },
             {
+              "type": "assign",
+              "variable": {
                 "name": "jobDone",
                 "value": "false"
+              }
             },
             {
-                "name": "log",
-                "value": "[...]"
+              "type": "raise",
+              "event": {
+                "name": "eProcessMessage",
+                "data": [
+                  {
+                    "name": "msg",
+                    "value": "'Job started. Producing ' + totalProducts + ' products.'"
+                  }
+                ],
+                "channel": "global"
+              }
             }
-        ]
-    },
-    "stateMachines": [
-        {
-            "name": "jobControlSystem",
-            // Represents a conveyor belt used in an industrial automation setting.
-            "localContext": {
-                "variables": [
-                    {
-                        "name": "totalProducts",
-                        "value": "1"
-                    }
-                ]
-            },
-            "states": [
-                {
-                    "name": "starting",
-                    // Start a new job and run the automation process.
-                    "initial": true,
-                    "entry": [
-                        {
-                            "type": "match",
-                            "value": "productsCompleted >= totalProducts || jobDone",
-                            "cases": [
-                                {
-                                    "case": "true",
-                                    "action": {
-                                        "type": "assign",
-                                        "variable": {
-                                            "name": "productsCompleted",
-                                            "value": "0"
-                                        }
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "type": "assign",
-                            "variable": {
-                                "name": "jobDone",
-                                "value": "false"
-                            }
-                        },
-                        {
-                            "type": "raise",
-                            "event": {
-                                "name": "eProcessMessage",
-                                "data": [
-                                    {
-                                        "name": "msg",
-                                        "value": "'Job started. Producing ' + totalProducts + ' products.'"
-                                    }
-                                ],
-                                "channel": "global"
-                            }
-                        }
-                    ],
-                    "always": [
-                        {
-                            "target": "running"
-                        }
-                    ]
-                },
-                {
-                    "name": "running",
-                    // Wait for completed products and deactivate the job after a specified amount of products was assembled.
-                    "initial": false,
-                    "on": [
-                        {
-                            "event": "eProductComplete",
-                            "actions": [
-                                {
-                                    "type": "assign",
-                                    "variable": {
-                                        "name": "productsCompleted",
-                                        "value": "productsCompleted + 1"
-                                    }
-                                },
-                                {
-                                    "type": "raise",
-                                    "event": {
-                                        "name": "eCheckJobDone",
-                                        "channel": "internal"
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "event": "eCheckJobDone",
-                            "target": "jobDone",
-                            "guards": [
-                                {
-                                    "expression": "productsCompleted >= totalProducts"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "jobDone",
-                    // Deactivate the job and inform employees about the deactivation.
-                    "initial": false,
-                    "terminal": true,
-                    "entry": [
-                        {
-                            "type": "assign",
-                            "variable": {
-                                "name": "jobDone",
-                                "value": "true"
-                            }
-                        },
-                        {
-                            "type": "raise",
-                            "event": {
-                                "name": "eProcessMessage",
-                                "data": [
-                                    {
-                                        "name": "msg",
-                                        "value": "'Job done! Produced ' + productsCompleted + ' products.'"
-                                    }
-                                ],
-                                "channel": "global"
-                            }
-                        },
-                        {
-                            "type": "raise",
-                            "event": {
-                                "name": "eJobDone",
-                                "channel": "global"
-                            }
-                        }
-                    ]
-                }
-            ]
+          ],
+          "always": [
+            {
+              "target": "running"
+            }
+          ]
         },
         {
-            "name": "conveyorBeltSystem",
-            // Represents a conveyor belt used in an industrial automation setting.
-            "localContext": {
-                "variables": [
-                    {
-                        "name": "isScanning",
-                        "value": "false"
-                    },
-                    {
-                        "name": "isUnloading",
-                        "value": "false"
-                    }
-                ]
-            },
-            "states": [
+          "name": "running",
+          // Wait for completed products and deactivate the job after a specified amount of products was assembled.
+          "initial": false,
+          "on": [
+            {
+              "event": "eProductComplete",
+              "actions": [
                 {
-                    "name": "loading",
-                    // Waiting for object detection (valid or invalid).
-                    "initial": true,
-                    "on": [
-                        {
-                            "event": "eObjectInvalid",
-                            "target": "error"
-                        },
-                        {
-                            "event": "eObjectValid",
-                            "target": "transporting"
-                        },
-                        {
-                            "event": "eJobDone",
-                            "target": "jobDone"
-                        }
-                    ],
-                    "always": [
-                        {
-                            "target": "jobDone",
-                            "guards": [
-                                {
-                                    "expression": "jobDone"
-                                }
-                            ]
-                        }
-                    ]
+                  "type": "assign",
+                  "variable": {
+                    "name": "productsCompleted",
+                    "value": "productsCompleted + 1"
+                  }
                 },
                 {
-                    "name": "error",
-                    // Error state: Invalid object placed on the belt.
-                    "initial": false,
-                    "entry": [
-                        {
-                            "type": "raise",
-                            "event": {
-                                "name": "eProcessMessage",
-                                "data": [
-                                    {
-                                        "name": "msg",
-                                        "value": "'Invalid object detected'"
-                                    }
-                                ],
-                                "channel": "global"
-                            }
-                        }
-                    ],
-                    "on": [
-                        {
-                            "event": "eObjectValid",
-                            "target": "transporting"
-                        },
-                        {
-                            "event": "eJobDone",
-                            "target": "jobDone"
-                        }
-                    ],
-                    "always": [
-                        {
-                            "target": "jobDone",
-                            "guards": [
-                                {
-                                    "expression": "jobDone"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "transporting",
-                    // Conveyor belt moves its current item.
-                    "initial": false,
-                    "entry": [
-                        {
-                            "type": "invoke",
-                            // Start moving the conveyor belt.
-                            "serviceType": "moveBelt"
-                        }
-                    ],
-                    "exit": [
-                        {
-                            "type": "invoke",
-                            // Stop moving the conveyor belt.
-                            "serviceType": "stopBelt"
-                        }
-                    ],
-                    "on": [
-                        {
-                            "event": "eStartUnload",
-                            "target": "unloading",
-                            "actions": [
-                                {
-                                    "type": "assign",
-                                    "variable": {
-                                        "name": "isUnloading",
-                                        "value": "true"
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "event": "eJobDone",
-                            "target": "jobDone"
-                        }
-                    ],
-                    "always": [
-                        {
-                            "target": "jobDone",
-                            "guards": [
-                                {
-                                    "expression": "jobDone"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "unloading",
-                    // Signal arm to pickup the item and wait for pickup.
-                    "initial": false,
-                    "entry": [
-                        {
-                            "type": "raise",
-                            "event": {
-                                "name": "eArmPickup",
-                                "channel": "global"
-                            }
-                        }
-                    ],
-                    "after": [
-                        {
-                            "name": "roboticArmSystem.triggerPickup",
-                            "type": "timeout",
-                            "delay": "1000",
-                            "action": {
-                                "type": "raise",
-                                "event": {
-                                    "name": "eArmPickup",
-                                    "channel": "global"
-                                }
-                            }
-                        }
-                    ],
-                    "on": [
-                        {
-                            "event": "ePickedUp",
-                            "target": "loading",
-                            "actions": [
-                                {
-                                    "type": "assign",
-                                    "variable": {
-                                        "name": "isUnloading",
-                                        "value": "false"
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "event": "eJobDone",
-                            "target": "jobDone",
-                            "actions": [
-                                {
-                                    "type": "assign",
-                                    "variable": {
-                                        "name": "isUnloading",
-                                        "value": "false"
-                                    }
-                                }
-                            ]
-                        }
-                    ],
-                    "always": [
-                        {
-                            "target": "jobDone",
-                            "actions": [
-                                {
-                                    "type": "assign",
-                                    "variable": {
-                                        "name": "isUnloading",
-                                        "value": "false"
-                                    }
-                                }
-                            ],
-                            "guards": [
-                                {
-                                    "expression": "jobDone"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "jobDone",
-                    // Amount of total products is reached. Terminate the state machine.
-                    "initial": false,
-                    "terminal": true
-                },
-                {
-                    "name": "cameraSensorSystem",
-                    // Represents a conveyor belt camera sensor used to detect objects on the belt.
-                    "localContext": {
-                        "variables": [
-                            {
-                                "name": "validObject",
-                                "value": "false"
-                            },
-                            {
-                                "name": "photoPath",
-                                "value": "''"
-                            }
-                        ]
-                    },
-                    "states": [
-                        {
-                            "name": "idle",
-                            // Wait for detection signal.
-                            "initial": true,
-                            "on": [
-                                {
-                                    "event": "eStartScan",
-                                    "target": "scanning",
-                                    "actions": [
-                                        {
-                                            "type": "assign",
-                                            "variable": {
-                                                "name": "isScanning",
-                                                "value": "true"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "name": "scanning",
-                            // Scan the object through the camera and find out whether the object is valid or invalid.
-                            "initial": false,
-                            "entry": [
-                                {
-                                    "type": "invoke",
-                                    // Signal camera to take a photo.
-                                    "serviceType": "takePhoto",
-                                    "output": [
-                                        {
-                                            "reference": "photoPath"
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "invoke",
-                                    // Upload photo to the cloud and scan for its validity.
-                                    "serviceType": "scanPhoto",
-                                    "input": [
-                                        {
-                                            "name": "photoPath",
-                                            "value": "photoPath"
-                                        }
-                                    ],
-                                    "output": [
-                                        {
-                                            "reference": "validObject"
-                                        }
-                                    ],
-                                    "done": [
-                                        {
-                                            "name": "eCheckValidObject",
-                                            "channel": "internal"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "exit": [
-                                {
-                                    "type": "assign",
-                                    "variable": {
-                                        "name": "isScanning",
-                                        "value": "false"
-                                    }
-                                }
-                            ],
-                            "on": [
-                                {
-                                    "event": "eCheckValidObject",
-                                    "target": "idle",
-                                    "actions": [
-                                        {
-                                            "type": "match",
-                                            // Set error message.
-                                            "value": "validObject",
-                                            "cases": [
-                                                {
-                                                    "case": "false",
-                                                    "action": {
-                                                        "type": "raise",
-                                                        "event": {
-                                                            "name": "eObjectInvalid",
-                                                            "channel": "global"
-                                                        }
-                                                    }
-                                                },
-                                                {
-                                                    "case": "true",
-                                                    "action": {
-                                                        "type": "raise",
-                                                        "event": {
-                                                            "name": "eObjectValid",
-                                                            "channel": "global"
-                                                        }
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                        3
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "name": "photoelectricSensor",
-                            // Represents a photoelectric sensor to be used as a base state machine.
-                            "abstract": true, // Abstract, because this nested state machine would be initialized otherwise
-                            "localContext": {
-                                "variables": [
-                                    {
-                                        "name": "isBeamInterrupted",
-                                        "value": "false"
-                                    }
-                                ]
-                            },
-                            "states": [
-                                {
-                                    "name": "idle",
-                                    // Wait for some time and start detecting.
-                                    "initial": true,
-                                    "virtual": true,
-                                    "on": [
-                                        {
-                                            "event": "eBeamDetection",
-                                            "target": "detecting",
-                                            "guards": [
-                                                {
-                                                    "reference": "guard.allowBeamDetection"
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "detecting",
-                                    // Check if the beam is interrupted or not.
-                                    "initial": false,
-                                    "virtual": true,
-                                    "on": [
-                                        {
-                                            "event": "eCheckBeamDetection",
-                                            "target": "detected",
-                                            "guards": [
-                                                {
-                                                    "expression": "isBeamInterrupted"
-                                                }
-                                            ],
-                                            "else": "idle"
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "detected",
-                                    // Start sensor scan and return to idle.
-                                    "initial": false,
-                                    "entry": [
-                                        {
-                                            "reference": "action.onDetected"
-                                        }
-                                    ],
-                                    "always": [
-                                        {
-                                            "target": "idle",
-                                            "actions": [
-                                                {
-                                                    "type": "assign",
-                                                    "variable": {
-                                                        "name": "isBeamInterrupted",
-                                                        "value": "false"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ],
-                            "guards": [
-                                {
-                                    "name": "guard.allowBeamDetection",
-                                    "expression": "!isUnloading"
-                                }
-                            ],
-                            "actions": [
-                                {
-                                    "name": "action.onDetected",
-                                    "type": "raise",
-                                    "event": {
-                                        "name": "eNoOp",
-                                        "channel": "internal"
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "photoelectricSensorStart",
-                            // Represents a photoelectric sensor (Start of belt).
-                            "extends": "photoelectricSensor",
-                            "states": [
-                                {
-                                    "name": "idle",
-                                    "after": [
-                                        {
-                                            "name": "startTriggerBeamDetection",
-                                            "type": "timeout",
-                                            "delay": "400",
-                                            "action": {
-                                                "type": "raise",
-                                                "event": {
-                                                    "name": "eBeamDetection",
-                                                    "channel": "internal"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "detecting",
-                                    // Check if the beam is interrupted or not.
-                                    "entry": [
-                                        {
-                                            "type": "invoke",
-                                            // Check if the beam is interrupted or not.
-                                            "serviceType": "beamDetectionStart",
-                                            "output": [
-                                                {
-                                                    "reference": "isBeamInterrupted"
-                                                }
-                                            ],
-                                            "done": [
-                                                {
-                                                    "name": "eCheckBeamDetection",
-                                                    "channel": "internal"
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ],
-                            "guards": [
-                                {
-                                    "name": "guard.allowBeamDetection",
-                                    "expression": "!isUnloading && !isScanning"
-                                }
-                            ],
-                            "actions": [
-                                {
-                                    // Start sensor scan and return to idle.
-                                    "name": "action.onDetected",
-                                    "type": "raise",
-                                    "event": {
-                                        "name": "eStartScan",
-                                        "channel": "global"
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "name": "photoelectricSensorEnd",
-                            // Represents a photoelectric sensor (End of belt).
-                            "extends": "photoelectricSensor",
-                            "states": [
-                                {
-                                    "name": "idle",
-                                    "after": [
-                                        {
-                                            "name": "endTriggerBeamDetection",
-                                            "type": "timeout",
-                                            "delay": "400",
-                                            "action": {
-                                                "type": "raise",
-                                                "event": {
-                                                    "name": "eBeamDetection",
-                                                    "channel": "internal"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "name": "detecting",
-                                    // Check if the beam is interrupted or not.
-                                    "entry": [
-                                        {
-                                            "type": "invoke",
-                                            // Check if the beam is interrupted or not.
-                                            "serviceType": "beamDetectionEnd",
-                                            "output": [
-                                                {
-                                                    "reference": "isBeamInterrupted"
-                                                }
-                                            ],
-                                            "done": [
-                                                {
-                                                    "name": "eCheckBeamDetection",
-                                                    "channel": "internal"
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ],
-                            "guards": [
-                                {
-                                    "name": "guard.allowBeamDetection",
-                                    "expression": "!isUnloading"
-                                }
-                            ],
-                            "actions": [
-                                {
-                                    // Trigger robotic arm to pick up the current object
-                                    "name": "action.onDetected",
-                                    "type": "raise",
-                                    "event": {
-                                        "name": "eStartUnload",
-                                        "channel": "global"
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "messageProcessor",
-                    // Process messages
-                    "abstract": true,
-                    "states": [
-                        {
-                            "name": "idle",
-                            // Waiting for an event to process a message.
-                            "initial": true,
-                            "on": [
-                                {
-                                    "event": "eProcessMessage",
-                                    "target": "process"
-                                },
-                                {
-                                    "event": "eJobDone",
-                                    "target": "jobDone"
-                                }
-                            ],
-                            "always": [
-                                {
-                                    "target": "jobDone",
-                                    "guards": [
-                                        {
-                                            "expression": "jobDone"
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "name": "process",
-                            // Send notification and return to idle.
-                            "abstract": true
-                        },
-                        {
-                            "name": "jobDone",
-                            // Amount of total products is reached. Terminate the state machine.
-                            "initial": false,
-                            "terminal": true
-                        }
-                    ]
-                },
-                {
-                    "name": "smsProcessor",
-                    // Send a message to employees using SMS.
-                    "extends": "messageProcessor",
-                    "states": [
-                        {
-                            "name": "process",
-                            // Send SMS and return to idle.
-                            "initial": false,
-                            "entry": [
-                                {
-                                    "type": "invoke",
-                                    // Notify employee using sms
-                                    "serviceType": "sendSms",
-                                    "input": [
-                                        {
-                                            "name": "smsText",
-                                            "value": "$msg"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "always": [
-                                {
-                                    "target": "idle"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "eMailProcessor",
-                    // Send a message to employees using EMail.
-                    "extends": "messageProcessor",
-                    "states": [
-                        {
-                            "name": "process",
-                            // Send EMail and return to idle.
-                            "initial": false,
-                            "entry": [
-                                {
-                                    "type": "invoke",
-                                    // Notify employee using EMail.
-                                    "serviceType": "sendMail",
-                                    "input": [
-                                        {
-                                            "name": "mailBody",
-                                            "value": "$msg"
-                                        }
-                                    ]
-                                }
-                            ],
-                            "always": [
-                                {
-                                    "target": "idle"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "logProcessor",
-                    // Store a message to the persistent log variable.
-                    "extends": "messageProcessor",
-                    "states": [
-                        {
-                            "name": "process",
-                            // Add message to the log and return to idle.
-                            "initial": false,
-                            "entry": [
-                                {
-                                    "type": "assign",
-                                    // Add message to the log.
-                                    "variable": {
-                                        "name": "log",
-                                        "value": "var newLog = log; newLog.add($msg); newLog"
-                                    }
-                                }
-                            ],
-                            "always": [
-                                {
-                                    "target": "idle"
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "name": "roboticArmSystem",
-                    // Represents a robotic arm used in an industrial automation setting.
-                    "localContext": {
-                        "variables": [
-                            {
-                                "name": "pickUpSuccess",
-                                "value": "true"
-                            },
-                            {
-                                "name": "assembleSuccess",
-                                "value": "true"
-                            },
-                            {
-                                "name": "partsAssembled",
-                                "value": "0"
-                            },
-                            {
-                                "name": "partsPerProduct",
-                                "value": "4"
-                            },
-                            {
-                                "name": "errorMsg",
-                                "value": "''"
-                            }
-                        ]
-                    },
-                    "states": [
-                        {
-                            "name": "idle",
-                            // Waiting for item pickup signal from the conveyor belt.
-                            "initial": true,
-                            "on": [
-                                {
-                                    "event": "eArmPickup",
-                                    "target": "pickup",
-                                    "guards": [
-                                        {
-                                            "expression": "!jobDone"
-                                        }
-                                    ]
-                                },
-                                {
-                                    "event": "eJobDone",
-                                    "target": "jobDone"
-                                }
-                            ],
-                            "always": [
-                                {
-                                    "target": "pickup",
-                                    "guards": [
-                                        {
-                                            "expression": "!pickUpSuccess"
-                                        }
-                                    ]
-                                },
-                                {
-                                    "target": "jobDone",
-                                    "guards": [
-                                        {
-                                            "expression": "jobDone"
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "name": "error",
-                            // Error state: Either the pickup or assemble step failed.
-                            "initial": false,
-                            "entry": [
-                                {
-                                    "type": "raise",
-                                    "event": {
-                                        "name": "eProcessMessage",
-                                        "data": [
-                                            {
-                                                "name": "msg",
-                                                "value": "'Fatal robotic arm failure: ' + errorMsg"
-                                            }
-                                        ],
-                                        "channel": "global"
-                                    }
-                                }
-                            ],
-                            "after": [
-                                {
-                                    "name": "triggerRetry",
-                                    "type": "timeout",
-                                    "delay": "1000",
-                                    "action": {
-                                        "type": "raise",
-                                        "event": {
-                                            "name": "eRetry",
-                                            "channel": "internal"
-                                        }
-                                    }
-                                }
-                            ],
-                            "on": [
-                                {
-                                    "event": "eRetry",
-                                    "target": "assemble",
-                                    "guards": [
-                                        {
-                                            "expression": "pickUpSuccess"
-                                        }
-                                    ],
-                                    "else": "return"
-                                },
-                                {
-                                    "event": "eJobDone",
-                                    "target": "jobDone"
-                                }
-                            ]
-                        },
-                        {
-                            "name": "pickup",
-                            // Robotic arm picks up the item.
-                            "initial": false,
-                            "entry": [
-                                {
-                                    "type": "invoke",
-                                    // Signal arm to pick up the item.
-                                    "serviceType": "pickUp",
-                                    "output": [
-                                        {
-                                            "reference": "pickUpSuccess"
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "match",
-                                    // Set error message.
-                                    "value": "pickUpSuccess",
-                                    "cases": [
-                                        {
-                                            "case": "false",
-                                            "action": {
-                                                "type": "assign",
-                                                "variable": {
-                                                    "name": "errorMsg",
-                                                    "value": "'Pickup failed'"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "raise",
-                                    "event": {
-                                        "name": "eCheckPickUpSuccess",
-                                        "channel": "internal"
-                                    }
-                                }
-                            ],
-                            "on": [
-                                {
-                                    "event": "eCheckPickUpSuccess",
-                                    "target": "assemble",
-                                    "guards": [
-                                        {
-                                            "expression": "pickUpSuccess"
-                                        }
-                                    ],
-                                    "actions": [
-                                        {
-                                            "type": "raise",
-                                            "event": {
-                                                "name": "ePickedUp",
-                                                "channel": "global"
-                                            }
-                                        }
-                                    ],
-                                    "else": "error"
-                                }
-                            ]
-                        },
-                        {
-                            "name": "assemble",
-                            // Robotic arm assembles the item.
-                            "initial": false,
-                            "entry": [
-                                {
-                                    "type": "invoke",
-                                    // Signal arm to assemble the item.
-                                    "serviceType": "assemble",
-                                    "output": [
-                                        {
-                                            "reference": "assembleSuccess"
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "match",
-                                    // Set error message.
-                                    "value": "assembleSuccess",
-                                    "cases": [
-                                        {
-                                            "case": "false",
-                                            "action": {
-                                                "type": "assign",
-                                                "variable": {
-                                                    "name": "errorMsg",
-                                                    "value": "'Assemble failed'"
-                                                }
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "raise",
-                                    "event": {
-                                        "name": "eCheckAssembleSuccess",
-                                        "channel": "internal"
-                                    }
-                                }
-                            ],
-                            "on": [
-                                {
-                                    "event": "eCheckAssembleSuccess",
-                                    "target": "return",
-                                    "guards": [
-                                        {
-                                            "expression": "assembleSuccess"
-                                        }
-                                    ],
-                                    "actions": [
-                                        {
-                                            "type": "assign",
-                                            "variable": {
-                                                "name": "partsAssembled",
-                                                "value": "partsAssembled + 1"
-                                            }
-                                        },
-                                        {
-                                            "type": "raise",
-                                            "event": {
-                                                "name": "eAssembleComplete",
-                                                "channel": "global"
-                                            }
-                                        }
-                                    ],
-                                    "else": "error"
-                                }
-                            ]
-                        },
-                        {
-                            "name": "return",
-                            // Robotic arm returns to its initial position (ready for pickup).
-                            "initial": false,
-                            "entry": [
-                                {
-                                    "type": "invoke",
-                                    // Signal arm to return to its initial position.
-                                    "serviceType": "returnToStart"
-                                }
-                            ],
-                            "always": [
-                                {
-                                    "target": "idle",
-                                    "guards": [
-                                        {
-                                            "expression": "partsAssembled >= partsPerProduct"
-                                        }
-                                    ],
-                                    "actions": [
-                                        {
-                                            "type": "assign",
-                                            "variable": {
-                                                "name": "partsAssembled",
-                                                "value": "0"
-                                            }
-                                        },
-                                        {
-                                            "type": "raise",
-                                            "event": {
-                                                "name": "eProductComplete",
-                                                "channel": "global"
-                                            }
-                                        }
-                                    ],
-                                    "else": "idle"
-                                }
-                            ]
-                        },
-                        {
-                            "name": "jobDone",
-                            // Amount of total products is reached. Terminate the state machine.
-                            "initial": false,
-                            "terminal": true
-                        }
-                    ]
-                },
-                {
-                    "name": "monitoringSystem",
-                    // Represents a monitoring system which collects statistics about the application.
-                    "localContext": {
-                        "variables": [
-                            {
-                                "name": "nScans",
-                                "value": "0"
-                            },
-                            {
-                                "name": "nAssemblies",
-                                "value": "0"
-                            }
-                        ]
-                    },
-                    "actions": [
-                        {
-                            "name": "aSendStatistics",
-                            "type": "invoke",
-                            // Send statistics to some service (e.g. a web server) for monitoring purposes.
-                            "serviceType": "sendStatistics",
-                            "input": [
-                                {
-                                    "name": "nScans",
-                                    "value": "nScans"
-                                },
-                                {
-                                    "name": "nAssemblies",
-                                    "value": "nAssemblies"
-                                },
-                                {
-                                    "name": "nProductsCompleted",
-                                    "value": "productsCompleted"
-                                },
-                                {
-                                    "name": "jobDone",
-                                    "value": "jobDone"
-                                }
-                            ]
-                        }
-                    ],
-                    "states": [
-                        {
-                            "name": "monitoring",
-                            // Default state: Monitors the application.
-                            "initial": true,
-                            "on": [
-                                {
-                                    "event": "eStartScan",
-                                    "actions": [
-                                        {
-                                            "type": "assign",
-                                            "variable": {
-                                                "name": "nScans",
-                                                "value": "nScans+1"
-                                            }
-                                        },
-                                        {
-                                            "type": "raise",
-                                            "event": {
-                                                "name": "eSendStatistics",
-                                                "channel": "internal"
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "event": "eAssembleComplete",
-                                    "actions": [
-                                        {
-                                            "type": "assign",
-                                            "variable": {
-                                                "name": "nAssemblies",
-                                                "value": "nAssemblies+1"
-                                            }
-                                        },
-                                        {
-                                            "type": "raise",
-                                            "event": {
-                                                "name": "eSendStatistics",
-                                                "channel": "internal"
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "event": "eSendStatistics",
-                                    "actions": [
-                                        {
-                                            "reference": "aSendStatistics"
-                                        }
-                                    ]
-                                },
-                                {
-                                    "event": "eJobDone",
-                                    "target": "jobDone"
-                                }
-                            ],
-                            "always": [
-                                {
-                                    "target": "jobDone",
-                                    "guards": [
-                                        {
-                                            "expression": "jobDone"
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "name": "jobDone",
-                            // Amount of total products is reached. Terminate the state machine.
-                            "initial": false,
-                            "terminal": true,
-                            "entry": [
-                                {
-                                    "reference": "aSendStatistics"
-                                }
-                            ]
-                        }
-                    ]
+                  "type": "raise",
+                  "event": {
+                    "name": "eCheckJobDone",
+                    "channel": "internal"
+                  }
                 }
-            ]
+              ]
+            },
+            {
+              "event": "eCheckJobDone",
+              "target": "jobDone",
+              "guards": [
+                {
+                  "expression": "productsCompleted >= totalProducts"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "jobDone",
+          // Deactivate the job and inform employees about the deactivation.
+          "initial": false,
+          "terminal": true,
+          "entry": [
+            {
+              "type": "assign",
+              "variable": {
+                "name": "jobDone",
+                "value": "true"
+              }
+            },
+            {
+              "type": "raise",
+              "event": {
+                "name": "eProcessMessage",
+                "data": [
+                  {
+                    "name": "msg",
+                    "value": "'Job done! Produced ' + productsCompleted + ' products.'"
+                  }
+                ],
+                "channel": "global"
+              }
+            },
+            {
+              "type": "raise",
+              "event": {
+                "name": "eJobDone",
+                "channel": "global"
+              }
+            }
+          ]
         }
+      ]
+    },
+    {
+      "name": "conveyorBeltSystem",
+      // Represents a conveyor belt used in an industrial automation setting.
+      "localContext": {
+        "variables": [
+          {
+            "name": "isScanning",
+            "value": "false"
+          },
+          {
+            "name": "isUnloading",
+            "value": "false"
+          }
+        ]
+      },
+      "states": [
+        {
+          "name": "loading",
+          // Waiting for object detection (valid or invalid).
+          "initial": true,
+          "on": [
+            {
+              "event": "eObjectInvalid",
+              "target": "error"
+            },
+            {
+              "event": "eObjectValid",
+              "target": "transporting"
+            },
+            {
+              "event": "eJobDone",
+              "target": "jobDone"
+            }
+          ],
+          "always": [
+            {
+              "target": "jobDone",
+              "guards": [
+                {
+                  "expression": "jobDone"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "error",
+          // Error state: Invalid object placed on the belt.
+          "initial": false,
+          "entry": [
+            {
+              "type": "raise",
+              "event": {
+                "name": "eProcessMessage",
+                "data": [
+                  {
+                    "name": "msg",
+                    "value": "'Invalid object detected'"
+                  }
+                ],
+                "channel": "global"
+              }
+            }
+          ],
+          "on": [
+            {
+              "event": "eObjectValid",
+              "target": "transporting"
+            },
+            {
+              "event": "eJobDone",
+              "target": "jobDone"
+            }
+          ],
+          "always": [
+            {
+              "target": "jobDone",
+              "guards": [
+                {
+                  "expression": "jobDone"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "transporting",
+          // Conveyor belt moves its current item.
+          "initial": false,
+          "entry": [
+            {
+              "type": "invoke",
+              // Start moving the conveyor belt.
+              "serviceType": "moveBelt"
+            }
+          ],
+          "exit": [
+            {
+              "type": "invoke",
+              // Stop moving the conveyor belt.
+              "serviceType": "stopBelt"
+            }
+          ],
+          "on": [
+            {
+              "event": "eStartUnload",
+              "target": "unloading",
+              "actions": [
+                {
+                  "type": "assign",
+                  "variable": {
+                    "name": "isUnloading",
+                    "value": "true"
+                  }
+                }
+              ]
+            },
+            {
+              "event": "eJobDone",
+              "target": "jobDone"
+            }
+          ],
+          "always": [
+            {
+              "target": "jobDone",
+              "guards": [
+                {
+                  "expression": "jobDone"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "unloading",
+          // Signal arm to pickup the item and wait for pickup.
+          "initial": false,
+          "entry": [
+            {
+              "type": "raise",
+              "event": {
+                "name": "eArmPickup",
+                "channel": "global"
+              }
+            }
+          ],
+          "after": [
+            {
+              "name": "roboticArmSystem.triggerPickup",
+              "type": "timeout",
+              "delay": "1000",
+              "action": {
+                "type": "raise",
+                "event": {
+                  "name": "eArmPickup",
+                  "channel": "global"
+                }
+              }
+            }
+          ],
+          "on": [
+            {
+              "event": "ePickedUp",
+              "target": "loading",
+              "actions": [
+                {
+                  "type": "assign",
+                  "variable": {
+                    "name": "isUnloading",
+                    "value": "false"
+                  }
+                }
+              ]
+            },
+            {
+              "event": "eJobDone",
+              "target": "jobDone",
+              "actions": [
+                {
+                  "type": "assign",
+                  "variable": {
+                    "name": "isUnloading",
+                    "value": "false"
+                  }
+                }
+              ]
+            }
+          ],
+          "always": [
+            {
+              "target": "jobDone",
+              "actions": [
+                {
+                  "type": "assign",
+                  "variable": {
+                    "name": "isUnloading",
+                    "value": "false"
+                  }
+                }
+              ],
+              "guards": [
+                {
+                  "expression": "jobDone"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "jobDone",
+          // Amount of total products is reached. Terminate the state machine.
+          "initial": false,
+          "terminal": true
+        },
+        {
+          "name": "cameraSensorSystem",
+          // Represents a conveyor belt camera sensor used to detect objects on the belt.
+          "localContext": {
+            "variables": [
+              {
+                "name": "validObject",
+                "value": "false"
+              },
+              {
+                "name": "photoPath",
+                "value": "''"
+              }
+            ]
+          },
+          "states": [
+            {
+              "name": "idle",
+              // Wait for detection signal.
+              "initial": true,
+              "on": [
+                {
+                  "event": "eStartScan",
+                  "target": "scanning",
+                  "actions": [
+                    {
+                      "type": "assign",
+                      "variable": {
+                        "name": "isScanning",
+                        "value": "true"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "scanning",
+              // Scan the object through the camera and find out whether the object is valid or invalid.
+              "initial": false,
+              "entry": [
+                {
+                  "type": "invoke",
+                  // Signal camera to take a photo.
+                  "serviceType": "takePhoto",
+                  "output": [
+                    {
+                      "reference": "photoPath"
+                    }
+                  ]
+                },
+                {
+                  "type": "invoke",
+                  // Upload photo to the cloud and scan for its validity.
+                  "serviceType": "scanPhoto",
+                  "input": [
+                    {
+                      "name": "photoPath",
+                      "value": "photoPath"
+                    }
+                  ],
+                  "output": [
+                    {
+                      "reference": "validObject"
+                    }
+                  ],
+                  "done": [
+                    {
+                      "name": "eCheckValidObject",
+                      "channel": "internal"
+                    }
+                  ]
+                }
+              ],
+              "exit": [
+                {
+                  "type": "assign",
+                  "variable": {
+                    "name": "isScanning",
+                    "value": "false"
+                  }
+                }
+              ],
+              "on": [
+                {
+                  "event": "eCheckValidObject",
+                  "target": "idle",
+                  "actions": [
+                    {
+                      "type": "match",
+                      // Set error message.
+                      "value": "validObject",
+                      "cases": [
+                        {
+                          "case": "false",
+                          "action": {
+                            "type": "raise",
+                            "event": {
+                              "name": "eObjectInvalid",
+                              "channel": "global"
+                            }
+                          }
+                        },
+                        {
+                          "case": "true",
+                          "action": {
+                            "type": "raise",
+                            "event": {
+                              "name": "eObjectValid",
+                              "channel": "global"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "photoelectricSensor",
+          // Represents a photoelectric sensor to be used as a base state machine.
+          "abstract": true,
+          // Abstract, because this nested state machine would be initialized otherwise
+          "localContext": {
+            "variables": [
+              {
+                "name": "isBeamInterrupted",
+                "value": "false"
+              }
+            ]
+          },
+          "states": [
+            {
+              "name": "idle",
+              // Wait for some time and start detecting.
+              "initial": true,
+              "virtual": true,
+              "on": [
+                {
+                  "event": "eBeamDetection",
+                  "target": "detecting",
+                  "guards": [
+                    {
+                      "reference": "guard.allowBeamDetection"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "name": "detecting",
+              // Check if the beam is interrupted or not.
+              "initial": false,
+              "virtual": true,
+              "on": [
+                {
+                  "event": "eCheckBeamDetection",
+                  "target": "detected",
+                  "guards": [
+                    {
+                      "expression": "isBeamInterrupted"
+                    }
+                  ],
+                  "else": "idle"
+                }
+              ]
+            },
+            {
+              "name": "detected",
+              // Start sensor scan and return to idle.
+              "initial": false,
+              "entry": [
+                {
+                  "reference": "action.onDetected"
+                }
+              ],
+              "always": [
+                {
+                  "target": "idle",
+                  "actions": [
+                    {
+                      "type": "assign",
+                      "variable": {
+                        "name": "isBeamInterrupted",
+                        "value": "false"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "guards": [
+            {
+              "name": "guard.allowBeamDetection",
+              "expression": "!isUnloading"
+            }
+          ],
+          "actions": [
+            {
+              "name": "action.onDetected",
+              "type": "raise",
+              "event": {
+                "name": "eNoOp",
+                "channel": "internal"
+              }
+            }
+          ]
+        },
+        {
+          "name": "photoelectricSensorStart",
+          // Represents a photoelectric sensor (Start of belt).
+          "extends": "photoelectricSensor",
+          "states": [
+            {
+              "name": "idle",
+              "after": [
+                {
+                  "name": "startTriggerBeamDetection",
+                  "type": "timeout",
+                  "delay": "400",
+                  "action": {
+                    "type": "raise",
+                    "event": {
+                      "name": "eBeamDetection",
+                      "channel": "internal"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "detecting",
+              // Check if the beam is interrupted or not.
+              "entry": [
+                {
+                  "type": "invoke",
+                  // Check if the beam is interrupted or not.
+                  "serviceType": "beamDetectionStart",
+                  "output": [
+                    {
+                      "reference": "isBeamInterrupted"
+                    }
+                  ],
+                  "done": [
+                    {
+                      "name": "eCheckBeamDetection",
+                      "channel": "internal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "guards": [
+            {
+              "name": "guard.allowBeamDetection",
+              "expression": "!isUnloading && !isScanning"
+            }
+          ],
+          "actions": [
+            {
+              // Start sensor scan and return to idle.
+              "name": "action.onDetected",
+              "type": "raise",
+              "event": {
+                "name": "eStartScan",
+                "channel": "global"
+              }
+            }
+          ]
+        },
+        {
+          "name": "photoelectricSensorEnd",
+          // Represents a photoelectric sensor (End of belt).
+          "extends": "photoelectricSensor",
+          "states": [
+            {
+              "name": "idle",
+              "after": [
+                {
+                  "name": "endTriggerBeamDetection",
+                  "type": "timeout",
+                  "delay": "400",
+                  "action": {
+                    "type": "raise",
+                    "event": {
+                      "name": "eBeamDetection",
+                      "channel": "internal"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "detecting",
+              // Check if the beam is interrupted or not.
+              "entry": [
+                {
+                  "type": "invoke",
+                  // Check if the beam is interrupted or not.
+                  "serviceType": "beamDetectionEnd",
+                  "output": [
+                    {
+                      "reference": "isBeamInterrupted"
+                    }
+                  ],
+                  "done": [
+                    {
+                      "name": "eCheckBeamDetection",
+                      "channel": "internal"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "guards": [
+            {
+              "name": "guard.allowBeamDetection",
+              "expression": "!isUnloading"
+            }
+          ],
+          "actions": [
+            {
+              // Trigger robotic arm to pick up the current object
+              "name": "action.onDetected",
+              "type": "raise",
+              "event": {
+                "name": "eStartUnload",
+                "channel": "global"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "messageProcessor",
+      // Process messages
+      "abstract": true,
+      "states": [
+        {
+          "name": "idle",
+          // Waiting for an event to process a message.
+          "initial": true,
+          "on": [
+            {
+              "event": "eProcessMessage",
+              "target": "process"
+            },
+            {
+              "event": "eJobDone",
+              "target": "jobDone"
+            }
+          ],
+          "always": [
+            {
+              "target": "jobDone",
+              "guards": [
+                {
+                  "expression": "jobDone"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "process",
+          // Send notification and return to idle.
+          "abstract": true
+        },
+        {
+          "name": "jobDone",
+          // Amount of total products is reached. Terminate the state machine.
+          "initial": false,
+          "terminal": true
+        }
+      ]
+    },
+    {
+      "name": "smsProcessor",
+      // Send a message to employees using SMS.
+      "extends": "messageProcessor",
+      "states": [
+        {
+          "name": "process",
+          // Send SMS and return to idle.
+          "initial": false,
+          "entry": [
+            {
+              "type": "invoke",
+              // Notify employee using sms
+              "serviceType": "sendSms",
+              "input": [
+                {
+                  "name": "smsText",
+                  "value": "$msg"
+                }
+              ]
+            }
+          ],
+          "always": [
+            {
+              "target": "idle"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "eMailProcessor",
+      // Send a message to employees using EMail.
+      "extends": "messageProcessor",
+      "states": [
+        {
+          "name": "process",
+          // Send EMail and return to idle.
+          "initial": false,
+          "entry": [
+            {
+              "type": "invoke",
+              // Notify employee using EMail.
+              "serviceType": "sendMail",
+              "input": [
+                {
+                  "name": "mailBody",
+                  "value": "$msg"
+                }
+              ]
+            }
+          ],
+          "always": [
+            {
+              "target": "idle"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "logProcessor",
+      // Store a message to the persistent log variable.
+      "extends": "messageProcessor",
+      "states": [
+        {
+          "name": "process",
+          // Add message to the log and return to idle.
+          "initial": false,
+          "entry": [
+            {
+              "type": "assign",
+              // Add message to the log.
+              "variable": {
+                "name": "log",
+                "value": "var newLog = log; newLog.add($msg); newLog"
+              }
+            }
+          ],
+          "always": [
+            {
+              "target": "idle"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "roboticArmSystem",
+      // Represents a robotic arm used in an industrial automation setting.
+      "localContext": {
+        "variables": [
+          {
+            "name": "pickUpSuccess",
+            "value": "true"
+          },
+          {
+            "name": "assembleSuccess",
+            "value": "true"
+          },
+          {
+            "name": "partsAssembled",
+            "value": "0"
+          },
+          {
+            "name": "partsPerProduct",
+            "value": "4"
+          },
+          {
+            "name": "errorMsg",
+            "value": "''"
+          }
+        ]
+      },
+      "states": [
+        {
+          "name": "idle",
+          // Waiting for item pickup signal from the conveyor belt.
+          "initial": true,
+          "on": [
+            {
+              "event": "eArmPickup",
+              "target": "pickup",
+              "guards": [
+                {
+                  "expression": "!jobDone"
+                }
+              ]
+            },
+            {
+              "event": "eJobDone",
+              "target": "jobDone"
+            }
+          ],
+          "always": [
+            {
+              "target": "pickup",
+              "guards": [
+                {
+                  "expression": "!pickUpSuccess"
+                }
+              ]
+            },
+            {
+              "target": "jobDone",
+              "guards": [
+                {
+                  "expression": "jobDone"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "error",
+          // Error state: Either the pickup or assemble step failed.
+          "initial": false,
+          "entry": [
+            {
+              "type": "raise",
+              "event": {
+                "name": "eProcessMessage",
+                "data": [
+                  {
+                    "name": "msg",
+                    "value": "'Fatal robotic arm failure: ' + errorMsg"
+                  }
+                ],
+                "channel": "global"
+              }
+            }
+          ],
+          "after": [
+            {
+              "name": "triggerRetry",
+              "type": "timeout",
+              "delay": "1000",
+              "action": {
+                "type": "raise",
+                "event": {
+                  "name": "eRetry",
+                  "channel": "internal"
+                }
+              }
+            }
+          ],
+          "on": [
+            {
+              "event": "eRetry",
+              "target": "assemble",
+              "guards": [
+                {
+                  "expression": "pickUpSuccess"
+                }
+              ],
+              "else": "return"
+            },
+            {
+              "event": "eJobDone",
+              "target": "jobDone"
+            }
+          ]
+        },
+        {
+          "name": "pickup",
+          // Robotic arm picks up the item.
+          "initial": false,
+          "entry": [
+            {
+              "type": "invoke",
+              // Signal arm to pick up the item.
+              "serviceType": "pickUp",
+              "output": [
+                {
+                  "reference": "pickUpSuccess"
+                }
+              ]
+            },
+            {
+              "type": "match",
+              // Set error message.
+              "value": "pickUpSuccess",
+              "cases": [
+                {
+                  "case": "false",
+                  "action": {
+                    "type": "assign",
+                    "variable": {
+                      "name": "errorMsg",
+                      "value": "'Pickup failed'"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "raise",
+              "event": {
+                "name": "eCheckPickUpSuccess",
+                "channel": "internal"
+              }
+            }
+          ],
+          "on": [
+            {
+              "event": "eCheckPickUpSuccess",
+              "target": "assemble",
+              "guards": [
+                {
+                  "expression": "pickUpSuccess"
+                }
+              ],
+              "actions": [
+                {
+                  "type": "raise",
+                  "event": {
+                    "name": "ePickedUp",
+                    "channel": "global"
+                  }
+                }
+              ],
+              "else": "error"
+            }
+          ]
+        },
+        {
+          "name": "assemble",
+          // Robotic arm assembles the item.
+          "initial": false,
+          "entry": [
+            {
+              "type": "invoke",
+              // Signal arm to assemble the item.
+              "serviceType": "assemble",
+              "output": [
+                {
+                  "reference": "assembleSuccess"
+                }
+              ]
+            },
+            {
+              "type": "match",
+              // Set error message.
+              "value": "assembleSuccess",
+              "cases": [
+                {
+                  "case": "false",
+                  "action": {
+                    "type": "assign",
+                    "variable": {
+                      "name": "errorMsg",
+                      "value": "'Assemble failed'"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "type": "raise",
+              "event": {
+                "name": "eCheckAssembleSuccess",
+                "channel": "internal"
+              }
+            }
+          ],
+          "on": [
+            {
+              "event": "eCheckAssembleSuccess",
+              "target": "return",
+              "guards": [
+                {
+                  "expression": "assembleSuccess"
+                }
+              ],
+              "actions": [
+                {
+                  "type": "assign",
+                  "variable": {
+                    "name": "partsAssembled",
+                    "value": "partsAssembled + 1"
+                  }
+                },
+                {
+                  "type": "raise",
+                  "event": {
+                    "name": "eAssembleComplete",
+                    "channel": "global"
+                  }
+                }
+              ],
+              "else": "error"
+            }
+          ]
+        },
+        {
+          "name": "return",
+          // Robotic arm returns to its initial position (ready for pickup).
+          "initial": false,
+          "entry": [
+            {
+              "type": "invoke",
+              // Signal arm to return to its initial position.
+              "serviceType": "returnToStart"
+            }
+          ],
+          "always": [
+            {
+              "target": "idle",
+              "guards": [
+                {
+                  "expression": "partsAssembled >= partsPerProduct"
+                }
+              ],
+              "actions": [
+                {
+                  "type": "assign",
+                  "variable": {
+                    "name": "partsAssembled",
+                    "value": "0"
+                  }
+                },
+                {
+                  "type": "raise",
+                  "event": {
+                    "name": "eProductComplete",
+                    "channel": "global"
+                  }
+                }
+              ],
+              "else": "idle"
+            }
+          ]
+        },
+        {
+          "name": "jobDone",
+          // Amount of total products is reached. Terminate the state machine.
+          "initial": false,
+          "terminal": true
+        }
+      ]
+    },
+    {
+      "name": "monitoringSystem",
+      // Represents a monitoring system which collects statistics about the application.
+      "localContext": {
+        "variables": [
+          {
+            "name": "nScans",
+            "value": "0"
+          },
+          {
+            "name": "nAssemblies",
+            "value": "0"
+          }
+        ]
+      },
+      "actions": [
+        {
+          "name": "aSendStatistics",
+          "type": "invoke",
+          // Send statistics to some service (e.g. a web server) for monitoring purposes.
+          "serviceType": "sendStatistics",
+          "input": [
+            {
+              "name": "nScans",
+              "value": "nScans"
+            },
+            {
+              "name": "nAssemblies",
+              "value": "nAssemblies"
+            },
+            {
+              "name": "nProductsCompleted",
+              "value": "productsCompleted"
+            },
+            {
+              "name": "jobDone",
+              "value": "jobDone"
+            }
+          ]
+        }
+      ],
+      "states": [
+        {
+          "name": "monitoring",
+          // Default state: Monitors the application.
+          "initial": true,
+          "on": [
+            {
+              "event": "eStartScan",
+              "actions": [
+                {
+                  "type": "assign",
+                  "variable": {
+                    "name": "nScans",
+                    "value": "nScans+1"
+                  }
+                },
+                {
+                  "type": "raise",
+                  "event": {
+                    "name": "eSendStatistics",
+                    "channel": "internal"
+                  }
+                }
+              ]
+            },
+            {
+              "event": "eAssembleComplete",
+              "actions": [
+                {
+                  "type": "assign",
+                  "variable": {
+                    "name": "nAssemblies",
+                    "value": "nAssemblies+1"
+                  }
+                },
+                {
+                  "type": "raise",
+                  "event": {
+                    "name": "eSendStatistics",
+                    "channel": "internal"
+                  }
+                }
+              ]
+            },
+            {
+              "event": "eSendStatistics",
+              "actions": [
+                {
+                  "reference": "aSendStatistics"
+                }
+              ]
+            },
+            {
+              "event": "eJobDone",
+              "target": "jobDone"
+            }
+          ],
+          "always": [
+            {
+              "target": "jobDone",
+              "guards": [
+                {
+                  "expression": "jobDone"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "jobDone",
+          // Amount of total products is reached. Terminate the state machine.
+          "initial": false,
+          "terminal": true,
+          "entry": [
+            {
+              "reference": "aSendStatistics"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

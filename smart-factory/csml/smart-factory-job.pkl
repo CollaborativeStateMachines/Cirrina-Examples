@@ -3,17 +3,23 @@ amends "https://raw.githubusercontent.com/UIBK-DPS-DC/Cirrina-Specifications/mai
 import "https://raw.githubusercontent.com/UIBK-DPS-DC/Cirrina-Specifications/main/pkl/HttpServiceImplementationDescription.pkl"
 import "https://raw.githubusercontent.com/UIBK-DPS-DC/Cirrina-UseCases/main/smart-factory/csml/smart-factory.pkl" as smartFactoryCSM
 
+local serviceHost = read?("env:SIMULATION_SERVICE_HOST") ?? "localhost"
+local servicePort = read?("env:SIMULATION_SERVICE_PORT")?.toInt() ?? 8000
+
 collaborativeStateMachine = smartFactoryCSM
-stateMachineName = "<NAME>" // Change: Replace with state machine name
-localData = new Mapping {} // Change: jobControlSystem and roboticArmSystem expect localData (totalProducts, partsPerProduct)
+stateMachineName = "jobControlSystem" // Change: Replace with state machine name
+localData = new Mapping {
+  ["totalProducts"] = "100"
+  ["partsPerProduct"] = "10"
+} // Change: jobControlSystem and roboticArmSystem expect localData (totalProducts, partsPerProduct)
 bindEventInstanceIds = new Listing {}
 runtimeName = "runtime"
 
 serviceImplementations {
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/moveBelt"
     method = "POST"
     name = "moveBelt"
@@ -22,8 +28,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/stopBelt"
     method = "POST"
     name = "stopBelt"
@@ -32,8 +38,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/beamDetectionStart"
     method = "POST"
     name = "beamDetectionStart"
@@ -42,8 +48,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/beamDetectionEnd"
     method = "POST"
     name = "beamDetectionEnd"
@@ -52,8 +58,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/takePhoto"
     method = "POST"
     name = "takePhoto"
@@ -62,8 +68,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/scanPhoto"
     method = "POST"
     name = "scanPhoto"
@@ -72,8 +78,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/pickUp"
     method = "POST"
     name = "pickUp"
@@ -82,8 +88,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/assemble"
     method = "POST"
     name = "assemble"
@@ -92,8 +98,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/returnToStart"
     method = "POST"
     name = "returnToStart"
@@ -102,8 +108,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/sendMail"
     method = "POST"
     name = "sendMail"
@@ -112,8 +118,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/sendSms"
     method = "POST"
     name = "sendSms"
@@ -122,8 +128,8 @@ serviceImplementations {
   }
   new HttpServiceImplementationDescription {
     scheme = "http"
-    host = "localhost"
-    port = 8000
+    host = serviceHost
+    port = servicePort
     endPoint = "/sendStatistics"
     method = "POST"
     name = "sendStatistics"

@@ -307,26 +307,30 @@ local conveyorBeltSystem_transporting: CSM.StateDescription = new {
     }
 }
 
+local aRaiseArmPickup: CSM.RaiseActionDescription = new {
+    event {
+        name = eArmPickup
+        channel = "global"
+    }
+}
+
+local aResetIsUnloading: CSM.AssignActionDescription = new {
+    variable {
+        name = "isUnloading"
+        value = "false"
+    }
+}
+
 local conveyorBeltSystem_unloading: CSM.StateDescription = new {
     name = "unloading"
     entry {
-        new CSM.RaiseActionDescription {
-            event {
-                name = eArmPickup
-                channel = "global"
-            }
-        }
+        aRaiseArmPickup
     }
     after {
         new CSM.TimeoutActionDescription {
             name = "conveyorBeltSystem.triggerPickup"
             delay = tPickUp
-            action = new CSM.RaiseActionDescription {
-                event {
-                    name = eArmPickup
-                    channel = "global"
-                }
-            }
+            action = aRaiseArmPickup
         }
     }
     on {
@@ -334,24 +338,14 @@ local conveyorBeltSystem_unloading: CSM.StateDescription = new {
             event = ePickedUp
             target = conveyorBeltSystem_loading.name
             actions {
-                new CSM.AssignActionDescription {
-                    variable {
-                        name = "isUnloading"
-                        value = "false"
-                    }
-                }
+                aResetIsUnloading
             }
         }
         new {
             event = eJobDone
             target = conveyorBeltSystem_jobDone.name
             actions {
-                new CSM.AssignActionDescription {
-                    variable {
-                        name = "isUnloading"
-                        value = "false"
-                    }
-                }
+                aResetIsUnloading
             }
         }
     }
@@ -488,7 +482,12 @@ open local class PhotoelectricSensorDescription extends CSM.StateMachineDescript
     hidden detectingGuard: CSM.GuardDescription = new CSM.GuardDescription {
         expression = "!isUnloading"
     }
-    hidden abstract detectedAction: CSM.ActionDescription
+    hidden detectedAction: CSM.ActionDescription = new CSM.RaiseActionDescription {
+        event {
+            name = "eNoOp"
+            channel = "internal"
+        }
+    }
     states {
         new CSM.StateDescription {
             name = "idle"
@@ -864,9 +863,9 @@ local roboticArmSystem_jobDone: CSM.StateDescription = new {
 }
 
 // ------------------------ Message Processor (Base State Machine) -------------------------------
-local class MessageProcessorDescription extends CSM.StateMachineDescription {
-    name = "messageProcessor"
-    hidden processAction: CSM.ActionDescription
+local abstract class MessageProcessorDescription extends CSM.StateMachineDescription {
+    abstract name: String
+    abstract hidden processAction: CSM.ActionDescription
     states {
         new CSM.StateDescription {
             name = "idle"
@@ -901,10 +900,10 @@ local class MessageProcessorDescription extends CSM.StateMachineDescription {
 }
 
 // ------------------------ E-Mail Processor -------------------------------
-local eMailProcessor: CSM.StateMachineDescription = new MessageProcessorDescription {
+local class EMailProcessorDescription extends MessageProcessorDescription {
     name = "eMailProcessor"
     processAction = new CSM.InvokeActionDescription {
-        serviceType = stSendEmail
+        serviceType = "sendMail"
         input {
             new {
                 name = "mailBody"
@@ -913,12 +912,13 @@ local eMailProcessor: CSM.StateMachineDescription = new MessageProcessorDescript
         }
     }
 }
+local eMailProcessor: CSM.StateMachineDescription = new EMailProcessorDescription{}
 
 // ------------------------ SMS Processor -------------------------------
-local smsProcessor: CSM.StateMachineDescription = new MessageProcessorDescription {
+local class SmsProcessorDescription extends MessageProcessorDescription {
     name = "smsProcessor"
     processAction = new CSM.InvokeActionDescription {
-        serviceType = stSendSms
+        serviceType = "sendSms"
         input {
             new {
                 name = "smsText"
@@ -927,17 +927,19 @@ local smsProcessor: CSM.StateMachineDescription = new MessageProcessorDescriptio
         }
     }
 }
+local smsProcessor: CSM.StateMachineDescription = new SmsProcessorDescription {}
 
 // ------------------------ Log Processor -------------------------------
-local logProcessor: CSM.StateMachineDescription = new MessageProcessorDescription {
+local class LogProcessorDescription extends MessageProcessorDescription {
     name = "logProcessor"
     processAction = new CSM.AssignActionDescription {
         variable {
-            name = vLog
+            name = "log"
             value = "var newLog = log; newLog.add($msg); newLog"
         }
     }
 }
+local logProcessor: CSM.StateMachineDescription = new LogProcessorDescription{}
 
 // ------------------------ Monitoring System -------------------------------
 local monitoringSystem: CSM.StateMachineDescription = new {
