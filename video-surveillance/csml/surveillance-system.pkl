@@ -134,6 +134,10 @@ local sCapturingProcessing: CSM.StateDescription = new {
         }
         new {
             event = eTimeout
+            target = sCapturing.name
+        }
+        new {
+            event = eAlarm
             target = sAlarm.name
         }
     }
