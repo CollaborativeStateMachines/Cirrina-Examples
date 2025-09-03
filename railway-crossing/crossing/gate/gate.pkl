@@ -1,9 +1,10 @@
 module gate
 
-import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/CollaborativeStateMachineDescription.pkl" as CSML
+import "CSML:CollaborativeStateMachineDescription"
 
-import "actions.pkl" as Actions
-import "events.pkl"  as Events
+import "@railway-crossing/crossing/gate/actions.pkl"   as Actions
+
+import "@railway-crossing/crossing/events.pkl" as Events
 
 stateMachine = new CSML.StateMachineDescription {
   name = "gate"
@@ -13,10 +14,8 @@ stateMachine = new CSML.StateMachineDescription {
       initial = true
       on {
         new {
-          event = Events.gateUp
-          actions {
-            Actions.doGateUp
-          }
+          event   = Events.gateUp
+          actions { Actions.gateUp }
         }
         new {
           event  = Events.gateDown
@@ -32,10 +31,8 @@ stateMachine = new CSML.StateMachineDescription {
           target = "up"
         }
         new {
-          event = Events.gateDown
-          actions {
-            Actions.doGateDown
-          }
+          event   = Events.gateDown
+          actions { Actions.gateDown }
         }
       }
     }

@@ -1,0 +1,15 @@
+amends "CSML:CollaborativeStateMachineDescription"
+
+import "@railway-crossing/crossing/crossing.pkl" as Crossing
+import "@railway-crossing/persistent_variables.pkl" as PersistentVariables
+
+name    = "railway-crossing"
+version = "2.0"
+stateMachines {
+  Crossing.stateMachine
+}
+persistentContext {
+  variables {
+    PersistentVariables.numTrainsPassedCrossings
+  }
+}

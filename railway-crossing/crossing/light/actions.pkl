@@ -1,0 +1,11 @@
+module actions
+
+import "CSML:CollaborativeStateMachineDescription"
+
+lightOn: CSML.InvokeActionDescription = new {
+  serviceType = "lightOn"
+}
+
+lightOff: CSML.InvokeActionDescription = new {
+  serviceType = "lightOff"
+}

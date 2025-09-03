@@ -1,6 +1,6 @@
 module guards
 
-import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/CollaborativeStateMachineDescription.pkl" as CSML
+import "CSML:CollaborativeStateMachineDescription"
 
 isEventDataTrue: CSML.GuardDescription = new {
   expression = "$value == true"

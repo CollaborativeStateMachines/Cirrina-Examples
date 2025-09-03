@@ -1,0 +1,118 @@
+module crossing
+
+import "CSML:CollaborativeStateMachineDescription"
+
+import "@railway-crossing/crossing/actions.pkl"     as Actions
+import "@railway-crossing/crossing/events.pkl"      as Events
+import "@railway-crossing/crossing/guards.pkl"      as Guards
+
+import "@railway-crossing/crossing/gate/gate.pkl"   as Gate
+import "@railway-crossing/crossing/light/light.pkl" as Light
+
+stateMachine = new CSML.StateMachineDescription {
+  name = "crossing"
+  localContext {
+    variables {
+      new { name  = "numTrainsPassedCrossing"; value = "0" }
+    }
+  }
+  states {
+    new {
+      name    = "away"
+      initial = true
+      on {
+        new {
+          event  = Events.sensor
+          target = "approach"
+          guards { Guards.isEventDataTrue }
+        }
+        new {
+          event   = Events.sensor
+          actions { Actions.raiseLightOff ; Actions.raiseGateUp }
+          guards  { Guards.isEventDataFalse }
+        }
+      }
+    }
+    new {
+      name = "approach"
+      on {
+        new {
+          event  = Events.sensor
+          target = "close"
+          guards { Guards.isEventDataFalse }
+        }
+        new {
+          event   = Events.sensor
+          actions { Actions.raiseLightOn; Actions.raiseGateDown }
+          guards  { Guards.isEventDataTrue }
+        }
+      }
+    }
+    new {
+      name = "close"
+      on {
+        new {
+          event  = Events.sensor
+          target = "present"
+          guards { Guards.isEventDataTrue }
+        }
+        new {
+          event   = Events.sensor
+          actions { Actions.raiseLightOn; Actions.raiseGateDown }
+          guards  { Guards.isEventDataFalse }
+        }
+      }
+    }
+    new {
+      name = "present"
+      on {
+        new {
+          event  = Events.sensor
+          target = "leaving"
+          guards { Guards.isEventDataFalse }
+        }
+        new {
+          event   = Events.sensor
+          actions { Actions.raiseLightOn; Actions.raiseGateDown }
+          guards  { Guards.isEventDataTrue }
+        }
+      }
+    }
+    new {
+      name = "leaving"
+      initial = true
+      on {
+        new {
+          event  = Events.sensor
+          target = "left"
+          guards { Guards.isEventDataTrue }
+        }
+        new {
+          event   = Events.sensor
+          actions { Actions.raiseLightOff; Actions.raiseGateUp }
+          guards  { Guards.isEventDataFalse }
+        }
+      }
+    }
+    new {
+      name = "left"
+      initial = true
+      on {
+        new {
+          event  = Events.sensor
+          target = "away"
+          guards { Guards.isEventDataFalse }
+        }
+        new {
+          event   = Events.sensor
+          actions { Actions.raiseLightOff; Actions.raiseGateUp }
+          guards  { Guards.isEventDataTrue }
+        }
+      }
+    }
+  }
+  stateMachines {
+    Gate.stateMachine
+    Light.stateMachine
+  }
+}

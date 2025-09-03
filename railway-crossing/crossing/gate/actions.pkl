@@ -1,0 +1,11 @@
+module actions
+
+import "CSML:CollaborativeStateMachineDescription"
+
+gateUp: CSML.InvokeActionDescription = new {
+  serviceType = "gateUp"
+}
+
+gateDown: CSML.InvokeActionDescription = new {
+  serviceType = "gateDown"
+}

@@ -1,8 +1,0 @@
-module persistent_variables
-
-import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/CollaborativeStateMachineDescription.pkl" as CSML
-
-numTrainsPassedCrossings = new CSML.ContextVariableDescription {
-  name  = "numTrainsPassedCrossings"
-  value = "0"
-}

@@ -1,0 +1,8 @@
+module persistent_variables
+
+import "CSML:CollaborativeStateMachineDescription"
+
+numTrainsPassedCrossings = new CSML.ContextVariableDescription {
+  name  = "numTrainsPassedCrossings"
+  value = "0"
+}
