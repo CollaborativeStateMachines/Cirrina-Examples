@@ -1,0 +1,43 @@
+module light
+
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/CollaborativeStateMachineDescription.pkl" as CSML
+
+import "actions.pkl" as Actions
+import "events.pkl"  as Events
+
+stateMachine = new CSML.StateMachineDescription {
+  name = "light"
+  states {
+    new {
+      name = "off"
+      initial = true
+      on {
+        new {
+          event = Events.lightOff
+          actions {
+            Actions.doLightOff
+          }
+        }
+        new {
+          event  = Events.lightOn
+          target = "on"
+        }
+      }
+    }
+    new {
+      name = "on"
+      on {
+        new {
+          event  = Events.lightOff
+          target = "off"
+        }
+        new {
+          event = Events.lightOn
+          actions {
+            Actions.doLightOn
+          }
+        }
+      }
+    }
+  }
+}

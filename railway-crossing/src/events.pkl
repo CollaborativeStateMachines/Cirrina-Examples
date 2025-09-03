@@ -1,0 +1,7 @@
+module events
+
+sensor   = "sensor"
+gateUp   = "gateUp"
+gateDown = "gateDown"
+lightOn  = "lightOn"
+lightOff = "lightOff"

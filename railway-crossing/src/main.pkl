@@ -1,0 +1,19 @@
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/CollaborativeStateMachineDescription.pkl"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/CollaborativeStateMachineDescription.pkl" as CSML
+
+import "actions.pkl"              as Actions
+import "crossing.pkl"             as Crossing
+import "events.pkl"               as Events
+import "guards.pkl"               as Guards
+import "persistent_variables.pkl" as PersistentVariables
+
+name    = "railway-crossing"
+version = "2.0"
+stateMachines {
+  Crossing.stateMachine
+}
+persistentContext {
+  variables {
+    PersistentVariables.numTrainsPassedCrossings
+  }
+}
