@@ -1,12 +1,18 @@
 import "@csm/Csml.pkl"
 
 import "crossing/crossing.pkl"
+import "bell/bell.pkl"
+import "gate/gate.pkl"
+import "light/light.pkl"
 
 class CrossingCollaborativeStateMachine extends Csml.CollaborativeStateMachine {
   name    = "crossing"
   version = "3.0"
   stateMachines {
     new crossing.CrossingStateMachine {}
+    new bell.BellStateMachine {}
+    new gate.GateStateMachine {}
+    new light.LightStateMachine {}
   }
 }
 

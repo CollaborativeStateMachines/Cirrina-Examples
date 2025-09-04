@@ -1,13 +1,10 @@
 import "@csm/Csml.pkl"
 
 import "actions.pkl"
-import "events.pkl"
 import "guards.pkl"
-
-import "gate/gate.pkl"
-import "light/light.pkl"
-
 import "vars.pkl"
+
+import ".../events.pkl"
 
 class CrossingStateMachine extends Csml.StateMachine {
   name = "crossing"
@@ -18,12 +15,20 @@ class CrossingStateMachine extends Csml.StateMachine {
   }
   states {
     new {
-      name    = "away"
+      name    = "init"
       initial = true
       entry {
-        new actions.RaiseLightOffAction {}
+        new actions.RaiseLightOnAction {}
         new actions.RaiseGateUpAction {}
       }
+      always {
+        new {
+          target = "away"
+        }
+      }
+    }
+    new {
+      name = "away"
       on {
         new {
           event  = events.sensor
@@ -34,10 +39,7 @@ class CrossingStateMachine extends Csml.StateMachine {
     }
     new {
       name = "approach"
-      entry {
-        new actions.RaiseLightOnAction {}
-        new actions.RaiseGateDownAction {}
-      }
+      entry { new actions.RaiseLightOnAction {} }
       on {
         new {
           event  = events.sensor
@@ -48,6 +50,9 @@ class CrossingStateMachine extends Csml.StateMachine {
     }
     new {
       name = "close"
+      entry {
+        new actions.RaiseGateDownAction {}
+      }
       on {
         new {
           event  = events.sensor
@@ -68,6 +73,10 @@ class CrossingStateMachine extends Csml.StateMachine {
     }
     new {
       name = "leaving"
+      entry {
+        new actions.RaiseLightOffAction {}
+      }
+      
       on {
         new {
           event  = events.sensor
@@ -78,6 +87,9 @@ class CrossingStateMachine extends Csml.StateMachine {
     }
     new {
       name = "left"
+      entry {
+        new actions.RaiseGateUpAction {}
+      }
       on {
         new {
           event  = events.sensor
@@ -86,9 +98,5 @@ class CrossingStateMachine extends Csml.StateMachine {
         }
       }
     }
-  }
-  stateMachines {
-    new gate.GateStateMachine {}
-    new light.LightStateMachine {}
   }
 }

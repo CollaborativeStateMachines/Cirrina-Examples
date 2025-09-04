@@ -23,9 +23,7 @@ class GateStateMachine extends Csml.StateMachine {
     new {
       name    = "up"
       initial = true
-      entry {
-        new actions.GateUpAction {}
-      }
+      entry { new actions.GateUpAction {} }
       on {
         new {
           event  = events.gateDown
@@ -35,9 +33,7 @@ class GateStateMachine extends Csml.StateMachine {
     }
     new {
       name = "down"
-      entry {
-        new actions.GateDownAction {}
-      }
+      entry { new actions.GateDownAction {} }
       on {
         new {
           event  = events.gateUp

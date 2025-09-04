@@ -3,9 +3,21 @@ import "@csm/Csml.pkl"
 /// Action that invokes a service that puts the gate up.
 class GateUpAction extends Csml.InvokeAction {
   serviceType = "gateUp"
+  done {
+    new {
+      name    = events.bellsOff
+      channel = "external"
+    }
+  }
 }
 
 /// Action that invokes a service that puts the gate down.
 class GateDownAction extends Csml.InvokeAction {
   serviceType = "gateDown"
+  done {
+    new {
+      name    = events.bellsOn
+      channel = "external"
+    }
+  }
 }

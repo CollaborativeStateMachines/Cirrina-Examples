@@ -1,0 +1,50 @@
+import "@csm/Csml.pkl"
+
+import "actions.pkl"
+
+import ".../events.pkl"
+
+/// Bell state machine, manages a bell.
+///
+///                off      
+///            ┌───────┐   
+///            │       ▼   
+///         ╔═════╗ ┌─────┐
+///         ║ on  ║ │ off │
+///         ╚═════╝ └──┬──┘
+///            ▲       │   
+///            └───────┘   
+///                on      
+class BellStateMachine extends Csml.StateMachine {
+  name = "bell"
+  states {
+    // The bell is initially off.
+    new {
+      name    = "off"
+      initial = true
+      on {
+        new {
+          event   = events.bellOff
+          actions { new actions.BellOffAction {} }
+        }
+        new {
+          event  = events.bellOn
+          target = "on"
+        }
+      }
+    }
+    new {
+      name = "on"
+      on {
+        new {
+          event  = events.bellOff
+          target = "off"
+        }
+        new {
+          event   = events.bellOn
+          actions { new actions.BellOnAction {} }
+        }
+      }
+    }
+  }
+}
