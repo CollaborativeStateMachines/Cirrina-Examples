@@ -1,13 +1,13 @@
 amends "pkl:Project"
 
 dependencies {
-  ["CSML"] { 
-    uri = "package://localhost:10000/csml@3.0.0"
+  ["csm"] { 
+    uri = "package://localhost:10000/csm/csm@2.0.0"
   }
 }
 
 package {
-  name = "railway-crossing" 
+  name = "railway-crossing"
   version = "0.0.1" 
   baseUri = "package://collaborativestatemachines.github.io/files/cirrina/\(name)"
   packageZipUrl = "https://collaborativestatemachines.github.io/files/cirrina/\(name)/\(name)@\(version).zip"

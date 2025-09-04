@@ -1,11 +1,9 @@
-module guards
+import "@csm/Csml.pkl"
 
-import "CSML:CollaborativeStateMachineDescription"
-
-isEventDataTrue: CSML.GuardDescription = new {
+class IsEventDataTrueGuard extends Csml.Guard {
   expression = "$value == true"
 }
 
-isEventDataFalse: CSML.GuardDescription = new {
+class IsEventDataFalseGuard extends Csml.Guard {
   expression = "$value == false"
 }

@@ -1,33 +1,31 @@
-module actions
+import "@csm/Csml.pkl"
 
-import "CSML:CollaborativeStateMachineDescription"
+import "events.pkl"
 
-import "@railway-crossing/crossing/events.pkl" as Events
-
-raiseGateUp: CSML.RaiseActionDescription = new {
+class RaiseGateUpAction extends Csml.RaiseAction {
   event {
-    name = Events.gateUp
+    name    = events.gateUp
     channel = "internal"
   }
 }
 
-raiseGateDown: CSML.RaiseActionDescription = new {
+class RaiseGateDownAction extends Csml.RaiseAction {
   event {
-    name = Events.gateDown
+    name    = events.gateDown
     channel = "internal"
   }
 }
 
-raiseLightOn: CSML.RaiseActionDescription = new {
+class RaiseLightOnAction extends Csml.RaiseAction {
   event {
-    name = Events.lightOn
+    name    = events.lightOn
     channel = "internal"
   }
 }
 
-raiseLightOff: CSML.RaiseActionDescription = new {
+class RaiseLightOffAction extends Csml.RaiseAction {
   event {
-    name = Events.lightOff
+    name    = events.lightOff
     channel = "internal"
   }
 }

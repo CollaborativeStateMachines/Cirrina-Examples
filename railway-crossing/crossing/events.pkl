@@ -1,5 +1,3 @@
-module events
-
 sensor   = "sensor"
 gateUp   = "gateUp"
 gateDown = "gateDown"

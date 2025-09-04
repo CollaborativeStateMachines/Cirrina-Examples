@@ -1,24 +1,22 @@
-module light
+import "@csm/Csml.pkl"
 
-import "CSML:CollaborativeStateMachineDescription"
+import "actions.pkl"
 
-import "@railway-crossing/crossing/light/actions.pkl"   as Actions
+import ".../events.pkl"
 
-import "@railway-crossing/crossing/events.pkl" as Events
-
-stateMachine = new CSML.StateMachineDescription {
+class LightStateMachine extends Csml.StateMachine {
   name = "light"
   states {
     new {
-      name = "off"
+      name    = "off"
       initial = true
       on {
         new {
-          event   = Events.lightOff
-          actions { Actions.lightOff }
+          event   = events.lightOff
+          actions { new actions.LightOffAction {} }
         }
         new {
-          event  = Events.lightOn
+          event  = events.lightOn
           target = "on"
         }
       }
@@ -27,12 +25,12 @@ stateMachine = new CSML.StateMachineDescription {
       name = "on"
       on {
         new {
-          event  = Events.lightOff
+          event  = events.lightOff
           target = "off"
         }
         new {
-          event   = Events.lightOn
-          actions { Actions.lightOn }
+          event   = events.lightOn
+          actions { new actions.LightOnAction {} }
         }
       }
     }

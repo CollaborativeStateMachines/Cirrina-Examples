@@ -1,15 +1,20 @@
-amends "CSML:CollaborativeStateMachineDescription"
+import "@csm/Csml.pkl"
 
-import "@railway-crossing/crossing/crossing.pkl" as Crossing
-import "@railway-crossing/persistent_variables.pkl" as PersistentVariables
+import "crossing/crossing.pkl"
 
-name    = "railway-crossing"
-version = "2.0"
-stateMachines {
-  Crossing.stateMachine
-}
-persistentContext {
-  variables {
-    PersistentVariables.numTrainsPassedCrossings
+import "vars.pkl"
+
+class CrossingCollaborativeStateMachine extends Csml.CollaborativeStateMachine {
+  name    = "crossing"
+  version = "3.0"
+  stateMachines {
+    new crossing.CrossingStateMachine {}
+  }
+  persistentContext {
+    variables {
+        vars.numTrainsPassedCrossings
+    }
   }
 }
+
+function main(): Csml.CollaborativeStateMachine = new CrossingCollaborativeStateMachine {}

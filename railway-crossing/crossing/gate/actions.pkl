@@ -1,11 +1,9 @@
-module actions
+import "@csm/Csml.pkl"
 
-import "CSML:CollaborativeStateMachineDescription"
-
-gateUp: CSML.InvokeActionDescription = new {
+class GateUpAction extends Csml.InvokeAction {
   serviceType = "gateUp"
 }
 
-gateDown: CSML.InvokeActionDescription = new {
+class GateDownAction extends Csml.InvokeAction {
   serviceType = "gateDown"
 }

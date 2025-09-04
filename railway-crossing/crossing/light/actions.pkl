@@ -1,11 +1,9 @@
-module actions
+import "@csm/Csml.pkl"
 
-import "CSML:CollaborativeStateMachineDescription"
-
-lightOn: CSML.InvokeActionDescription = new {
+class LightOnAction extends Csml.InvokeAction {
   serviceType = "lightOn"
 }
 
-lightOff: CSML.InvokeActionDescription = new {
+class LightOffAction extends Csml.InvokeAction {
   serviceType = "lightOff"
 }

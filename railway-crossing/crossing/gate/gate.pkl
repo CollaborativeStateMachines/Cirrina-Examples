@@ -1,24 +1,22 @@
-module gate
+import "@csm/Csml.pkl"
 
-import "CSML:CollaborativeStateMachineDescription"
+import "actions.pkl"
 
-import "@railway-crossing/crossing/gate/actions.pkl"   as Actions
+import ".../events.pkl"
 
-import "@railway-crossing/crossing/events.pkl" as Events
-
-stateMachine = new CSML.StateMachineDescription {
+class GateStateMachine extends Csml.StateMachine {
   name = "gate"
   states {
     new {
-      name = "up"
+      name    = "up"
       initial = true
       on {
         new {
-          event   = Events.gateUp
-          actions { Actions.gateUp }
+          event   = events.gateUp
+          actions { new actions.GateUpAction {} }
         }
         new {
-          event  = Events.gateDown
+          event  = events.gateDown
           target = "down"
         }
       }
@@ -27,12 +25,12 @@ stateMachine = new CSML.StateMachineDescription {
       name = "down"
       on {
         new {
-          event = Events.gateUp
+          event  = events.gateUp
           target = "up"
         }
         new {
-          event   = Events.gateDown
-          actions { Actions.gateDown }
+          event   = events.gateDown
+          actions { new actions.GateDownAction {} }
         }
       }
     }

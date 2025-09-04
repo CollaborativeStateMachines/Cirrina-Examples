@@ -1,15 +1,13 @@
-module crossing
+import "@csm/Csml.pkl"
 
-import "CSML:CollaborativeStateMachineDescription"
+import "actions.pkl"
+import "events.pkl"
+import "guards.pkl"
 
-import "@railway-crossing/crossing/actions.pkl"     as Actions
-import "@railway-crossing/crossing/events.pkl"      as Events
-import "@railway-crossing/crossing/guards.pkl"      as Guards
+import "gate/gate.pkl"
+import "light/light.pkl"
 
-import "@railway-crossing/crossing/gate/gate.pkl"   as Gate
-import "@railway-crossing/crossing/light/light.pkl" as Light
-
-stateMachine = new CSML.StateMachineDescription {
+class CrossingStateMachine extends Csml.StateMachine {
   name = "crossing"
   localContext {
     variables {
@@ -22,14 +20,14 @@ stateMachine = new CSML.StateMachineDescription {
       initial = true
       on {
         new {
-          event  = Events.sensor
+          event  = events.sensor
           target = "approach"
-          guards { Guards.isEventDataTrue }
+          guards { new guards.IsEventDataTrueGuard {} }
         }
         new {
-          event   = Events.sensor
-          actions { Actions.raiseLightOff ; Actions.raiseGateUp }
-          guards  { Guards.isEventDataFalse }
+          event   = events.sensor
+          actions { new actions.RaiseLightOffAction {} ; new actions.RaiseGateUpAction {} }
+          guards  { new guards.IsEventDataFalseGuard {} }
         }
       }
     }
@@ -37,14 +35,14 @@ stateMachine = new CSML.StateMachineDescription {
       name = "approach"
       on {
         new {
-          event  = Events.sensor
+          event  = events.sensor
           target = "close"
-          guards { Guards.isEventDataFalse }
+          guards { new guards.IsEventDataFalseGuard {} }
         }
         new {
-          event   = Events.sensor
-          actions { Actions.raiseLightOn; Actions.raiseGateDown }
-          guards  { Guards.isEventDataTrue }
+          event   = events.sensor
+          actions { new actions.RaiseLightOnAction {}; new actions.RaiseGateDownAction {} }
+          guards  { new guards.IsEventDataTrueGuard {} }
         }
       }
     }
@@ -52,14 +50,14 @@ stateMachine = new CSML.StateMachineDescription {
       name = "close"
       on {
         new {
-          event  = Events.sensor
+          event  = events.sensor
           target = "present"
-          guards { Guards.isEventDataTrue }
+          guards { new guards.IsEventDataTrueGuard {} }
         }
         new {
-          event   = Events.sensor
-          actions { Actions.raiseLightOn; Actions.raiseGateDown }
-          guards  { Guards.isEventDataFalse }
+          event   = events.sensor
+          actions { new actions.RaiseLightOnAction {}; new actions.RaiseGateDownAction {} }
+          guards  { new guards.IsEventDataFalseGuard {} }
         }
       }
     }
@@ -67,14 +65,14 @@ stateMachine = new CSML.StateMachineDescription {
       name = "present"
       on {
         new {
-          event  = Events.sensor
+          event  = events.sensor
           target = "leaving"
-          guards { Guards.isEventDataFalse }
+          guards { new guards.IsEventDataFalseGuard {} }
         }
         new {
-          event   = Events.sensor
-          actions { Actions.raiseLightOn; Actions.raiseGateDown }
-          guards  { Guards.isEventDataTrue }
+          event   = events.sensor
+          actions { new actions.RaiseLightOnAction {}; new actions.RaiseGateDownAction {} }
+          guards  { new guards.IsEventDataTrueGuard {} }
         }
       }
     }
@@ -83,14 +81,14 @@ stateMachine = new CSML.StateMachineDescription {
       initial = true
       on {
         new {
-          event  = Events.sensor
+          event  = events.sensor
           target = "left"
-          guards { Guards.isEventDataTrue }
+          guards { new guards.IsEventDataTrueGuard {} }
         }
         new {
-          event   = Events.sensor
-          actions { Actions.raiseLightOff; Actions.raiseGateUp }
-          guards  { Guards.isEventDataFalse }
+          event   = events.sensor
+          actions { new actions.RaiseLightOffAction {}; new actions.RaiseGateUpAction {} }
+          guards  { new guards.IsEventDataFalseGuard {} }
         }
       }
     }
@@ -99,20 +97,20 @@ stateMachine = new CSML.StateMachineDescription {
       initial = true
       on {
         new {
-          event  = Events.sensor
+          event  = events.sensor
           target = "away"
-          guards { Guards.isEventDataFalse }
+          guards { new guards.IsEventDataFalseGuard {} }
         }
         new {
-          event   = Events.sensor
-          actions { Actions.raiseLightOff; Actions.raiseGateUp }
-          guards  { Guards.isEventDataTrue }
+          event   = events.sensor
+          actions { new actions.RaiseLightOffAction {}; new actions.RaiseGateUpAction {} }
+          guards  { new guards.IsEventDataTrueGuard {} }
         }
       }
     }
   }
   stateMachines {
-    Gate.stateMachine
-    Light.stateMachine
+    new gate.GateStateMachine {}
+    new light.LightStateMachine {}
   }
 }
