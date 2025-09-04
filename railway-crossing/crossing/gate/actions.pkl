@@ -1,9 +1,11 @@
 import "@csm/Csml.pkl"
 
+/// Action that invokes a service that puts the gate up.
 class GateUpAction extends Csml.InvokeAction {
   serviceType = "gateUp"
 }
 
+/// Action that invokes a service that puts the gate down.
 class GateDownAction extends Csml.InvokeAction {
   serviceType = "gateDown"
 }

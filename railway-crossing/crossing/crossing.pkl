@@ -7,42 +7,42 @@ import "guards.pkl"
 import "gate/gate.pkl"
 import "light/light.pkl"
 
+import "vars.pkl"
+
 class CrossingStateMachine extends Csml.StateMachine {
   name = "crossing"
   localContext {
     variables {
-      new { name  = "numTrainsPassedCrossing"; value = "0" }
+      new vars.NumTrainsPassed {}
     }
   }
   states {
     new {
       name    = "away"
       initial = true
+      entry {
+        new actions.RaiseLightOffAction {}
+        new actions.RaiseGateUpAction {}
+      }
       on {
         new {
           event  = events.sensor
           target = "approach"
           guards { new guards.IsEventDataTrueGuard {} }
         }
-        new {
-          event   = events.sensor
-          actions { new actions.RaiseLightOffAction {} ; new actions.RaiseGateUpAction {} }
-          guards  { new guards.IsEventDataFalseGuard {} }
-        }
       }
     }
     new {
       name = "approach"
+      entry {
+        new actions.RaiseLightOnAction {}
+        new actions.RaiseGateDownAction {}
+      }
       on {
         new {
           event  = events.sensor
           target = "close"
           guards { new guards.IsEventDataFalseGuard {} }
-        }
-        new {
-          event   = events.sensor
-          actions { new actions.RaiseLightOnAction {}; new actions.RaiseGateDownAction {} }
-          guards  { new guards.IsEventDataTrueGuard {} }
         }
       }
     }
@@ -54,11 +54,6 @@ class CrossingStateMachine extends Csml.StateMachine {
           target = "present"
           guards { new guards.IsEventDataTrueGuard {} }
         }
-        new {
-          event   = events.sensor
-          actions { new actions.RaiseLightOnAction {}; new actions.RaiseGateDownAction {} }
-          guards  { new guards.IsEventDataFalseGuard {} }
-        }
       }
     }
     new {
@@ -69,42 +64,25 @@ class CrossingStateMachine extends Csml.StateMachine {
           target = "leaving"
           guards { new guards.IsEventDataFalseGuard {} }
         }
-        new {
-          event   = events.sensor
-          actions { new actions.RaiseLightOnAction {}; new actions.RaiseGateDownAction {} }
-          guards  { new guards.IsEventDataTrueGuard {} }
-        }
       }
     }
     new {
       name = "leaving"
-      initial = true
       on {
         new {
           event  = events.sensor
           target = "left"
           guards { new guards.IsEventDataTrueGuard {} }
         }
-        new {
-          event   = events.sensor
-          actions { new actions.RaiseLightOffAction {}; new actions.RaiseGateUpAction {} }
-          guards  { new guards.IsEventDataFalseGuard {} }
-        }
       }
     }
     new {
       name = "left"
-      initial = true
       on {
         new {
           event  = events.sensor
           target = "away"
           guards { new guards.IsEventDataFalseGuard {} }
-        }
-        new {
-          event   = events.sensor
-          actions { new actions.RaiseLightOffAction {}; new actions.RaiseGateUpAction {} }
-          guards  { new guards.IsEventDataTrueGuard {} }
         }
       }
     }

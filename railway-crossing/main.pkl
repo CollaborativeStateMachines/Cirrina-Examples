@@ -2,18 +2,11 @@ import "@csm/Csml.pkl"
 
 import "crossing/crossing.pkl"
 
-import "vars.pkl"
-
 class CrossingCollaborativeStateMachine extends Csml.CollaborativeStateMachine {
   name    = "crossing"
   version = "3.0"
   stateMachines {
     new crossing.CrossingStateMachine {}
-  }
-  persistentContext {
-    variables {
-        vars.numTrainsPassedCrossings
-    }
   }
 }
 

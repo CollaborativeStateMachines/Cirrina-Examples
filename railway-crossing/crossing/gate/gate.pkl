@@ -4,17 +4,29 @@ import "actions.pkl"
 
 import ".../events.pkl"
 
+/// Gate state machine, manages a gate.
+///
+///
+///                down      
+///             ┌────────┐   
+///             │        ▼   
+///         ╔══════╗ ┌──────┐
+///         ║  up  ║ │ down │
+///         ╚══════╝ └───┬──┘
+///            ▲         │   
+///            └─────────┘   
+///                up      
 class GateStateMachine extends Csml.StateMachine {
   name = "gate"
   states {
+    // The gate is initially up.
     new {
       name    = "up"
       initial = true
+      entry {
+        new actions.GateUpAction {}
+      }
       on {
-        new {
-          event   = events.gateUp
-          actions { new actions.GateUpAction {} }
-        }
         new {
           event  = events.gateDown
           target = "down"
@@ -23,14 +35,13 @@ class GateStateMachine extends Csml.StateMachine {
     }
     new {
       name = "down"
+      entry {
+        new actions.GateDownAction {}
+      }
       on {
         new {
           event  = events.gateUp
           target = "up"
-        }
-        new {
-          event   = events.gateDown
-          actions { new actions.GateDownAction {} }
         }
       }
     }

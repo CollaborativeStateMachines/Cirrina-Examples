@@ -4,9 +4,21 @@ import "actions.pkl"
 
 import ".../events.pkl"
 
+/// Light state machine, manages a light.
+///
+///                off      
+///            ┌───────┐   
+///            │       ▼   
+///         ╔═════╗ ┌─────┐
+///         ║ on  ║ │ off │
+///         ╚═════╝ └──┬──┘
+///            ▲       │   
+///            └───────┘   
+///                on      
 class LightStateMachine extends Csml.StateMachine {
   name = "light"
   states {
+    // The light is initially off.
     new {
       name    = "off"
       initial = true

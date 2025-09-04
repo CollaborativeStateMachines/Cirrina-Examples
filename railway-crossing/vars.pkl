@@ -1,6 +1,0 @@
-import "@csm/Csml.pkl"
-
-numTrainsPassedCrossings = new Csml.ContextVariable {
-  name  = "numTrainsPassedCrossings"
-  value = "0"
-}

@@ -1,5 +1,14 @@
+/// Raised based on a sensor reading.
 sensor   = "sensor"
+
+/// Raised when the gate should be up.
 gateUp   = "gateUp"
+
+/// Raised when the gate should be down.
 gateDown = "gateDown"
+
+/// Raised when the light should be on.
 lightOn  = "lightOn"
+
+/// Raised when the light should be off.
 lightOff = "lightOff"
