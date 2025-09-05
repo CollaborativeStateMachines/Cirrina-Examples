@@ -1,11 +1,13 @@
 import "@csm/Csml.pkl"
 
+import ".../events.pkl"
+
 /// Action that invokes a service that puts the gate up.
 class GateUpAction extends Csml.InvokeAction {
   serviceType = "gateUp"
   done {
     new {
-      name    = events.bellsOff
+      name    = events.bellOff
       channel = "external"
     }
   }
@@ -16,7 +18,7 @@ class GateDownAction extends Csml.InvokeAction {
   serviceType = "gateDown"
   done {
     new {
-      name    = events.bellsOn
+      name    = events.bellOn
       channel = "external"
     }
   }
