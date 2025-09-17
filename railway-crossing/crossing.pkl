@@ -1,0 +1,143 @@
+import "csm:Csml"
+
+import "events.pkl"
+
+/// Action that raises the gate up event.
+const raiseGateUpAction = new Csml.RaiseActionDescription {
+  event {
+    name    = events.gateUp
+    channel = "external"
+  }
+}
+
+/// Action that raises the gate down event.
+const raiseGateDownAction = new Csml.RaiseActionDescription {
+  event {
+    name    = events.gateDown
+    channel = "external"
+  }
+}
+
+/// Action that raises the light on event.
+const raiseLightOnAction = new Csml.RaiseActionDescription {
+  event {
+    name    = events.lightOn
+    channel = "external"
+  }
+}
+
+/// Action that raises the light off event.
+const raiseLightOffAction = new Csml.RaiseActionDescription {
+  event {
+    name    = events.lightOff
+    channel = "external"
+  }
+}
+
+/// Guard that passes when the event data (its value $value) is true.
+const isEventDataTrueGuard = new Csml.GuardDescription {
+  expression = "$value == true"
+}
+
+/// Guard that passes when the event data (its value $value) is false.
+const isEventDataFalseGuard = new Csml.GuardDescription {
+  expression = "$value == false"
+}
+
+class CrossingStateMachine extends Csml.StateMachineDescription {
+  name = "crossing"
+  localContext {
+    variables {
+      new {
+        name  = "numTrainsPassed"
+        value = "0"
+      }
+    }
+  }
+  states {
+    new {
+      name    = "init"
+      initial = true
+      entry {
+        raiseLightOffAction
+        raiseGateUpAction
+      }
+      always {
+        new {
+          target = "away"
+        }
+      }
+    }
+    new {
+      name = "away"
+      on {
+        new {
+          event  = events.sensor
+          target = "approach"
+          guards { isEventDataTrueGuard }
+        }
+      }
+    }
+    new {
+      name = "approach"
+      entry { raiseLightOnAction }
+      on {
+        new {
+          event  = events.sensor
+          target = "close"
+          guards { isEventDataFalseGuard }
+        }
+      }
+    }
+    new {
+      name = "close"
+      entry {
+        raiseGateDownAction
+      }
+      on {
+        new {
+          event  = events.sensor
+          target = "present"
+          guards { isEventDataTrueGuard }
+        }
+      }
+    }
+    new {
+      name = "present"
+      on {
+        new {
+          event  = events.sensor
+          target = "leaving"
+          guards { isEventDataFalseGuard }
+        }
+      }
+    }
+    new {
+      name = "leaving"
+      entry {
+        raiseGateUpAction
+      }
+      
+      on {
+        new {
+          event  = events.sensor
+          target = "left"
+          guards { isEventDataTrueGuard }
+        }
+      }
+    }
+    new {
+      name = "left"
+      entry {
+        raiseLightOffAction
+      }
+      on {
+        new {
+          event  = events.sensor
+          target = "away"
+          guards { isEventDataFalseGuard }
+        }
+      }
+    }
+  }
+}

@@ -1,7 +1,0 @@
-import "@csm/Csml.pkl"
-
-/// Variable containing the number of trains passed.
-class NumTrainsPassed extends Csml.ContextVariable {
-  name  = "numTrainsPassed"
-  value = "0"
-}

@@ -18,8 +18,14 @@ class LightStatus(BaseModel):
     last: float
 
 
+class BellStatus(BaseModel):
+    status: str
+    last: float
+
+
 gate_statuses = {}
 light_statuses = {}
+bell_statuses = {}
 
 
 @app.post("/gate/down")
@@ -78,5 +84,35 @@ async def light_off(request: Request):
 
     # Update its state
     light_statuses[id].status = "off"
+
+    return Response(status_code=HTTP_200_OK)
+
+
+@app.post("/bell/on")
+async def bell_on(request: Request):
+    # Retrieve the sender ID
+    id = request.headers.get("Cirrina-Sender-ID")
+
+    # Create the gate status if not seen before
+    if id not in bell_statuses:
+        bell_statuses[id] = BellStatus(status="off", last=time.time())
+
+    # Update its state
+    bell_statuses[id].status = "on"
+
+    return Response(status_code=HTTP_200_OK)
+
+
+@app.post("/bell/off")
+async def bell_off(request: Request):
+    # Retrieve the sender ID
+    id = request.headers.get("Cirrina-Sender-ID")
+
+    # Create the gate status if not seen before
+    if id not in bell_statuses:
+        bell_statuses[id] = BellStatus(status="off", last=time.time())
+
+    # Update its state
+    bell_statuses[id].status = "off"
 
     return Response(status_code=HTTP_200_OK)

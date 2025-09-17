@@ -1,8 +1,16 @@
-import "@csm/Csml.pkl"
+import "csm:Csml"
 
-import "actions.pkl"
+import "events.pkl"
 
-import ".../events.pkl"
+/// Action that invokes a service that turns the light on.
+const lightOnAction = new Csml.InvokeActionDescription {
+  serviceType = "lightOn"
+}
+
+/// Action that invokes a service that turns the light off.
+const lightOffAction = new Csml.InvokeActionDescription {
+  serviceType = "lightOff"
+}
 
 /// Light state machine, manages a light.
 ///
@@ -15,7 +23,7 @@ import ".../events.pkl"
 ///            ▲       │   
 ///            └───────┘   
 ///                on      
-class LightStateMachine extends Csml.StateMachine {
+class LightStateMachine extends Csml.StateMachineDescription {
   name = "light"
   states {
     // The light is initially off.
@@ -25,7 +33,7 @@ class LightStateMachine extends Csml.StateMachine {
       on {
         new {
           event   = events.lightOff
-          actions { new actions.LightOffAction {} }
+          actions { lightOffAction }
         }
         new {
           event  = events.lightOn
@@ -42,7 +50,7 @@ class LightStateMachine extends Csml.StateMachine {
         }
         new {
           event   = events.lightOn
-          actions { new actions.LightOnAction {} }
+          actions { lightOnAction }
         }
       }
     }
