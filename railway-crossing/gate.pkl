@@ -1,0 +1,65 @@
+import "csm:Csml"
+
+import "events.pkl"
+
+/// Action that invokes a service that puts the gate up.
+const gateUpAction = new Csml.InvokeActionDescription {
+  serviceType = "gateUp"
+  done {
+    new {
+      name    = events.bellOff
+      channel = "external"
+    }
+  }
+}
+
+/// Action that invokes a service that puts the gate down.
+const gateDownAction = new Csml.InvokeActionDescription {
+  serviceType = "gateDown"
+  done {
+    new {
+      name    = events.bellOn
+      channel = "external"
+    }
+  }
+}
+
+/// Gate state machine, manages a gate.
+///
+///
+///                down      
+///             ┌────────┐   
+///             │        ▼   
+///         ╔══════╗ ┌──────┐
+///         ║  up  ║ │ down │
+///         ╚══════╝ └───┬──┘
+///            ▲         │   
+///            └─────────┘   
+///                up      
+class GateStateMachine extends Csml.StateMachineDescription {
+  name = "gate"
+  states {
+    // The gate is initially up.
+    new {
+      name    = "up"
+      initial = true
+      entry { gateUpAction }
+      on {
+        new {
+          event  = events.gateDown
+          target = "down"
+        }
+      }
+    }
+    new {
+      name = "down"
+      entry { gateDownAction }
+      on {
+        new {
+          event  = events.gateUp
+          target = "up"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,84 @@
+configs:
+  telegraf_config:
+    file: ./telegraf.conf
+services:
+  # Cirrina requirements
+  # - InfluxDB is used to log telemetry information. The InfluxDB database is populated through OpenTelemetry 
+  #   and provided through an OLTP endpoint forwarding the telemetry data to InfluxDB using Telegraf.
+  # - NATS for its messaging and key-value store.
+  # InfluxDB
+  influxdb:
+    image: "influxdb:2"
+    ports:
+      - "8086:8086"
+    environment:
+      # Initialize the database
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=adminadmin
+      - DOCKER_INFLUXDB_INIT_ORG=org
+      - DOCKER_INFLUXDB_INIT_BUCKET=bucket
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=bzO10KmR8x
+  # Telegraf 
+  telegraf:
+    image: "telegraf:latest"
+    ports:
+      - "4317:4317"
+    configs:
+      - source: telegraf_config
+        target: /etc/telegraf/telegraf.conf
+    depends_on:
+      - influxdb
+  # NATS for messaging and key-value store
+  nats:
+    image: "nats:latest"
+    command:
+      - "-js"
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+  # Cirrina
+  cirrina:
+    image: marlonetheredgeuibk/cirrina:unstable
+    environment:
+      - NATS_EVENT_URL=nats://nats:4222/
+      - NATS_CONTEXT_URL=nats://nats:4222/
+      - OTLP_ENDPOINT=http://telegraf:4317/
+      # Application entry-point
+      - APP_PATH=/app/main.pkl
+      # Instantiate all state machines on this runtime
+      - INSTANTIATE=bell,gate,light,crossing
+      # Provide service bindings
+      - SERVICE_BINDINGS_PATH=/app/services.pkl
+    volumes:
+      - ./:/app
+    depends_on:
+      - telegraf
+      - nats
+  # The railway crossing services
+  services:
+    build:
+      context: ./services/services
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - METRICS_INTERVAL=1000
+      - OTLP_ENDPOINT=http://telegraf:4317/
+    depends_on:
+      - cirrina
+  # The railway crossing sensor simulation
+  simulate_sensors:
+    build:
+      context: ./services/simulate_sensors
+      dockerfile: Dockerfile
+    environment:
+      - METRICS_INTERVAL=1000
+      - OTLP_ENDPOINT=http://telegraf:4317/
+      - NATS_URL=nats://nats:4222/
+      # Transmission interval at start
+      - START_INTERVAL_IN_SECONDS=0.1
+      # Transmission interval at end
+      - END_INTERVAL_IN_SECONDS=0.01
+    depends_on:
+      - cirrina
