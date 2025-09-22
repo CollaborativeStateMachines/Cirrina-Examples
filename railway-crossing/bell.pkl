@@ -30,11 +30,8 @@ class BellStateMachine extends Csml.StateMachineDescription {
     new {
       name    = "off"
       initial = true
+      entry { offAction }
       on {
-        new {
-          event   = events.bellOff
-          actions { offAction }
-        }
         new {
           event  = events.bellOn
           target = "on"
@@ -43,11 +40,8 @@ class BellStateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "on"
+      entry { onAction }
       on {
-        new {
-          event  = events.bellOff
-          target = "off"
-        }
         new {
           event   = events.bellOn
           actions { onAction }

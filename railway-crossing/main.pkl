@@ -1,7 +1,7 @@
 amends "csm:Csml"
 import "csm:Csml"
 
-import "crossing.pkl"
+import "controller.pkl"
 import "bell.pkl"
 import "gate.pkl"
 import "light.pkl"
@@ -9,7 +9,7 @@ import "light.pkl"
 name    = "crossing"
 version = "3.0.0"
 stateMachines {
-  new crossing.CrossingStateMachine {}
+  new controller.ControllerStateMachine {}
   new bell.BellStateMachine {}
   new gate.GateStateMachine {}
   new light.LightStateMachine {}

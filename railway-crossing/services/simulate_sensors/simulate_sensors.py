@@ -28,11 +28,9 @@ TIME_FACTOR = 1.0
 
 resource = Resource(attributes={SERVICE_NAME: "railway-simulation"})
 
-exporter = OTLPMetricExporter(endpoint=os.environ["OTLP_ENDPOINT"])
+exporter = OTLPMetricExporter()
 
-metric_reader = PeriodicExportingMetricReader(
-    exporter, export_interval_millis=int(os.environ["METRICS_INTERVAL"])
-)
+metric_reader = PeriodicExportingMetricReader(exporter)
 
 provider = MeterProvider(resource=resource, metric_readers=[metric_reader])
 
