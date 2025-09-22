@@ -1,0 +1,12 @@
+amends "csm:Csml"
+import "csm:Csml"
+
+import "detector.pkl"
+import "surveillance.pkl"
+
+name    = "surveillance"
+version = "3.0.0"
+stateMachines {
+  new detector.DetectorStateMachine {}
+  new surveillance.SurveillanceStateMachine {}
+}

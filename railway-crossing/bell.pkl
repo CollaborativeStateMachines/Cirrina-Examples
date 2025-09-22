@@ -2,27 +2,27 @@ import "csm:Csml"
 
 import "events.pkl"
 
-/// Action that invokes a service that turns the bell on.
+// Action that invokes a service that turns the bell on.
 const onAction = new Csml.InvokeActionDescription {
   serviceType = "bellOn"
 }
 
-/// Action that invokes a service that turns the bell off.
+// Action that invokes a service that turns the bell off.
 const offAction = new Csml.InvokeActionDescription {
   serviceType = "bellOff"
 }
 
-/// Bell state machine, manages a bell.
-///
-///                off      
-///            ┌───────┐   
-///            │       ▼   
-///         ╔═════╗ ┌─────┐
-///         ║ on  ║ │ off │
-///         ╚═════╝ └──┬──┘
-///            ▲       │   
-///            └───────┘   
-///                on      
+// Bell state machine, manages a bell.
+//
+//                off      
+//            ┌───────┐   
+//            │       ▼   
+//         ╔═════╗ ┌─────┐
+//         ║ on  ║ │ off │
+//         ╚═════╝ └──┬──┘
+//            ▲       │   
+//            └───────┘   
+//                on      
 class BellStateMachine extends Csml.StateMachineDescription {
   name = "bell"
   states {

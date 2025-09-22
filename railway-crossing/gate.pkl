@@ -2,7 +2,7 @@ import "csm:Csml"
 
 import "events.pkl"
 
-/// Action that invokes a service that puts the gate up.
+// Action that invokes a service that puts the gate up.
 const gateUpAction = new Csml.InvokeActionDescription {
   serviceType = "gateUp"
   done {
@@ -13,7 +13,7 @@ const gateUpAction = new Csml.InvokeActionDescription {
   }
 }
 
-/// Action that raises the bell on event.
+// Action that raises the bell on event.
 const raiseBellOnAction = new Csml.RaiseActionDescription {
   event {
     name    = events.bellOn
@@ -21,23 +21,23 @@ const raiseBellOnAction = new Csml.RaiseActionDescription {
   }
 }
 
-/// Action that invokes a service that puts the gate down.
+// Action that invokes a service that puts the gate down.
 const gateDownAction = new Csml.InvokeActionDescription {
   serviceType = "gateDown"
 }
 
-/// Gate state machine, manages a gate.
-///
-///
-///                down      
-///             ┌────────┐   
-///             │        ▼   
-///         ╔══════╗ ┌──────┐
-///         ║  up  ║ │ down │
-///         ╚══════╝ └───┬──┘
-///            ▲         │   
-///            └─────────┘   
-///                up      
+// Gate state machine, manages a gate.
+//
+//
+//                down      
+//             ┌────────┐   
+//             │        ▼   
+//         ╔══════╗ ┌──────┐
+//         ║  up  ║ │ down │
+//         ╚══════╝ └───┬──┘
+//            ▲         │   
+//            └─────────┘   
+//                up      
 class GateStateMachine extends Csml.StateMachineDescription {
   name = "gate"
   states {

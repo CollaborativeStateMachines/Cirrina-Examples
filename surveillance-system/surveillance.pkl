@@ -1,0 +1,89 @@
+import "csm:Csml"
+
+import "events.pkl"
+
+class SurveillanceStateMachine extends Csml.StateMachineDescription {
+  name = "surveillance"
+  localContext {
+    variables {
+      new {
+        name = "hasThreat"
+        value = "false"
+      }
+    }
+  }
+  states {
+    new {
+      name = "processing"
+      initial = true
+      on {
+        new {
+          event = events.foundPersons
+          actions {
+            new Csml.InvokeActionDescription {
+              serviceType = "analyze"
+              input {
+                new {
+                  name = "image"
+                  value = "$image"
+                }
+              }
+              output {
+                new {
+                  reference = "hasThreat"
+                }
+              }
+              done {
+                new {
+                  name = "analyzed"
+                  channel = "internal"
+                }
+              }
+            }
+          }
+        }
+        new {
+          event = "analyzed"
+          guards {
+            new Csml.GuardDescription {
+              expression = "hasThreat == true"
+            }
+          }
+          actions {
+            new Csml.RaiseActionDescription {
+              event {
+                name = "alarm"
+                channel = "global"
+              }
+            }
+          }
+        }
+        new {
+          event = "alarm"
+          target = "alarm"
+        }
+      }
+    }
+    new {
+      name = "alarm"
+      on {
+        new {
+          event = "disarm"
+          target = "processing"
+        }
+      }
+      after {
+        new Csml.TimeoutActionDescription {
+          name = "disarmTimeout"
+          delay = "10000" // Note: replace with Duration: 10.s
+          action = new Csml.RaiseActionDescription {
+            event {
+              name = "disarm"
+              channel = "global"
+            }
+          }
+        }
+      }
+    }
+  }
+}
