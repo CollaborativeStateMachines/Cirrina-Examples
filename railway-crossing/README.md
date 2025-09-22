@@ -16,7 +16,7 @@ The implementation consists of four state machines:
 
 The following diagram shows the interactions of all state machines:
 
-![](diagram.png)
+![](diagram.svg)
 
 The **Crossing** state machine transitions between the states **_init_**, **_away_**, **_approach_**, 
 **_close_**, **_present_**, **_leaving_**, and **_left_**. The initial state **_init_** is indicated by a
@@ -33,13 +33,16 @@ Based on an arriving train's nearness:
 - **_approach_** - light and bell are turned on.
 - **_close_** - gate is lowered.
 
-The light, bell, and gate are managed in separate state machines triggered by the events: `_lightOn_`,
-`_lightOff_`, `_bellOn_`, `_bellOff_`, `_gateDown_`, and `_gateUp_`.
+The light, bell, and gate are managed in separate state machines triggered by the events: `lightOn`,
+`lightOff`, `bellOn`, `bellOff`, `gateDown`, and `gateUp`.
 
 Upon a train's departure:
 
 - **_leaving_** - gate is raised.
 - **_left_** - light and bell are turned off.
+
+This example is describing in the 
+[CSM Tutorial](https://collaborativestatemachines.github.io/learn/tutorial/).
 
 ## Structure
 

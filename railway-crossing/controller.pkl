@@ -34,6 +34,14 @@ const raiseLightOffAction = new Csml.RaiseActionDescription {
   }
 }
 
+// Action that increments the number of trains passed.
+const incrementNumTrainsPassed = new Csml.AssignActionDescription {
+  variable = new {
+    name = "numTrainsPassed"
+    value = "numTrainsPassed + 1"
+  }
+}
+
 /// Guard that passes when the event data (its value $value) is true.
 const isEventDataTrueGuard = new Csml.GuardDescription {
   expression = "$value == true"
@@ -44,11 +52,12 @@ const isEventDataFalseGuard = new Csml.GuardDescription {
   expression = "$value == false"
 }
 
-class CrossingStateMachine extends Csml.StateMachineDescription {
-  name = "crossing"
+class ControllerStateMachine extends Csml.StateMachineDescription {
+  name = "controller"
   localContext {
     variables {
       new {
+        // IDEA: Add analytics of multiple crossings
         name  = "numTrainsPassed"
         value = "0"
       }
@@ -104,6 +113,7 @@ class CrossingStateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "present"
+      entry { incrementNumTrainsPassed }
       on {
         new {
           event  = events.sensor

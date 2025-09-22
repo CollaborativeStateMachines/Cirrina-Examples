@@ -13,15 +13,17 @@ const gateUpAction = new Csml.InvokeActionDescription {
   }
 }
 
+/// Action that raises the bell on event.
+const raiseBellOnAction = new Csml.RaiseActionDescription {
+  event {
+    name    = events.bellOn
+    channel = "external"
+  }
+}
+
 /// Action that invokes a service that puts the gate down.
 const gateDownAction = new Csml.InvokeActionDescription {
   serviceType = "gateDown"
-  done {
-    new {
-      name    = events.bellOn
-      channel = "external"
-    }
-  }
 }
 
 /// Gate state machine, manages a gate.
@@ -53,7 +55,10 @@ class GateStateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "down"
-      entry { gateDownAction }
+      entry { 
+        raiseBellOnAction
+        gateDownAction
+      }
       on {
         new {
           event  = events.gateUp

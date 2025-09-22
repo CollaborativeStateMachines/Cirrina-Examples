@@ -43,11 +43,12 @@ services:
     environment:
       - NATS_EVENT_URL=nats://nats:4222/
       - NATS_CONTEXT_URL=nats://nats:4222/
-      - OTLP_ENDPOINT=http://telegraf:4317/
+      - OTEL_METRIC_EXPORT_INTERVAL=1000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://telegraf:4317/
       # Application entry-point
       - APP_PATH=/app/main.pkl
       # Instantiate all state machines on this runtime
-      - INSTANTIATE=bell,gate,light,crossing
+      - INSTANTIATE=bell,gate,light,controller
       # Provide service bindings
       - SERVICE_BINDINGS_PATH=/app/services.pkl
     volumes:
@@ -63,8 +64,8 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - METRICS_INTERVAL=1000
-      - OTLP_ENDPOINT=http://telegraf:4317/
+      - OTEL_METRIC_EXPORT_INTERVAL=1000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://telegraf:4317/
     depends_on:
       - cirrina
   # The railway crossing sensor simulation
@@ -73,8 +74,8 @@ services:
       context: ./services/simulate_sensors
       dockerfile: Dockerfile
     environment:
-      - METRICS_INTERVAL=1000
-      - OTLP_ENDPOINT=http://telegraf:4317/
+      - OTEL_METRIC_EXPORT_INTERVAL=1000
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://telegraf:4317/
       - NATS_URL=nats://nats:4222/
       # Transmission interval at start
       - START_INTERVAL_IN_SECONDS=0.1
