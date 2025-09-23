@@ -12,4 +12,7 @@ This repository contains the following use case implementations:
 - [Railway Crossing](railway-crossing)<br>
   Simulation of a railway crossing including gate and light management.
 
+- [Surveillance System](surveillance-system)<br>
+  Simulation of a video surveillance system with person recognition.
+
 Individual use case descriptions and usage instructions can be found in the corresponding README files.

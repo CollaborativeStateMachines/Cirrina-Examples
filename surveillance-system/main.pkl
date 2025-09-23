@@ -1,5 +1,5 @@
-amends "csm:Csml"
-import "csm:Csml"
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
 
 import "detector.pkl"
 import "surveillance.pkl"
