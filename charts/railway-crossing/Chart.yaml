@@ -1,0 +1,14 @@
+apiVersion: v2
+name: railway-crossing
+description: Helm chart to deploy the Cirrina railway crossing use case
+type: application
+version: 1.0.0
+dependencies:
+  - name: cirrina
+    repository: "https://collaborativestatemachines.github.io/Cirrina-Helm/"
+  - name: nats
+    repository: "https://nats-io.github.io/k8s/helm/charts/"
+  - name: influxdb
+    repository: "https://helm.influxdata.com/"
+  - name: telegraf
+    repository: "https://helm.influxdata.com/"
