@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "railway-crossing.fullname" . }}-simulate-sensors
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "railway-crossing.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: simulate-sensors
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: simulate-sensors
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: simulate-sensors
+          image: "{{ .Values.simulateSensors.image.repository }}:{{ .Values.simulateSensors.image.tag }}"
+          env:
+            - name: NATS_URL
+              value: "{{ .Values.simulateSensors.natsUrl }}"
+            - name: START_INTERVAL_IN_SECONDS
+              value: "{{ .Values.simulateSensors.startIntervalSeconds }}"
+            - name: END_INTERVAL_IN_SECONDS
+              value: "{{ .Values.simulateSensors.endIntervalSeconds }}"
+{{- if .Values.simulateSensors.extraEnvVars }}
+{{- toYaml .Values.simulateSensors.extraEnvVars | nindent 12 }}
+{{- end }}

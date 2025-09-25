@@ -1,0 +1,7 @@
+foundPersons = "foundPersons"
+
+disarm = "disarm"
+
+analyzed = "analyzed"
+
+alarm = "alarm"

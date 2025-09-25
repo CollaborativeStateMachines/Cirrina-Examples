@@ -1,8 +1,8 @@
-import "csm:Csml"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
 
 import "events.pkl"
 
-/// Action that raises the gate up event.
+// Action that raises the gate up event.
 const raiseGateUpAction = new Csml.RaiseActionDescription {
   event {
     name    = events.gateUp
@@ -10,7 +10,7 @@ const raiseGateUpAction = new Csml.RaiseActionDescription {
   }
 }
 
-/// Action that raises the gate down event.
+// Action that raises the gate down event.
 const raiseGateDownAction = new Csml.RaiseActionDescription {
   event {
     name    = events.gateDown
@@ -18,7 +18,7 @@ const raiseGateDownAction = new Csml.RaiseActionDescription {
   }
 }
 
-/// Action that raises the light on event.
+// Action that raises the light on event.
 const raiseLightOnAction = new Csml.RaiseActionDescription {
   event {
     name    = events.lightOn
@@ -26,7 +26,7 @@ const raiseLightOnAction = new Csml.RaiseActionDescription {
   }
 }
 
-/// Action that raises the light off event.
+// Action that raises the light off event.
 const raiseLightOffAction = new Csml.RaiseActionDescription {
   event {
     name    = events.lightOff
@@ -42,12 +42,12 @@ const incrementNumTrainsPassed = new Csml.AssignActionDescription {
   }
 }
 
-/// Guard that passes when the event data (its value $value) is true.
+// Guard that passes when the event data (its value $value) is true.
 const isEventDataTrueGuard = new Csml.GuardDescription {
   expression = "$value == true"
 }
 
-/// Guard that passes when the event data (its value $value) is false.
+// Guard that passes when the event data (its value $value) is false.
 const isEventDataFalseGuard = new Csml.GuardDescription {
   expression = "$value == false"
 }

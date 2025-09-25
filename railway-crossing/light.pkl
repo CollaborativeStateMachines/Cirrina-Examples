@@ -1,28 +1,28 @@
-import "csm:Csml"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
 
 import "events.pkl"
 
-/// Action that invokes a service that turns the light on.
+// Action that invokes a service that turns the light on.
 const lightOnAction = new Csml.InvokeActionDescription {
   serviceType = "lightOn"
 }
 
-/// Action that invokes a service that turns the light off.
+// Action that invokes a service that turns the light off.
 const lightOffAction = new Csml.InvokeActionDescription {
   serviceType = "lightOff"
 }
 
-/// Light state machine, manages a light.
-///
-///                off      
-///            ┌───────┐   
-///            │       ▼   
-///         ╔═════╗ ┌─────┐
-///         ║ on  ║ │ off │
-///         ╚═════╝ └──┬──┘
-///            ▲       │   
-///            └───────┘   
-///                on      
+// Light state machine, manages a light.
+//
+//                off      
+//            ┌───────┐   
+//            │       ▼   
+//         ╔═════╗ ┌─────┐
+//         ║ on  ║ │ off │
+//         ╚═════╝ └──┬──┘
+//            ▲       │   
+//            └───────┘   
+//                on      
 class LightStateMachine extends Csml.StateMachineDescription {
   name = "light"
   states {

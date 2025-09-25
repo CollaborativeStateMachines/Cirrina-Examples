@@ -2,57 +2,48 @@ amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/ref
 
 bindings {
   new HttpServiceImplementationBinding {
-    name = "bellOn"
-    `local` = false
+    name = "cameraCapture"
+    `local` = true
     scheme = "http"
-    host = "railway-crossing-services"
+    host = "services"
     port = 8000
     endPoint = "/bell/on"
     method = "POST"
   }
   new HttpServiceImplementationBinding {
-    name = "bellOff"
+    name = "detectPersons"
     `local` = false
     scheme = "http"
-    host = "railway-crossing-services"
+    host = "services"
     port = 8000
     endPoint = "/bell/off"
     method = "POST"
   }
   new HttpServiceImplementationBinding {
-    name = "gateUp"
+    name = "alarmOn"
     `local` = false
     scheme = "http"
-    host = "railway-crossing-services"
+    host = "services"
     port = 8000
     endPoint = "/gate/up"
     method = "POST"
   }
   new HttpServiceImplementationBinding {
-    name = "gateDown"
+    name = "alarmOff"
     `local` = false
     scheme = "http"
-    host = "railway-crossing-services"
+    host = "services"
     port = 8000
     endPoint = "/gate/down"
     method = "POST"
   }
   new HttpServiceImplementationBinding {
-    name = "lightOn"
+    name = "analyze"
     `local` = false
     scheme = "http"
-    host = "railway-crossing-services"
+    host = "services"
     port = 8000
     endPoint = "/light/on"
-    method = "POST"
-  }
-  new HttpServiceImplementationBinding {
-    name = "lightOff"
-    `local` = false
-    scheme = "http"
-    host = "railway-crossing-services"
-    port = 8000
-    endPoint = "/light/off"
     method = "POST"
   }
 }
