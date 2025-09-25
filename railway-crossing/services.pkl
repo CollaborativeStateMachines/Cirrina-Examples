@@ -5,7 +5,7 @@ bindings {
     name = "bellOn"
     `local` = false
     scheme = "http"
-    host = "prod-railway-crossing-services.default.svc.cluster.local"
+    host = "railway-crossing-services"
     port = 8000
     endPoint = "/bell/on"
     method = "POST"
@@ -14,7 +14,7 @@ bindings {
     name = "bellOff"
     `local` = false
     scheme = "http"
-    host = "prod-railway-crossing-services.default.svc.cluster.local"
+    host = "railway-crossing-services"
     port = 8000
     endPoint = "/bell/off"
     method = "POST"
@@ -23,7 +23,7 @@ bindings {
     name = "gateUp"
     `local` = false
     scheme = "http"
-    host = "prod-railway-crossing-services.default.svc.cluster.local"
+    host = "railway-crossing-services"
     port = 8000
     endPoint = "/gate/up"
     method = "POST"
@@ -32,7 +32,7 @@ bindings {
     name = "gateDown"
     `local` = false
     scheme = "http"
-    host = "prod-railway-crossing-services.default.svc.cluster.local"
+    host = "railway-crossing-services"
     port = 8000
     endPoint = "/gate/down"
     method = "POST"
@@ -41,7 +41,7 @@ bindings {
     name = "lightOn"
     `local` = false
     scheme = "http"
-    host = "prod-railway-crossing-services.default.svc.cluster.local"
+    host = "railway-crossing-services"
     port = 8000
     endPoint = "/light/on"
     method = "POST"
@@ -50,7 +50,7 @@ bindings {
     name = "lightOff"
     `local` = false
     scheme = "http"
-    host = "prod-railway-crossing-services.default.svc.cluster.local"
+    host = "railway-crossing-services"
     port = 8000
     endPoint = "/light/off"
     method = "POST"

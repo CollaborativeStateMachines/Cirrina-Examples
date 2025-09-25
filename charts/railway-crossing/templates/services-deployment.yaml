@@ -37,10 +37,6 @@ spec:
         - name: services
           image: "{{ .Values.services.image.repository }}:{{ .Values.services.image.tag }}"
           env:
-            - name: OTEL_METRIC_EXPORT_INTERVAL
-              value: "{{ .Values.services.otel.metricExportInterval }}"
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "{{ .Values.services.otel.exporterOtlpEndpoint }}"
 {{- if .Values.services.extraEnvVars }}
 {{- toYaml .Values.services.extraEnvVars | nindent 12 }}
 {{- end }}

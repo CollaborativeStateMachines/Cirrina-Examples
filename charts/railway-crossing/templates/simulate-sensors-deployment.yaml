@@ -21,10 +21,6 @@ spec:
         - name: simulate-sensors
           image: "{{ .Values.simulateSensors.image.repository }}:{{ .Values.simulateSensors.image.tag }}"
           env:
-            - name: OTEL_METRIC_EXPORT_INTERVAL
-              value: "{{ .Values.simulateSensors.otel.metricExportInterval }}"
-            - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "{{ .Values.simulateSensors.otel.exporterOtlpEndpoint }}"
             - name: NATS_URL
               value: "{{ .Values.simulateSensors.natsUrl }}"
             - name: START_INTERVAL_IN_SECONDS

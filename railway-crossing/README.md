@@ -54,8 +54,9 @@ The `main.pkl` provides the entry point by describing the collaborative state ma
 
 ## Running
 
-The example can be executed using the provided Docker Compose file:
+A [Helm Chart](../charts/railway-crossing/) is provided to run this example inside Kubernetes. The Helm chart
+can be deployed using:
 
-```
-docker-compose up
+```terminal
+helm upgrade --kube-context kind-cluster1 --install railway-crossing . --namespace default
 ```
