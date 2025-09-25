@@ -43,8 +43,8 @@ class LightStateMachine extends Csml.StateMachineDescription {
       entry { lightOnAction }
       on {
         new {
-          event   = events.lightOn
-          actions { lightOnAction }
+          event  = events.lightOff
+          target = "off"
         }
       }
     }

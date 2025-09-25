@@ -6,7 +6,7 @@ import "events.pkl"
 const raiseGateUpAction = new Csml.RaiseActionDescription {
   event {
     name    = events.gateUp
-    channel = "external"
+    channel = "global"
   }
 }
 
@@ -14,7 +14,7 @@ const raiseGateUpAction = new Csml.RaiseActionDescription {
 const raiseGateDownAction = new Csml.RaiseActionDescription {
   event {
     name    = events.gateDown
-    channel = "external"
+    channel = "global"
   }
 }
 
@@ -22,7 +22,7 @@ const raiseGateDownAction = new Csml.RaiseActionDescription {
 const raiseLightOnAction = new Csml.RaiseActionDescription {
   event {
     name    = events.lightOn
-    channel = "external"
+    channel = "global"
   }
 }
 
@@ -30,7 +30,7 @@ const raiseLightOnAction = new Csml.RaiseActionDescription {
 const raiseLightOffAction = new Csml.RaiseActionDescription {
   event {
     name    = events.lightOff
-    channel = "external"
+    channel = "global"
   }
 }
 

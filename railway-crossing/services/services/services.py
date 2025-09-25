@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from starlette.responses import Response
 from starlette.status import HTTP_200_OK
@@ -26,6 +27,52 @@ class BellStatus(BaseModel):
 gate_statuses = {}
 light_statuses = {}
 bell_statuses = {}
+
+
+from fastapi.responses import HTMLResponse
+
+
+@app.get("/status", response_class=HTMLResponse)
+def visualize_status():
+    html = """
+    <html>
+    <head>
+        <title>Crossing Status</title>
+        <meta http-equiv="refresh" content="1">
+        <style>
+            table { border-collapse: collapse; font-family: Arial, sans-serif; }
+            th, td { border: 1px solid black; padding: 8px; text-align: center; }
+            th { background-color: #eee; }
+        </style>
+    </head>
+    <body>
+        <h1>Railway Crossing Status</h1>
+        <table>
+            <tr><th>ID</th><th>Type</th><th>Status</th></tr>
+    """
+
+    # Show gate statuses
+    for id, g in gate_statuses.items():
+        gate_color = "green" if g.status == "up" else "red"
+        html += f"<tr><td>{id}</td><td>Gate</td><td style='background-color:{gate_color}'>{g.status}</td></tr>"
+
+    # Show light statuses
+    for id, l in light_statuses.items():
+        light_color = "yellow" if l.status == "on" else "gray"
+        html += f"<tr><td>{id}</td><td>Light</td><td style='background-color:{light_color}'>{l.status}</td></tr>"
+
+    # Show bell statuses
+    for id, b in bell_statuses.items():
+        bell_color = "orange" if b.status == "on" else "gray"
+        html += f"<tr><td>{id}</td><td>Bell</td><td style='background-color:{bell_color}'>{b.status}</td></tr>"
+
+    html += """
+        </table>
+    </body>
+    </html>
+    """
+
+    return HTMLResponse(content=html)
 
 
 @app.post("/gate/down")

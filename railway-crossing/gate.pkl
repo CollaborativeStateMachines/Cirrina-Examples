@@ -8,7 +8,7 @@ const gateUpAction = new Csml.InvokeActionDescription {
   done {
     new {
       name    = events.bellOff
-      channel = "external"
+      channel = "global"
     }
   }
 }
@@ -17,7 +17,7 @@ const gateUpAction = new Csml.InvokeActionDescription {
 const raiseBellOnAction = new Csml.RaiseActionDescription {
   event {
     name    = events.bellOn
-    channel = "external"
+    channel = "global"
   }
 }
 
