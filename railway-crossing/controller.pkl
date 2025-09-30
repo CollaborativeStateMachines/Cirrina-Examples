@@ -127,7 +127,6 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
       entry {
         raiseGateUpAction
       }
-      
       on {
         new {
           event  = events.sensor
