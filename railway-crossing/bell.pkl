@@ -43,8 +43,8 @@ class BellStateMachine extends Csml.StateMachineDescription {
       entry { onAction }
       on {
         new {
-          event   = events.bellOn
-          actions { onAction }
+          event  = events.bellOff
+          target = "off"
         }
       }
     }
