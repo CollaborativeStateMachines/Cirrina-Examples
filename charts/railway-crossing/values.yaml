@@ -1,8 +1,13 @@
 namespace: default
 
+nats:
+  jetstream:
+    enabled: true
+
 cirrina:
   image:
-    tag: unstable
+    tag: sha-f084ad5
+    pullPolicy: Always
   appPath: "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/railway-crossing/main.pkl"
   serviceBindingsPath: "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/railway-crossing/services.pkl"
   instantiate: bell,gate,light,controller

@@ -40,3 +40,24 @@ spec:
 {{- if .Values.services.extraEnvVars }}
 {{- toYaml .Values.services.extraEnvVars | nindent 12 }}
 {{- end }}
+          ports:
+            - containerPort: 8000
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: railway-crossing-services
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "railway-crossing.labels" . | nindent 4 }}
+spec:
+  selector:
+    app.kubernetes.io/name: services
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+  type: ClusterIP
