@@ -2,6 +2,7 @@ import Event_pb2
 
 import asyncio
 import nats
+import random
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
@@ -13,7 +14,8 @@ import uuid
 import os
 import time
 
-TRAIN_SPEED_IN_MS = 33.3
+MIN_TRAIN_SPEED_IN_MS = 25
+MAX_TRAIN_SPEED_IN_MS = 38.89
 TRAIN_LENGTH_IN_M = 150.0
 
 START_INTERVAL_IN_SECONDS = float(os.environ["START_INTERVAL_IN_SECONDS"])
@@ -42,9 +44,9 @@ phase_counter = meter.create_counter("phase")
 
 
 class Train:
-    def __init__(self):
+    def __init__(self, speed):
         self._position = 0.0
-        self._speed_in_ms = TRAIN_SPEED_IN_MS
+        self._speed_in_ms = speed
         self._length = TRAIN_LENGTH_IN_M
 
     def update_position(self, delta_time):
@@ -55,6 +57,9 @@ class Train:
 
     def back_position(self):
         return self._position - self._length
+
+    def speed(self):
+        return self._speed_in_ms
 
 
 class Simulation:
@@ -70,6 +75,9 @@ class Simulation:
         self._sensor_positions = sensor_positions
         self._sensor_values = [False for _ in self._sensor_positions]
 
+        self._train_sensor_times = {}
+        self._train_calculated_speed = {}
+
         self._time_factor = time_factor
 
         self._nc = nc
@@ -77,15 +85,49 @@ class Simulation:
         self._start_time = time.time()
 
     def _new_train(self):
-        train = Train()
+        train = Train(random.uniform(MIN_TRAIN_SPEED_IN_MS, MAX_TRAIN_SPEED_IN_MS))
         self._trains.append(train)
+        # track enter/leave times for sensor 0
+        self._train_sensor_times[train] = {"enter": None, "leave": None}
 
     def _update_sensor_values(self):
-        for i, sensor_position in enumerate(self._sensor_positions):
-            self._sensor_values[i] = any(
-                train.back_position() <= sensor_position < train.front_position()
-                for train in self._trains
-            )
+        # Reset all sensors each tick
+        self._sensor_values = [False for _ in self._sensor_positions]
+        trains_to_remove = []
+
+        for train in self._trains:
+            # Remove train once it passes the last sensor
+            if train.back_position() > self._sensor_positions[-1]:
+                trains_to_remove.append(train)
+                continue
+
+            # Update sensor active states
+            for i, sensor_position in enumerate(self._sensor_positions):
+                if train.back_position() <= sensor_position < train.front_position():
+                    self._sensor_values[i] = True
+
+            # Calculate speed when passing sensor 0
+            train_times = self._train_sensor_times[train]
+            sensor_pos = self._sensor_positions[0]
+            if train.front_position() >= sensor_pos and train_times["enter"] is None:
+                train_times["enter"] = self._simulated_time_in_s
+            if (
+                train.back_position() > sensor_pos
+                and train_times["enter"] is not None
+                and train_times["leave"] is None
+            ):
+                train_times["leave"] = self._simulated_time_in_s
+                delta_t = train_times["leave"] - train_times["enter"]
+                if delta_t > 0:
+                    self._train_calculated_speed[train] = TRAIN_LENGTH_IN_M / delta_t
+                else:
+                    self._train_calculated_speed[train] = train.speed()
+
+        # Clean up departed trains
+        for train in trains_to_remove:
+            self._trains.remove(train)
+            self._train_sensor_times.pop(train, None)
+            self._train_calculated_speed.pop(train, None)
 
     def _compute_broadcast_interval(self):
         elapsed_time = time.time() - self._start_time
@@ -121,14 +163,7 @@ class Simulation:
             for train in self._trains:
                 train.update_position(delta_simulation_time)
 
-            # Remove trains beyond the kill point
-            self._trains = [
-                train
-                for train in self._trains
-                if train.back_position() < self._sensor_positions[-1]
-            ]
-
-            # Update sensor values
+            # Remove trains beyond the kill point and update sensors
             self._update_sensor_values()
 
             # Broadcast sensor values
@@ -138,13 +173,16 @@ class Simulation:
             await asyncio.sleep(current_interval)
 
     async def _broadcast_sensor_values(self):
-        s = False
-
-        for i, sensor_value in enumerate(self._sensor_values):
-            s = s or sensor_value
+        s = any(self._sensor_values)
+        current_speed = 0.0
+        for train in self._trains:
+            if train in self._train_calculated_speed:
+                current_speed = self._train_calculated_speed[train]
+                break
 
         subject = "peripheral.sensor"
-
+        print(s)
+        print(current_speed)
         # Specify event data
         event = Event_pb2.Event()
 
@@ -153,11 +191,15 @@ class Simulation:
         event.name = "sensor"
         event.channel = Event_pb2.Event.PERIPHERAL
 
-        # Specify variable data
-        variable = event.data.add()
+        # Specify bool variable data
+        variable_bool = event.data.add()
+        variable_bool.name = "value"
+        variable_bool.value.bool = s
 
-        variable.name = "value"
-        variable.value.bool = s
+        # Specify speed variable data
+        variable_speed = event.data.add()
+        variable_speed.name = "trainSpeed"
+        variable_speed.value.double = current_speed
 
         # Publish event
         await self._nc.publish(subject, event.SerializeToString())

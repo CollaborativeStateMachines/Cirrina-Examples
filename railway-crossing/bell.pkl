@@ -5,6 +5,12 @@ import "events.pkl"
 // Action that invokes a service that turns the bell on.
 const onAction = new Csml.InvokeActionDescription {
   serviceType = "bellOn"
+  input {
+    new {
+      name = "approachingSpeed"
+      value = "$approachingSpeed"
+    }
+  }
 }
 
 // Action that invokes a service that turns the bell off.

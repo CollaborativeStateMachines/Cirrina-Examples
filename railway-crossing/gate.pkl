@@ -17,6 +17,12 @@ const gateUpAction = new Csml.InvokeActionDescription {
 const raiseBellOnAction = new Csml.RaiseActionDescription {
   event {
     name    = events.bellOn
+    data {
+      new {
+        name = "approachingSpeed"
+        value = "$approachingSpeed"
+      }
+    }
     channel = "global"
   }
 }
@@ -24,6 +30,12 @@ const raiseBellOnAction = new Csml.RaiseActionDescription {
 // Action that invokes a service that puts the gate down.
 const gateDownAction = new Csml.InvokeActionDescription {
   serviceType = "gateDown"
+  input {
+    new {
+      name = "approachingSpeed"
+      value = "$approachingSpeed"
+    }
+  }
 }
 
 // Gate state machine, manages a gate.

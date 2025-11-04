@@ -14,6 +14,12 @@ const raiseGateUpAction = new Csml.RaiseActionDescription {
 const raiseGateDownAction = new Csml.RaiseActionDescription {
   event {
     name    = events.gateDown
+    data {
+      new {
+        name = "approachingSpeed"
+        value = "approachingSpeed"
+      }
+    }
     channel = "global"
   }
 }
@@ -31,6 +37,13 @@ const raiseLightOffAction = new Csml.RaiseActionDescription {
   event {
     name    = events.lightOff
     channel = "global"
+  }
+}
+
+const assignTrainSpeedAction = new Csml.AssignActionDescription {
+  variable = new {
+    name = "approachingSpeed"
+    value = "$trainSpeed"
   }
 }
 
@@ -59,6 +72,10 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
       new {
         // IDEA: Add analytics of multiple crossings
         name  = "numTrainsPassed"
+        value = "0"
+      }
+      new {
+        name = "approachingSpeed"
         value = "0"
       }
     }
@@ -101,6 +118,7 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
     new {
       name = "close"
       entry {
+        assignTrainSpeedAction
         raiseGateDownAction
       }
       on {

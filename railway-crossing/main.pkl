@@ -14,3 +14,19 @@ stateMachines {
   new gate.GateStateMachine {}
   new light.LightStateMachine {}
 }
+persistentContext {
+  variables {
+    new {
+      name = "status"
+      value = "'none'"
+    }
+    new {
+      name = "lastStatusChange"
+      value = "'none'"
+    }
+    new {
+      name = "status"
+      value = "'none'"
+    }
+  }
+}

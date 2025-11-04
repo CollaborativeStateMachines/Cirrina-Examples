@@ -42,7 +42,7 @@ class StateMachine extends Csml.StateMachineDescription {
       after {
         new Csml.TimeoutActionDescription {
           name = "nextNumber"
-          delay = "15"
+          delay = "25"
           action = new Csml.RaiseActionDescription {
             event {
               name = "nextNumber"
@@ -82,7 +82,7 @@ class StateMachine extends Csml.StateMachineDescription {
             }
             }
             }
-            
+
           }
         }
         new Csml.OnTransitionDescription {
