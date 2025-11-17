@@ -27,13 +27,30 @@ const raiseBellOnAction = new Csml.RaiseActionDescription {
   }
 }
 
-// Action that invokes a service that puts the gate down.
+// Action that invokes a service that puts the gate down. Appends the current train speed as input and receives the delay after which the gate is lowered as output.
 const gateDownAction = new Csml.InvokeActionDescription {
   serviceType = "gateDown"
   input {
     new {
       name = "approachingSpeed"
       value = "$approachingSpeed"
+    }
+  }
+  output {
+    new {
+      reference = "downDelay"
+    }
+  }
+  done {
+    new {
+      name = "gateIsDown"
+      data {
+        new {
+          name = "downDelay"
+          value = "downDelay"
+        }
+      }
+      channel = "global"
     }
   }
 }
@@ -52,6 +69,14 @@ const gateDownAction = new Csml.InvokeActionDescription {
 //                up      
 class GateStateMachine extends Csml.StateMachineDescription {
   name = "gate"
+  localContext {
+    variables {
+      new {
+        name = "downDelay"
+        value = "0"
+      }
+    }
+  }
   states {
     // The gate is initially up.
     new {

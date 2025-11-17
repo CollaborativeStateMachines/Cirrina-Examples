@@ -1,10 +1,13 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, BackgroundTasks
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from starlette.responses import Response
 from starlette.status import HTTP_200_OK
-
-import time
+import datetime
+import ContextVariable_pb2
+import Event_pb2
+import logging
+import time, asyncio
 
 app = FastAPI()
 
@@ -22,7 +25,6 @@ class LightStatus(BaseModel):
 class BellStatus(BaseModel):
     status: str
     last: float
-
 
 gate_statuses = {}
 light_statuses = {}
@@ -76,7 +78,26 @@ def visualize_status():
 
 
 @app.post("/gate/down")
-def gate_down(request: Request):
+async def gate_down(request: Request, background_tasks: BackgroundTasks):
+    # Read the raw request body
+    body = await request.body()
+
+    # Parse the protobuf message
+    context_variables = ContextVariable_pb2.ContextVariables()
+    context_variables.ParseFromString(body)
+
+    # Extract the approachingSpeed value
+    approaching_speed = None
+    for context_variable in context_variables.data:
+        if context_variable.name == "approachingSpeed":
+            approaching_speed = context_variable.value.double
+            break
+
+    if approaching_speed is None:
+        return {"error": "approachingSpeed not found in context variables"}
+
+    seconds_until_arrival = 1000 / approaching_speed
+    seconds_to_close = seconds_until_arrival - 15
     # Retrieve the sender ID
     id = request.headers.get("Cirrina-Sender-ID")
 
@@ -84,10 +105,17 @@ def gate_down(request: Request):
     if id not in gate_statuses:
         gate_statuses[id] = GateStatus(status="up", last=time.time())
 
-    # Update its state
-    gate_statuses[id].status = "down"
+    # Update its state 15 seconds before projected arrival
+    background_tasks.add_task(set_gate_down_in, id, seconds_to_close)
 
-    return Response(status_code=HTTP_200_OK)
+    response_vars = ContextVariable_pb2.ContextVariables()
+    response_vars.data.add(
+    name="downDelay",
+    value=ContextVariable_pb2.Value(double=seconds_to_close)
+    )
+    # Serialize response
+    response_body = response_vars.SerializeToString()
+    return Response(content=response_body, media_type="application/x-protobuf", status_code=200)
 
 
 @app.post("/gate/up")
@@ -106,7 +134,22 @@ def gate_up(request: Request):
 
 
 @app.post("/light/on")
-async def light_on(request: Request):
+async def light_on(request: Request, background_tasks: BackgroundTasks):
+    # Read the raw request body
+    body = await request.body()
+
+    # Parse the protobuf message
+    context_variables = ContextVariable_pb2.ContextVariables()
+    context_variables.ParseFromString(body)
+
+    # Extract the approachingSpeed value
+    approaching_speed = None
+    for context_variable in context_variables.data:
+        if context_variable.name == "approachingSpeed":
+            approaching_speed = context_variable.value.double
+            break
+
+    seconds_until_arrival = 1000 / approaching_speed
     # Retrieve the sender ID
     id = request.headers.get("Cirrina-Sender-ID")
 
@@ -115,7 +158,7 @@ async def light_on(request: Request):
         light_statuses[id] = LightStatus(status="off", last=time.time())
 
     # Update its state
-    light_statuses[id].status = "on"
+    background_tasks.add_task(set_light_on_in, id, seconds_until_arrival - 15)
 
     return Response(status_code=HTTP_200_OK)
 
@@ -134,9 +177,37 @@ async def light_off(request: Request):
 
     return Response(status_code=HTTP_200_OK)
 
+@app.post("/light/earlyWarning")
+async def light_earlyWarning(request: Request):
+    # Retrieve the sender ID
+    id = request.headers.get("Cirrina-Sender-ID")
+
+    # Create the gate status if not seen before
+    if id not in light_statuses:
+        light_statuses[id] = LightStatus(status="earlyWarning", last=time.time())
+
+    # Update its state
+    light_statuses[id].status = "earlyWarning"
+
+    return Response(status_code=HTTP_200_OK)
 
 @app.post("/bell/on")
-async def bell_on(request: Request):
+async def bell_on(request: Request, background_tasks: BackgroundTasks):
+    # Read the raw request body
+    body = await request.body()
+
+    # Parse the protobuf message
+    context_variables = ContextVariable_pb2.ContextVariables()
+    context_variables.ParseFromString(body)
+
+    # Extract the approachingSpeed value
+    approaching_speed = None
+    for context_variable in context_variables.data:
+        if context_variable.name == "approachingSpeed":
+            approaching_speed = context_variable.value.double
+            break
+
+    seconds_until_arrival = 1000 / approaching_speed
     # Retrieve the sender ID
     id = request.headers.get("Cirrina-Sender-ID")
 
@@ -144,8 +215,8 @@ async def bell_on(request: Request):
     if id not in bell_statuses:
         bell_statuses[id] = BellStatus(status="off", last=time.time())
 
-    # Update its state
-    bell_statuses[id].status = "on"
+    # Update its state 15 seconds before projected arrival
+    background_tasks.add_task(set_bell_on_in, id, seconds_until_arrival - 15)
 
     return Response(status_code=HTTP_200_OK)
 
@@ -163,3 +234,52 @@ async def bell_off(request: Request):
     bell_statuses[id].status = "off"
 
     return Response(status_code=HTTP_200_OK)
+
+async def set_gate_down_in(id: str, delay: float):
+    # Delay lowering of gate by given value
+    if delay > 0:
+        await asyncio.sleep(delay)
+
+    # Update its state
+    gate_statuses[id].status = "down"
+    gate_statuses[id].last = time.time()
+
+async def set_bell_on_in(id: str, delay: float):
+    # Delay activation of bell by given value
+    if delay > 0:
+        await asyncio.sleep(delay)
+
+    # Update its state
+    bell_statuses[id].status = "on"
+    bell_statuses[id].last = time.time()
+
+async def set_light_on_in(id: str, delay: float):
+    # Delay activation of lights by given value
+    if delay > 0:
+        await asyncio.sleep(delay)
+
+    # Update its state
+    light_statuses[id].status = "on"
+    light_statuses[id].last = time.time()
+    logger.info(f"Light {id} set to ON after {delay:.2f} seconds")
+
+@app.post("/getTimestamp")
+async def getTimestamp(request: Request):
+    # Retrieve unix timestamp
+    timestamp = datetime.datetime.now().timestamp()
+
+    # Add data to context variable
+    response_vars = ContextVariable_pb2.ContextVariables()
+    response_vars.data.add(
+        name="lastUpdate_Timestamp",
+        value=ContextVariable_pb2.Value(double=timestamp)
+    )
+    # Serialize response
+    response_body = response_vars.SerializeToString()
+    return Response(
+            content=response_body,
+            media_type="application/x-protobuf",
+            status_code=200
+        )
+
+

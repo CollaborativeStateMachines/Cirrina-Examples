@@ -4,6 +4,8 @@ COPY requirements.txt /tmp/requirements.txt
 RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
 WORKDIR /app
+COPY ContextVariable_pb2.py .
+COPY Event_pb2.py .
 COPY services.py .
 
 CMD ["uvicorn", "services:app", "--host", "0.0.0.0", "--workers", "33", "--port", "8000"]

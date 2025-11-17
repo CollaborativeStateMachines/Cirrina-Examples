@@ -55,4 +55,22 @@ bindings {
     endPoint = "/light/off"
     method = "POST"
   }
+  new HttpServiceImplementationBinding {
+    name = "lightEarlyWarning"
+    `local` = false
+    scheme = "http"
+    host = "railway-crossing-services"
+    port = 8000
+    endPoint = "/light/earlyWarning"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "timestamp"
+    `local` = false
+    scheme = "http"
+    host = "railway-crossing-services"
+    port = 8000
+    endPoint = "/getTimestamp"
+    method = "POST"
+  }
 }

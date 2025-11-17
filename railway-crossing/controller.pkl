@@ -10,7 +10,7 @@ const raiseGateUpAction = new Csml.RaiseActionDescription {
   }
 }
 
-// Action that raises the gate down event.
+// Action that raises the gate down event, includes the train speed as event data.
 const raiseGateDownAction = new Csml.RaiseActionDescription {
   event {
     name    = events.gateDown
@@ -24,10 +24,16 @@ const raiseGateDownAction = new Csml.RaiseActionDescription {
   }
 }
 
-// Action that raises the light on event.
+// Action that raises the light on event, includes the train speed as event data.
 const raiseLightOnAction = new Csml.RaiseActionDescription {
   event {
     name    = events.lightOn
+    data {
+      new {
+        name = "approachingSpeed"
+        value = "approachingSpeed"
+      }
+    }
     channel = "global"
   }
 }
@@ -40,10 +46,65 @@ const raiseLightOffAction = new Csml.RaiseActionDescription {
   }
 }
 
+// Action that raises the light earlz warning event.
+const raiseLightEarlyWarningAction  = new Csml.RaiseActionDescription {
+  event {
+    name = events.lightEarlyWarning
+    channel = "global"
+  }
+}
+
+// Action that raises the train on the way event which is an early warning for the adjacent crossing, includes the train speed as event data.
+const raiseTrainOnTheWay = new Csml.RaiseActionDescription {
+  event {
+    name = events.trainOnTheWay
+    data {
+      new {
+        name = "approachingSpeed"
+        value = "approachingSpeed"
+      }
+    }
+    channel = "global"
+  }
+}
+
+// Action that invokes a service that returns the current unix timestamp and raises the 'timestampUpdated' event on completion.
+const getTimestampAction = new Csml.InvokeActionDescription {
+  serviceType = "timestamp"
+  output {
+    new {
+      reference = "lastUpdate_Timestamp"
+    }
+  }
+  done {
+    new {
+      name = "timestampUpdated"
+      channel = "internal"
+    }
+  }
+}
+
+// Action to assign the train speed value to the local context variable.
 const assignTrainSpeedAction = new Csml.AssignActionDescription {
   variable = new {
     name = "approachingSpeed"
     value = "$trainSpeed"
+  }
+}
+
+// Action to assign the calculated delay value from the event data to the local context variable.
+const assignDelayValue = new Csml.AssignActionDescription {
+  variable = new {
+    name = "signalDelay"
+    value = "$downDelay"
+  }
+}
+
+// Action to calculate the timestamp when the gate is down and assign it to the local context variable.
+const assignGateDownTimestamp = new Csml.AssignActionDescription {
+  variable = new {
+    name = "gateDownTime"
+    value = "lastUpdate_Timestamp + signalDelay"
   }
 }
 
@@ -55,6 +116,7 @@ const incrementNumTrainsPassed = new Csml.AssignActionDescription {
   }
 }
 
+
 // Guard that passes when the event data (its value $value) is true.
 const isEventDataTrueGuard = new Csml.GuardDescription {
   expression = "$value == true"
@@ -65,18 +127,127 @@ const isEventDataFalseGuard = new Csml.GuardDescription {
   expression = "$value == false"
 }
 
+// Function to append a timestamp to a list in the state map where the key is the current state.
+const function appendTimestamp(smName : String, stateName : String) : Csml.AssignActionDescription =
+  new Csml.AssignActionDescription {
+    variable = new {
+      name = smName + "_State"
+      value =
+        "(function(map, state, ts) { "
+        + "if (map == '{:}') { "
+        + "map = new('java.util.HashMap'); "
+        + "} "
+        + "var list = map.get(state); "
+        + "if (list == null) { "
+        + "list = new('java.util.ArrayList'); "
+        + "map.put(state, list); "
+        + "} "
+        + "list.add(ts); "
+        + "return map; "
+        + "})(" + smName + "_State, '" + stateName + "', lastUpdate_Timestamp)"
+    }
+  }
+
+// Function to update the numsTrainsPassed key with the current value.
+const function updateTrainCount(smName : String) : Csml.AssignActionDescription
+  = new Csml.AssignActionDescription {
+    variable = new {
+      name = smName + "_State"
+      value =
+        "(function(map, count) { "
+        + "if (map == '{:}') { "
+        + "map = new('java.util.HashMap'); "
+        + "} "
+        + "map.put('numsTrainsPassed', count); "
+        + "return map; "
+        + "})(" + smName + "_State, numTrainsPassed)"
+    }
+  }
+
+// Function to append the current train speed to the state map where the key is 'trainSpeed'.
+const function appendSpeed(smName : String) : Csml.AssignActionDescription =
+  new Csml.AssignActionDescription {
+    variable = new {
+      name = smName + "_State"
+      value =
+        "(function(map, speed) { "
+        + "if (map == '{:}') { "
+        + "map = new('java.util.HashMap'); "
+        + "} "
+        + "var list = map.get('trainSpeed'); "
+        + "if (list == null) { "
+        + "list = new('java.util.ArrayList'); "
+        + "map.put('trainSpeed', list)"
+        + "} "
+        + "list.add(speed); "
+        + "return map; "
+        + "})(" + smName + "_State, approachingSpeed)"
+    }
+  }
+
+// Function to append the calculated delay for warning signals to the state map where the key is 'signalDelay'.
+const function appendSignalDelay(smName : String) : Csml.AssignActionDescription =
+  new Csml.AssignActionDescription {
+    variable = new {
+      name = smName + "_State"
+      value =
+        "(function(map, cd) { "
+        + "if (map == '{:}') { "
+        + "map = new('java.util.HashMap'); "
+        + "} "
+        + "var list = map.get('signalDelay'); "
+        + "if (list == null) { "
+        + "list = new('java.util.ArrayList'); "
+        + "map.put('signalDelay', list)"
+        + "} "
+        + "list.add(cd); "
+        + "return map; "
+        + "})(" + smName + "_State, signalDelay)"
+    }
+  }
+
+// Function to append the total time the gate was down to the state map where the key is 'downTime'.
+const function appendDownTime(smName : String) : Csml.AssignActionDescription =
+  new Csml.AssignActionDescription {
+    variable = new {
+      name = smName + "_State"
+      value =
+        "(function(map, dt) { "
+        + "if (map == '{:}') { "
+        + "map = new('java.util.HashMap'); "
+        + "} "
+        + "var list = map.get('downTime'); "
+        + "if (list == null) { "
+        + "list = new('java.util.ArrayList'); "
+        + "map.put('downTime', list)"
+        + "} "
+        + "list.add(dt); "
+        + "return map; "
+        + "})(" + smName + "_State, (lastUpdate_Timestamp - gateDownTime))"
+    }
+  }
+
+// Map defining all local context variables for ControllerStateMachine.
+const localVariables = Map("numTrainsPassed", "0", "approachingSpeed", "0", "gateDownTime", "0")
+
 class ControllerStateMachine extends Csml.StateMachineDescription {
   name = "controller"
-  localContext {
+  local self = this
+  persistentContext {
     variables {
       new {
-        // IDEA: Add analytics of multiple crossings
-        name  = "numTrainsPassed"
-        value = "0"
+        name = self.name + "_State"
+        value = "{:}"
       }
-      new {
-        name = "approachingSpeed"
-        value = "0"
+    }
+  }
+  localContext {
+    variables {
+      for (_var, _val in localVariables) {
+        new {
+          name = _var
+          value = _val
+        }
       }
     }
   }
@@ -96,7 +267,66 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "away"
+      local selfState = this
+      localContext {
+        variables {
+          new {
+            name = "lastUpdate_Timestamp"
+            value = "0"
+          }
+        }
+      }
+      entry  {
+        getTimestampAction
+      }
       on {
+        new {
+          event  = "timestampUpdated"
+          actions {
+            appendTimestamp(self.name, selfState.name)
+          }
+        }
+        new {
+          event  = events.sensor
+          target = "approach"
+          guards { isEventDataTrueGuard }
+        }
+        new {
+          event = events.trainOnTheWay
+          actions {
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "approachingSpeed"
+                value = "$approachingSpeed"
+              }
+            }
+          }
+          target = "earlyWarning"
+        }
+      }
+    }
+    new {
+      name = "earlyWarning"
+      local selfState = this
+      localContext {
+        variables {
+          new {
+            name = "lastUpdate_Timestamp"
+            value = "0"
+          }
+        }
+      }
+      entry {
+        raiseLightEarlyWarningAction
+        getTimestampAction
+      }
+      on {
+        new {
+          event = "timestampUpdated"
+          actions {
+            appendTimestamp(self.name, selfState.name)
+          }
+        }
         new {
           event  = events.sensor
           target = "approach"
@@ -106,8 +336,25 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "approach"
-      entry { raiseLightOnAction }
+      local selfState = this
+      localContext {
+        variables {
+          new {
+            name = "lastUpdate_Timestamp"
+            value = "0"
+          }
+        }
+      }
+      entry {
+        getTimestampAction
+      }
       on {
+        new {
+          event = "timestampUpdated"
+          actions {
+            appendTimestamp(self.name, selfState.name)
+          }
+        }
         new {
           event  = events.sensor
           target = "close"
@@ -117,11 +364,41 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "close"
+      local selfState = this
+      localContext {
+        variables {
+          new {
+            name = "signalDelay"
+            value = "0"
+          }
+          new {
+            name = "lastUpdate_Timestamp"
+            value = "0"
+          }
+        }
+      }
       entry {
+        getTimestampAction
         assignTrainSpeedAction
         raiseGateDownAction
+        raiseLightOnAction
       }
       on {
+        new {
+          event = "gateIsDown"
+          actions {
+            assignDelayValue
+            appendSignalDelay(self.name)
+            assignGateDownTimestamp
+          }
+        }
+        new {
+          event = "timestampUpdated"
+          actions {
+            appendTimestamp(self.name, selfState.name)
+            appendSpeed(self.name)
+          }
+        }
         new {
           event  = events.sensor
           target = "present"
@@ -131,8 +408,27 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "present"
-      entry { incrementNumTrainsPassed }
+      local selfState = this
+      localContext {
+        variables {
+          new {
+            name = "lastUpdate_Timestamp"
+            value = "0"
+          }
+        }
+      }
+      entry {
+        getTimestampAction
+        incrementNumTrainsPassed
+      }
       on {
+        new {
+          event = "timestampUpdated"
+          actions {
+            appendTimestamp(self.name, selfState.name)
+            updateTrainCount(self.name)
+          }
+        }
         new {
           event  = events.sensor
           target = "leaving"
@@ -142,10 +438,28 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "leaving"
+      local selfState = this
+      localContext {
+        variables {
+          new {
+            name = "lastUpdate_Timestamp"
+            value = "0"
+          }
+        }
+      }
       entry {
+        getTimestampAction
         raiseGateUpAction
+        raiseTrainOnTheWay
       }
       on {
+        new {
+          event = "timestampUpdated"
+          actions {
+            appendTimestamp(self.name, selfState.name)
+            appendDownTime(self.name)
+          }
+        }
         new {
           event  = events.sensor
           target = "left"
@@ -155,10 +469,26 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "left"
+      local selfState = this
+      localContext {
+        variables {
+          new {
+            name = "lastUpdate_Timestamp"
+            value = "0"
+          }
+        }
+      }
       entry {
+        getTimestampAction
         raiseLightOffAction
       }
       on {
+        new {
+          event = "timestampUpdated"
+          actions {
+            appendTimestamp(self.name, selfState.name)
+          }
+        }
         new {
           event  = events.sensor
           target = "away"

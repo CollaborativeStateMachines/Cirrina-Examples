@@ -5,11 +5,22 @@ import "events.pkl"
 // Action that invokes a service that turns the light on.
 const lightOnAction = new Csml.InvokeActionDescription {
   serviceType = "lightOn"
+  input {
+    new {
+      name = "approachingSpeed"
+      value = "$approachingSpeed"
+    }
+  }
 }
 
 // Action that invokes a service that turns the light off.
 const lightOffAction = new Csml.InvokeActionDescription {
   serviceType = "lightOff"
+}
+
+// Action that invokes a service that turns the light to an early warning state.
+const lightEarlyWarningAction = new Csml.InvokeActionDescription {
+  serviceType = "lightEarlyWarning"
 }
 
 // Light state machine, manages a light.
@@ -28,14 +39,17 @@ class LightStateMachine extends Csml.StateMachineDescription {
   states {
     // The light is initially off.
     new {
-      name    = "off"
+      name = "off"
       initial = true
       entry { lightOffAction }
       on {
         new {
-          event  = events.lightOn
+          event = events.lightOn
           target = "on"
         }
+        new {
+          event = events.lightEarlyWarning
+          target = "earlyWarning" }
       }
     }
     new {
@@ -43,8 +57,18 @@ class LightStateMachine extends Csml.StateMachineDescription {
       entry { lightOnAction }
       on {
         new {
-          event  = events.lightOff
+          event = events.lightOff
           target = "off"
+        }
+      }
+    }
+    new {
+      name = "earlyWarning"
+      entry { lightEarlyWarningAction }
+      on {
+        new {
+          event = events.lightOn
+          target = "on"
         }
       }
     }

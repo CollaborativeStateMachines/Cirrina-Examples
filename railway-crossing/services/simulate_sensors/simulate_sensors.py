@@ -22,9 +22,9 @@ START_INTERVAL_IN_SECONDS = float(os.environ["START_INTERVAL_IN_SECONDS"])
 END_INTERVAL_IN_SECONDS = float(os.environ["END_INTERVAL_IN_SECONDS"])
 DURATION_IN_SECONDS = 300
 
-SENSOR_POSITIONS = [0.0, 200.0, 400.0]
+SENSOR_POSITIONS = [0.0, 1000.0, 1200.0]
 
-TRAINS_INTERVAL_IN_S = 30.0
+TRAINS_INTERVAL_IN_S = 60.0
 
 TIME_FACTOR = 1.0
 
@@ -123,7 +123,7 @@ class Simulation:
                 else:
                     self._train_calculated_speed[train] = train.speed()
 
-        # Clean up departed trains
+        # Remove departed trains
         for train in trains_to_remove:
             self._trains.remove(train)
             self._train_sensor_times.pop(train, None)
@@ -181,8 +181,6 @@ class Simulation:
                 break
 
         subject = "peripheral.sensor"
-        print(s)
-        print(current_speed)
         # Specify event data
         event = Event_pb2.Event()
 
