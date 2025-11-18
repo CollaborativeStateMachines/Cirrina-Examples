@@ -263,23 +263,4 @@ async def set_light_on_in(id: str, delay: float):
     light_statuses[id].last = time.time()
     logger.info(f"Light {id} set to ON after {delay:.2f} seconds")
 
-@app.post("/getTimestamp")
-async def getTimestamp(request: Request):
-    # Retrieve unix timestamp
-    timestamp = datetime.datetime.now().timestamp()
-
-    # Add data to context variable
-    response_vars = ContextVariable_pb2.ContextVariables()
-    response_vars.data.add(
-        name="lastUpdate_Timestamp",
-        value=ContextVariable_pb2.Value(double=timestamp)
-    )
-    # Serialize response
-    response_body = response_vars.SerializeToString()
-    return Response(
-            content=response_body,
-            media_type="application/x-protobuf",
-            status_code=200
-        )
-
 
