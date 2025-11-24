@@ -8,6 +8,16 @@ const gateUpAction = new Csml.InvokeActionDescription {
   done {
     new {
       name    = events.bellOff
+      data {
+        new {
+          name = "traceId"
+          value = "$traceId"
+        }
+        new {
+          name = "spanId"
+          value = "$spanId"
+        }
+      }
       channel = "global"
     }
   }
@@ -78,10 +88,19 @@ class GateStateMachine extends Csml.StateMachineDescription {
     }
   }
   states {
+    new{
+      name = "init"
+      initial = true
+      on {
+        new {
+          event = events.gateUp
+          target = "up"
+        }
+      }
+    }
     // The gate is initially up.
     new {
-      name    = "up"
-      initial = true
+      name = "up"
       entry { gateUpAction }
       on {
         new {

@@ -5,7 +5,17 @@ import "events.pkl"
 // Action that raises the gate up event.
 const raiseGateUpAction = new Csml.RaiseActionDescription {
   event {
-    name    = events.gateUp
+    name = events.gateUp
+    data {
+      new {
+        name = "traceId"
+        value = "$traceId"
+      }
+      new {
+        name = "spanId"
+        value = "$spanId"
+      }
+    }
     channel = "global"
   }
 }
@@ -102,7 +112,22 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
       initial = true
       entry {
         raiseLightOffAction
-        raiseGateUpAction
+        new Csml.RaiseActionDescription {
+          event {
+            name = events.gateUp
+            data {
+              new {
+                name = "traceId"
+                value = "''"
+              }
+              new {
+                name = "spanId"
+                value = "''"
+              }
+            }
+            channel = "global"
+          }
+        }
       }
       always {
         new {
@@ -119,9 +144,6 @@ class ControllerStateMachine extends Csml.StateMachineDescription {
             value = "utility:now()"
           }
         }
-      }
-      entry {
-
       }
       on {
         new {
