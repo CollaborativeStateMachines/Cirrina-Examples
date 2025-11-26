@@ -19,17 +19,17 @@ import uuid
 import os
 import time
 
-MIN_TRAIN_SPEED_IN_MS = 25
-MAX_TRAIN_SPEED_IN_MS = 38.89
+MIN_TRAIN_SPEED_IN_MS = 2500
+MAX_TRAIN_SPEED_IN_MS = 2500
 TRAIN_LENGTH_IN_M = 150.0
 
 START_INTERVAL_IN_SECONDS = float(os.environ["START_INTERVAL_IN_SECONDS"])
 END_INTERVAL_IN_SECONDS = float(os.environ["END_INTERVAL_IN_SECONDS"])
 DURATION_IN_SECONDS = 300
 
-SENSOR_POSITIONS = [0.0, 1000.0, 1200.0]
+SENSOR_POSITIONS = [0.0, 1000.0, 1500.0]
 
-TRAINS_INTERVAL_IN_S = 60.0
+TRAINS_INTERVAL_IN_S = 1
 
 TIME_FACTOR = 1.0
 
@@ -53,7 +53,7 @@ span_processor = BatchSpanProcessor(span_exporter)
 trace_provider.add_span_processor(span_processor)
 trace.set_tracer_provider(trace_provider)
 tracer = trace.get_tracer(__name__)
-
+c = 0
 
 class Train:
     def __init__(self, speed):
@@ -97,8 +97,10 @@ class Simulation:
         self._start_time = time.time()
 
     def _new_train(self):
+        global c
         train = Train(random.uniform(MIN_TRAIN_SPEED_IN_MS, MAX_TRAIN_SPEED_IN_MS))
         self._trains.append(train)
+        c += 1
         # track enter/leave times for sensor 0
         self._train_sensor_times[train] = {"enter": None, "leave": None}
 
@@ -156,10 +158,10 @@ class Simulation:
         ) * (elapsed_time / DURATION_IN_SECONDS)
 
     async def simulate(self):
-        while True:
+        while c < 100:
+            start_time = time.time()
             # Compute current broadcast interval
             current_interval = self._compute_broadcast_interval()
-
             current_simulation_time = self._simulated_time_in_s
             delta_simulation_time = current_interval * self._time_factor
 
@@ -182,7 +184,7 @@ class Simulation:
             await self._broadcast_sensor_values()
 
             # Sleep to maintain broadcast rate
-            await asyncio.sleep(current_interval)
+            await asyncio.sleep(current_interval - (time.time() - start_time) if (current_interval - (time.time() - start_time)) > 0 else 0)
 
     async def _broadcast_sensor_values(self):
 
@@ -226,9 +228,8 @@ class Simulation:
             variable_spanId.value.string = spanId
 
             # Publish event
+            print(s)
             await self._nc.publish(subject, event.SerializeToString())
-
-        events_published_counter.add(1)
 
 
 async def main():
