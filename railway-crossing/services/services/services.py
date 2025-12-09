@@ -194,22 +194,6 @@ async def light_off(request: Request):
 
     return Response(status_code=HTTP_200_OK)
 
-
-@app.post("/light/earlyWarning")
-async def light_earlyWarning(request: Request):
-    # Retrieve the sender ID
-    id = request.headers.get("Cirrina-Sender-ID")
-
-    # Create the gate status if not seen before
-    if id not in light_statuses:
-        light_statuses[id] = LightStatus(status="earlyWarning", last=time.time())
-
-    # Update its state
-    light_statuses[id].status = "earlyWarning"
-
-    return Response(status_code=HTTP_200_OK)
-
-
 @app.post("/bell/on")
 async def bell_on(request: Request, background_tasks: BackgroundTasks):
     # Read the raw request body
@@ -262,7 +246,6 @@ async def bell_off(request: Request):
         try:
             trace_id_int = int(traceId, 16)
             span_id_int = int(spanId, 16)
-
             span_ctx = SpanContext(
                 trace_id=trace_id_int,
                 span_id=span_id_int,
