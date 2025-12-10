@@ -25,7 +25,7 @@ TRAIN_LENGTH_IN_M = 150.0
 
 START_INTERVAL_IN_SECONDS = float(os.environ["START_INTERVAL_IN_SECONDS"])
 END_INTERVAL_IN_SECONDS = float(os.environ["END_INTERVAL_IN_SECONDS"])
-DURATION_IN_SECONDS = 300
+DURATION_IN_SECONDS = 600
 
 SENSOR_POSITIONS = [0.0, 1000.0, 1500.0]
 
@@ -53,7 +53,6 @@ span_processor = BatchSpanProcessor(span_exporter)
 trace_provider.add_span_processor(span_processor)
 trace.set_tracer_provider(trace_provider)
 tracer = trace.get_tracer(__name__)
-c = 0
 
 class Train:
     def __init__(self, speed):
@@ -97,10 +96,8 @@ class Simulation:
         self._start_time = time.time()
 
     def _new_train(self):
-        global c
         train = Train(random.uniform(MIN_TRAIN_SPEED_IN_MS, MAX_TRAIN_SPEED_IN_MS))
         self._trains.append(train)
-        c += 1
         # track enter/leave times for sensor 0
         self._train_sensor_times[train] = {"enter": None, "leave": None}
 
@@ -146,11 +143,7 @@ class Simulation:
     def _compute_broadcast_interval(self):
         elapsed_time = time.time() - self._start_time
         if elapsed_time > DURATION_IN_SECONDS:
-            # Reset the start time and elapsed time to loop
-            self._start_time = time.time()
-            elapsed_time = 0
-
-            phase_counter.add(1)
+            exit(0)
 
         # Linear interpolation
         return START_INTERVAL_IN_SECONDS + (
@@ -158,7 +151,7 @@ class Simulation:
         ) * (elapsed_time / DURATION_IN_SECONDS)
 
     async def simulate(self):
-        while c < 100:
+        while True:
             start_time = time.time()
             # Compute current broadcast interval
             current_interval = self._compute_broadcast_interval()
@@ -181,12 +174,12 @@ class Simulation:
             self._update_sensor_values()
 
             # Broadcast sensor values
-            await self._broadcast_sensor_values()
+            await self._broadcast_sensor_values(current_interval)
 
             # Sleep to maintain broadcast rate
             await asyncio.sleep(current_interval - (time.time() - start_time) if (current_interval - (time.time() - start_time)) > 0 else 0)
 
-    async def _broadcast_sensor_values(self):
+    async def _broadcast_sensor_values(self, current_interval):
 
         s = any(self._sensor_values)
         current_speed = 0.0
@@ -216,6 +209,8 @@ class Simulation:
 
         with tracer.start_as_current_span("broadcast_sensor") as span:
             ctx = span.get_span_context()
+            span.set_attribute("interval", current_interval)
+            span.set_attribute("trains", c)
             traceId = trace.format_trace_id(ctx.trace_id)
             spanId = trace.format_span_id(ctx.span_id)
 
@@ -228,7 +223,6 @@ class Simulation:
             variable_spanId.value.string = spanId
 
             # Publish event
-            print(s)
             await self._nc.publish(subject, event.SerializeToString())
 
 

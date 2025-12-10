@@ -2,392 +2,185 @@ import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/ref
 
 import "events.pkl"
 
-// Action that raises the gate up event.
-const raiseGateUpAction = new Csml.RaiseActionDescription {
-  event {
-    name = events.gateUp
-    data {
-      new {
-        name = "traceId"
-        value = "$traceId"
-      }
-      new {
-        name = "spanId"
-        value = "$spanId"
-      }
-    }
-    channel = "global"
-  }
-}
-
-// Action that raises the gate down event, includes the train speed as event data.
-const raiseGateDownAction = new Csml.RaiseActionDescription {
-  event {
-    name    = events.gateDown
-    data {
-      new {
-        name = "approachingSpeed"
-        value = "approachingSpeed"
-      }
-    }
-    channel = "global"
-  }
-}
-
-// Action that raises the light on event, includes the train speed as event data.
-const raiseLightOnAction = new Csml.RaiseActionDescription {
-  event {
-    name    = events.lightOn
-    data {
-      new {
-        name = "approachingSpeed"
-        value = "approachingSpeed"
-      }
-    }
-    channel = "global"
-  }
-}
-
-// Action that raises the light off event.
-const raiseLightOffAction = new Csml.RaiseActionDescription {
-  event {
-    name    = events.lightOff
-    channel = "global"
-  }
-}
-
-// Action that raises the light earlz warning event.
-const raiseLightEarlyWarningAction  = new Csml.RaiseActionDescription {
-  event {
-    name = events.lightEarlyWarning
-    channel = "global"
-  }
-}
-
-// Action that increments the number of trains passed.
-const incrementNumTrainsPassed = new Csml.AssignActionDescription {
-  variable = new {
-    name = "numTrainsPassed"
-    value = "numTrainsPassed + 1"
-  }
-}
-
-// Guard that passes when the event data (its value $value) is true.
-const isEventDataTrueGuard = new Csml.GuardDescription {
-  expression = "$value == true"
-}
-
-// Guard that passes when the event data (its value $value) is false.
-const isEventDataFalseGuard = new Csml.GuardDescription {
-  expression = "$value == false"
-}
-
 // Map defining all local context variables for ControllerStateMachine.
 const localVariables = Map("numTrainsPassed", "0", "approachingSpeed", "0", "gateDownTime", "0")
+
+const function createRaiseActionGlobal(e: String): Csml.RaiseActionDescription =
+    new Csml.RaiseActionDescription {
+      event {
+        name = e
+        channel = "global"
+      }
+}
+
+const function createRaiseActionGlobalWithData(e: String, _data: Map<String,String>): Csml.RaiseActionDescription =
+    new Csml.RaiseActionDescription {
+      event {
+        name = e
+        data {
+          for (_name, _value in _data) {
+            new {
+              name = _name
+              value = _value
+            }
+          }
+        }
+        channel = "global"
+      }
+    }
+
+const function context(v: Map<String, String>): Listing<Csml.ContextVariableDescription> = new Listing {
+    for (_n, _v in v) {
+      new Csml.ContextVariableDescription {
+        name = _n
+        value = _v
+      }
+    }
+  }
+
+const function to(targetState: String): Listing<Csml.TransitionDescription> = new Listing {
+  new Csml.TransitionDescription {
+    target = targetState
+  }
+}
+
+const function createOnTransition(e: String, t: String, a: Listing, guardExpression: String): Csml.OnTransitionDescription =
+  new Csml.OnTransitionDescription {
+    event = e
+    target = t
+    actions = a
+    guards { new Csml.GuardDescription { expression = guardExpression } }
+}
+
+const function createInternalOnTransition(e: String, a: Listing, guardExpression: String): Csml.OnTransitionDescription =
+  new Csml.OnTransitionDescription {
+    event = e
+    actions = a
+    guards { new Csml.GuardDescription { expression = guardExpression } }
+}
+
+const function createAssignAction(_n: String, _v: String): Csml.AssignActionDescription =
+      new Csml.AssignActionDescription {
+        variable = new {
+          name = _n
+          value = _v
+        }
+  }
+
+const function createAppendToCrossingState(s: String, k: String, v: String): Csml.AssignActionDescription =
+    new Csml.AssignActionDescription {
+      variable = new {
+        name = s + "_State"
+        value = "utility:appendToMap(\(s + "_State"),\"\(k)\", \(v))"
+      }
+}
+
+const function createReplaceInCrossingState(s: String, k: String, v: String): Csml.AssignActionDescription =
+    new Csml.AssignActionDescription {
+      variable = new {
+        name = s + "_State"
+        value = "utility:replaceInMap(\(s + "_State"), \"\(k)\", \(v))"
+      }
+}
 
 class ControllerStateMachine extends Csml.StateMachineDescription {
   name = "controller"
   local self = this
   persistentContext {
-    variables {
-      new {
-        name = self.name + "_State"
-        value = "{:}"
-      }
-    }
+    variables = context(Map(self.name + "_State", "{:}"))
   }
   localContext {
-    variables {
-      for (_var, _val in localVariables) {
-        new {
-          name = _var
-          value = _val
-        }
-      }
-    }
+    variables = context(localVariables)
   }
   states {
     new {
       name    = "init"
       initial = true
       entry {
-        raiseLightOffAction
-        new Csml.RaiseActionDescription {
-          event {
-            name = events.gateUp
-            data {
-              new {
-                name = "traceId"
-                value = "''"
-              }
-              new {
-                name = "spanId"
-                value = "''"
-              }
-            }
-            channel = "global"
-          }
-        }
+        createRaiseActionGlobal(events.lightOff)
+        createRaiseActionGlobalWithData(events.gateUp, Map("traceId", "''", "spanId", "''"))
       }
-      always {
-        new {
-          target = "away"
-        }
-      }
+      always = to("away")
     }
     new {
       name = "away"
       localContext {
-        variables {
-          new {
-            name = "lastUpdate_Timestamp"
-            value = "utility:now()"
-          }
-        }
+        variables = context(Map("lastUpdate_Timestamp", "utility:now()"))
       }
       on {
-        new {
-          event  = events.sensor
-          target = "approach"
-          guards { isEventDataTrueGuard }
-        }
-        new {
-          event = events.trainOnTheWay
-          actions {
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = "approachingSpeed"
-                value = "$approachingSpeed"
-              }
-            }
-          }
-          target = "earlyWarning"
-        }
-      }
-    }
-    new {
-      name = "earlyWarning"
-      localContext {
-        variables {
-          new {
-            name = "lastUpdate_Timestamp"
-            value = "utility:now()"
-          }
-        }
-      }
-      entry {
-        raiseLightEarlyWarningAction
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = self.name + "_State"
-            value = "utility:appendToMap(\(self.name + "_State"), \"earlyWarning\", lastUpdate_Timestamp)"
-          }
-        }
-      }
-      on {
-        new {
-          event  = events.sensor
-          target = "approach"
-          guards { isEventDataTrueGuard }
-        }
+        createOnTransition(events.sensor, "approach", new Listing {}, "$value")
+        createInternalOnTransition(events.trainOnTheWay, new Listing { createRaiseActionGlobalWithData(events.lightOn, Map ("approachingSpeed", "approachingSpeed")) }, "true")
       }
     }
     new {
       name = "approach"
       localContext {
-        variables {
-          new {
-            name = "lastUpdate_Timestamp"
-            value = "utility:now()"
-          }
-        }
+        variables = context(Map("lastUpdate_Timestamp", "utility:now()"))
       }
       entry {
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = self.name + "_State"
-            value = "utility:appendToMap(\(self.name + "_State"), \"approach\", lastUpdate_Timestamp)"
-          }
-        }
+        createAppendToCrossingState(self.name, "approach", "lastUpdate_Timestamp")
       }
       on {
-        new {
-          event  = events.sensor
-          target = "close"
-          guards { isEventDataFalseGuard }
-        }
+        createOnTransition(events.sensor, "close", new Listing {}, "!($value)")
       }
     }
     new {
       name = "close"
       localContext {
-        variables {
-          new {
-            name = "signalDelay"
-            value = "0"
-          }
-          new {
-            name = "lastUpdate_Timestamp"
-            value = "utility:now()"
-          }
-        }
+        variables = context(Map("lastUpdate_Timestamp", "utility:now()", "signalDelay", "0"))
       }
       entry {
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = "approachingSpeed"
-            value = "$trainSpeed"
-          }
-        }
-        raiseGateDownAction
-        raiseLightOnAction
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = self.name + "_State"
-            value = "utility:appendToMap(\(self.name + "_State"), \"close\", lastUpdate_Timestamp)"
-          }
-        }
-        new Csml.AssignActionDescription{
-          variable = new {
-            name = self.name + "_State"
-            value = "utility:appendToMap(\(self.name + "_State"), \"trainSpeed\", approachingSpeed)"
-          }
-        }
+        createAssignAction("approachingSpeed", "$trainSpeed")
+        createRaiseActionGlobalWithData(events.gateDown, Map("traceId", "''", "spanId", "''", "approachingSpeed", "approachingSpeed"))
+        createRaiseActionGlobalWithData(events.lightOn, Map ("approachingSpeed", "approachingSpeed"))
+        createAppendToCrossingState(self.name, "close", "lastUpdate_Timestamp")
+        createAppendToCrossingState(self.name, "trainSpeed", "approachingSpeed")
       }
       on {
-        new {
-          event = "gateIsDown"
-          actions {
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = "signalDelay"
-                value = "$downDelay"
-              }
-            }
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = "gateDownTime"
-                value = "lastUpdate_Timestamp + signalDelay"
-              }
-            }
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = self.name + "_State"
-                value = "utility:appendToMap(\(self.name + "_State"), \"signalDelay\", signalDelay)"
-              }
-            }
-          }
-        }
-        new {
-          event  = events.sensor
-          target = "present"
-          guards { isEventDataTrueGuard }
-        }
+        createInternalOnTransition("gateIsDown", new Listing { createAssignAction("signalDelay", "$downDelay"); createAssignAction("gateDownTime", "lastUpdate_Timestamp + signalDelay"); createAppendToCrossingState(self.name, "signalDelay", "signalDelay")}, "true");
+        createOnTransition(events.sensor, "present", new Listing {}, "$value")
       }
     }
     new {
       name = "present"
       localContext {
-        variables {
-          new {
-            name = "lastUpdate_Timestamp"
-            value = "utility:now()"
-          }
-        }
+        variables = context(Map("lastUpdate_Timestamp", "utility:now()"))
       }
       entry {
-        incrementNumTrainsPassed
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = self.name + "_State"
-            value = "utility:replaceInMap(\(self.name + "_State"), \"numsTrainsPassed\", numTrainsPassed)"
-          }
-        }
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = self.name + "_State"
-            value = "utility:appendToMap(\(self.name + "_State"), \"present\", lastUpdate_Timestamp)"
-          }
-        }
+        createAssignAction("numTrainsPassed", "numTrainsPassed + 1")
+        createAppendToCrossingState(self.name, "present", "lastUpdate_Timestamp")
+        createReplaceInCrossingState(self.name, "numTrainsPassed", "numTrainsPassed")
       }
       on {
-        new {
-          event  = events.sensor
-          target = "leaving"
-          guards { isEventDataFalseGuard }
-        }
+        createOnTransition(events.sensor, "leaving", new Listing {}, "!($value)")
       }
     }
     new {
       name = "leaving"
       localContext {
-        variables {
-          new {
-            name = "lastUpdate_Timestamp"
-            value = "utility:now()"
-          }
-        }
+        variables = context(Map("lastUpdate_Timestamp", "utility:now()"))
       }
       entry {
-        raiseGateUpAction
-        new Csml.RaiseActionDescription {
-          event {
-            name = events.trainOnTheWay
-            data {
-              new {
-                name = "approachingSpeed"
-                value = "approachingSpeed"
-              }
-            }
-            channel = "global"
-          }
+        createRaiseActionGlobalWithData(events.gateUp, Map("traceId", "$traceId", "spanId", "$spanId"))
+        createRaiseActionGlobalWithData(events.trainOnTheWay, Map("approachingSpeed", "approachingSpeed"))
+        createAppendToCrossingState(self.name, "leaving", "lastUpdate_Timestamp")
+        createAppendToCrossingState(self.name, "downTime", "(lastUpdate_Timestamp - gateDownTime)")
         }
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = self.name + "_State"
-            value = "utility:appendToMap(\(self.name + "_State"), \"leaving\", lastUpdate_Timestamp)"
-          }
-        }
-        new Csml.AssignActionDescription{
-          variable = new {
-            name = self.name + "_State"
-            value = "utility:appendToMap(\(self.name + "_State"), \"downTime\", (lastUpdate_Timestamp - gateDownTime))"
-          }
-        }
-      }
       on {
-        new {
-          event  = events.sensor
-          target = "left"
-          guards { isEventDataTrueGuard }
-        }
+        createOnTransition(events.sensor, "left", new Listing {}, "$value")
       }
     }
     new {
       name = "left"
       localContext {
-        variables {
-          new {
-            name = "lastUpdate_Timestamp"
-            value = "utility:now()"
-          }
-        }
+        variables = context(Map("lastUpdate_Timestamp", "utility:now()"))
       }
       entry {
-        raiseLightOffAction
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = self.name + "_State"
-            value = "utility:appendToMap(\(self.name + "_State"), \"left\", lastUpdate_Timestamp)"
-          }
-        }
+        createRaiseActionGlobal(events.lightOff)
+        createAppendToCrossingState(self.name, "left", "lastUpdate_Timestamp")
       }
       on {
-        new {
-          event  = events.sensor
-          target = "away"
-          guards { isEventDataFalseGuard }
-        }
+        createOnTransition(events.sensor, "away", new Listing {}, "!($value)")
       }
     }
   }
