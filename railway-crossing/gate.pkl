@@ -8,6 +8,16 @@ const gateUpAction = new Csml.InvokeActionDescription {
   done {
     new {
       name    = events.bellOff
+      data {
+        new {
+          name = "traceId"
+          value = "$traceId"
+        }
+        new {
+          name = "spanId"
+          value = "$spanId"
+        }
+      }
       channel = "global"
     }
   }
@@ -17,13 +27,42 @@ const gateUpAction = new Csml.InvokeActionDescription {
 const raiseBellOnAction = new Csml.RaiseActionDescription {
   event {
     name    = events.bellOn
+    data {
+      new {
+        name = "approachingSpeed"
+        value = "$approachingSpeed"
+      }
+    }
     channel = "global"
   }
 }
 
-// Action that invokes a service that puts the gate down.
+// Action that invokes a service that puts the gate down. Appends the current train speed as input and receives the delay after which the gate is lowered as output.
 const gateDownAction = new Csml.InvokeActionDescription {
   serviceType = "gateDown"
+  input {
+    new {
+      name = "approachingSpeed"
+      value = "$approachingSpeed"
+    }
+  }
+  output {
+    new {
+      reference = "downDelay"
+    }
+  }
+  done {
+    new {
+      name = "gateIsDown"
+      data {
+        new {
+          name = "downDelay"
+          value = "downDelay"
+        }
+      }
+      channel = "global"
+    }
+  }
 }
 
 // Gate state machine, manages a gate.
@@ -40,11 +79,28 @@ const gateDownAction = new Csml.InvokeActionDescription {
 //                up      
 class GateStateMachine extends Csml.StateMachineDescription {
   name = "gate"
+  localContext {
+    variables {
+      new {
+        name = "downDelay"
+        value = "0"
+      }
+    }
+  }
   states {
+    new{
+      name = "init"
+      initial = true
+      on {
+        new {
+          event = events.gateUp
+          target = "up"
+        }
+      }
+    }
     // The gate is initially up.
     new {
-      name    = "up"
-      initial = true
+      name = "up"
       entry { gateUpAction }
       on {
         new {

@@ -1,0 +1,169 @@
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+
+class StateMachine extends Csml.StateMachineDescription {
+  name = "stateMachineOne"
+  states {
+    // Initialize fib and score values
+    new Csml.StateDescription {
+      name = "setup"
+      initial = true
+      entry {
+        new Csml.CreateActionDescription {
+          variable = new Csml.ContextVariableDescription {
+            name = "fib1"
+            value = "1"
+          }
+          isPersistent = true
+        }
+        new Csml.CreateActionDescription {
+          variable = new Csml.ContextVariableDescription {
+            name = "fib2"
+            value = "1"
+          }
+          isPersistent = true
+        }
+        new Csml.CreateActionDescription {
+          variable {
+            name = "scoreOne"
+            value = "0"
+          }
+          isPersistent = true
+        }
+      }
+      always {
+        new Csml.TransitionDescription {
+          target = "fib"
+        }
+      }
+    }
+    // Invoke service every 25ms to calculate new values
+    new Csml.StateDescription {
+      name = "fib"
+      after {
+        new Csml.TimeoutActionDescription {
+          name = "nextNumber"
+          delay = "25"
+          action = new Csml.RaiseActionDescription {
+            event {
+              name = "nextNumber"
+              channel = "internal"
+            }
+          }
+        }
+      }
+      on {
+        new Csml.OnTransitionDescription {
+          event = "nextNumber"
+          actions {
+            new Csml.InvokeActionDescription {
+              serviceType = "calculateFib"
+              input {
+                new {
+                  name = "fib1"
+                  value = "fib1"
+                }
+                new {
+                  name = "fib2"
+                  value = "fib2"
+                }
+              }
+              output {
+                new {
+                  reference = "fib1"
+                }
+                new {
+                  reference = "fib2"
+                }
+              }
+              done {
+              new Csml.EventDescription {
+              name = "gotNextNumber"
+              channel = "internal"
+            }
+            }
+            }
+
+          }
+        }
+        new Csml.OnTransitionDescription {
+          event = "gotNextNumber"
+          target = "checkScored"
+        }
+      }
+    }
+    // Check new values if score has been reached and reset values
+    new Csml.StateDescription {
+      name = "checkScored"
+      always{
+        new Csml.TransitionDescription {
+          guards {
+            new Csml.GuardDescription {
+              expression = "fib1 >= 1000000000 && scoreOne <= 300"
+            }
+          }
+          actions {
+            new Csml.RaiseActionDescription {
+              event {
+                name = "scoreGoalReached"
+                channel = "global"
+              }
+            }
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "scoreOne"
+                value = "scoreOne + 1"
+              }
+            }
+          }
+        }
+        new Csml.TransitionDescription {
+          guards {
+            new Csml.GuardDescription {
+              expression = "fib1 < 1000000000 && scoreOne <= 300"
+            }
+          }
+          target = "fib"
+        }
+      }
+      on {
+        new Csml.OnTransitionDescription {
+          event = "scoreGoalReached"
+          guards {
+            new Csml.GuardDescription {
+              expression = "scoreOne > 300"
+            }
+          }
+          target = "end"
+        }
+        new Csml.OnTransitionDescription {
+          event = "scoreGoalReached"
+          guards {
+            new Csml.GuardDescription {
+              expression = "scoreOne <= 300"
+            }
+          }
+          actions {
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "fib1"
+                value = "1"
+              }
+            }
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "fib2"
+                value = "1"
+              }
+            }
+          }
+          target = "fib"
+        }
+      }
+    }
+    // End state machine
+    new Csml.StateDescription {
+      name = "end"
+      terminal = true
+    }
+  }
+}

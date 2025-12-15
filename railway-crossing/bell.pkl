@@ -5,11 +5,27 @@ import "events.pkl"
 // Action that invokes a service that turns the bell on.
 const onAction = new Csml.InvokeActionDescription {
   serviceType = "bellOn"
+  input {
+    new {
+      name = "approachingSpeed"
+      value = "$approachingSpeed"
+    }
+  }
 }
 
 // Action that invokes a service that turns the bell off.
 const offAction = new Csml.InvokeActionDescription {
   serviceType = "bellOff"
+  input {
+    new {
+      name = "traceId"
+      value = "$traceId"
+    }
+    new {
+      name = "spanId"
+      value = "$spanId"
+    }
+  }
 }
 
 // Bell state machine, manages a bell.
@@ -28,8 +44,17 @@ class BellStateMachine extends Csml.StateMachineDescription {
   states {
     // The bell is initially off.
     new {
-      name    = "off"
+      name = "init"
       initial = true
+      on {
+        new {
+          event = events.bellOff
+          target = "off"
+        }
+      }
+    }
+    new {
+      name    = "off"
       entry { offAction }
       on {
         new {

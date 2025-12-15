@@ -1,2 +1,6 @@
 uvicorn[standard]
 fastapi[all]
+protobuf
+opentelemetry-api
+opentelemetry-sdk
+opentelemetry-exporter-otlp
