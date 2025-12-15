@@ -1,0 +1,122 @@
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+
+class StateMachine extends Csml.StateMachineDescription {
+  name = "philosopher"
+  local self = this
+  localContext {
+    variables {
+      new {
+        name = "counter"
+        value = "0"
+      }
+    }
+  }
+  states {
+   new {
+     name = "requestingFork"
+     initial = true
+     entry {
+       new Csml.AssignActionDescription {
+         variable = new {
+           name = "counter"
+           value = "counter + 1"
+         }
+       }
+       new Csml.RaiseActionDescription {
+         event {
+           name = "requesting"
+           data {
+             new {
+               name = "forkOne"
+               value = self.name
+             }
+           }
+           channel = "global"
+         }
+       }
+     }
+     on {
+         new  {
+           event = "allocated"
+           guards {
+             new {
+               expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
+             }
+           }
+           target = "eating"
+         }
+       new {
+         event = "denied"
+         guards {
+           new {
+             expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
+           }
+           new {
+             expression = "counter <= 16000"
+           }
+         }
+         target = "requestingFork"
+       }
+       new {
+         event = "denied"
+         guards {
+           new {
+             expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
+           }
+           new {
+             expression = "counter > 16000"
+           }
+         }
+         target = "leave"
+       }
+     }
+   }
+    new Csml.StateDescription {
+      name = "eating"
+      entry {
+        new Csml.RaiseActionDescription {
+          event {
+            name = "finished"
+            data {
+              new {
+                name = "forkOne"
+                value = self.name
+              }
+            }
+            channel = "global"
+          }
+        }
+      }
+      on {
+        new Csml.OnTransitionDescription {
+          event = "finished"
+          guards {
+            new Csml.GuardDescription {
+              expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
+            }
+            new Csml.GuardDescription {
+              expression = "counter <= 16000"
+            }
+          }
+          target = "requestingFork"
+        }
+        new Csml.OnTransitionDescription {
+          event = "finished"
+          guards {
+            new Csml.GuardDescription {
+              expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
+            }
+            new Csml.GuardDescription {
+              expression = "counter > 16000"
+            }
+          }
+          target = "leave"
+        }
+      }
+    }
+    new Csml.StateDescription {
+      name = "leave"
+      terminal = true
+    }
+  }
+}
