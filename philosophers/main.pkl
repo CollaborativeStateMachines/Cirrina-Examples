@@ -1,0 +1,14 @@
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+import "arbitrator.pkl"
+import "defs.pkl"
+import "philosopher.pkl"
+
+
+name = "benchmark"
+version = "3.0.0"
+stateMachines {
+  new arbitrator.StateMachine {}
+  for (_name in defs.philosophers) {
+    new philosopher.StateMachine {name = _name }
+}
+}
