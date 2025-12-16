@@ -1,0 +1,75 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+
+class StateMachine extends Csml.StateMachineDescription {
+  name = "barber"
+  localContext {
+    variables {
+      new {
+        name = "barberCounter"
+        value = "0"
+      }
+    }
+  }
+  states {
+    new {
+      name = "sleeping"
+      initial = true
+      entry {
+        new Csml.RaiseActionDescription {
+          event {
+            name = "statusSleeping"
+            channel = "global"
+          }
+        }
+      }
+      on {
+        new {
+          event = "enter"
+          target = "cutting"
+        }
+      }
+    }
+    new {
+      name = "cutting"
+      entry {
+        new Csml.AssignActionDescription {
+          variable = new {
+            name = "barberCounter"
+            value = "barberCounter + 1"
+          }
+        }
+      }
+      always {
+        new {
+          guards {
+            new Csml.GuardDescription {
+              expression = "utility:busyWait(1000) == 1000"
+            }
+          }
+          actions {
+            new Csml.RaiseActionDescription {
+              event {
+                name = "done"
+                data {
+                  new {
+                    name = "customer"
+                    value = "$customer"
+                  }
+                }
+                channel = "global"
+              }
+            }
+            new Csml.RaiseActionDescription {
+              event {
+                name = "getNext"
+                channel = "global"
+              }
+            }
+          }
+          target = "sleeping"
+        }
+      }
+    }
+  }
+}
