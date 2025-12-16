@@ -1,5 +1,4 @@
-import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
 
 class StateMachine extends Csml.StateMachineDescription {
   name = "waitingRoom"
@@ -31,7 +30,7 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "customerEnter"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "waitingCustomers.size() == 3"
             }
           }
@@ -53,10 +52,10 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "customerEnter"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "waitingCustomers.isEmpty()"
             }
-            new Csml.GuardDescription {
+            new {
               expression = "barberStatus == 'sleeping'"
             }
           }
@@ -84,7 +83,7 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "customerEnter"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "waitingCustomers.isEmpty()"
             }
             new Csml.GuardDescription {
@@ -115,10 +114,10 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "customerEnter"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "waitingCustomers.size() != 3"
             }
-            new Csml.GuardDescription {
+            new {
               expression = "!waitingCustomers.isEmpty()"
             }
           }
@@ -146,7 +145,7 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "getNext"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "!waitingCustomers.isEmpty()"
             }
           }

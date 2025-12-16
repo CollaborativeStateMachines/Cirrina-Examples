@@ -3,14 +3,6 @@ import
 
 class StateMachine extends Csml.StateMachineDescription {
   name = "barber"
-  localContext {
-    variables {
-      new {
-        name = "barberCounter"
-        value = "0"
-      }
-    }
-  }
   states {
     new {
       name = "sleeping"
@@ -32,18 +24,10 @@ class StateMachine extends Csml.StateMachineDescription {
     }
     new {
       name = "cutting"
-      entry {
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = "barberCounter"
-            value = "barberCounter + 1"
-          }
-        }
-      }
       always {
         new {
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "utility:busyWait(1000) == 1000"
             }
           }
