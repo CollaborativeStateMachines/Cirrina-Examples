@@ -3,7 +3,7 @@ amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/ref
 bindings {
   new HttpServiceImplementationBinding {
     name = "cameraCapture"
-    `local` = false
+    `local` = true
     scheme = "http"
     host = "localhost"
     port = 8001
@@ -12,7 +12,7 @@ bindings {
   }
   new HttpServiceImplementationBinding {
     name = "detectPersons"
-    `local` = true
+    `local` = false
     scheme = "http"
     host = "localhost"
     port = 8002
