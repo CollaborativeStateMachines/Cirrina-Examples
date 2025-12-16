@@ -1,5 +1,4 @@
-import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
 
 class StateMachine extends Csml.StateMachineDescription {
   name = "customer"
@@ -43,7 +42,7 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "full"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "$customer == \(self.name)"
             }
           }
@@ -52,7 +51,7 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "enter"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "$customer == \(self.name)"
             }
           }
@@ -61,7 +60,7 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "waiting"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "$customer == \(self.name)"
             }
           }
@@ -83,11 +82,11 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "done"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "$customer == \(self.name)"
             }
-            new Csml.GuardDescription {
-              expression = "counter <= 333"
+            new {
+              expression = "counter < 333"
             }
           }
           target = "requestHaircut"
@@ -95,11 +94,11 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "done"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "$customer == \(self.name)"
             }
-            new Csml.GuardDescription {
-              expression = "counter > 333"
+            new {
+              expression = "counter >= 333"
             }
           }
           target = "leave"
@@ -112,7 +111,7 @@ class StateMachine extends Csml.StateMachineDescription {
         new {
           event = "enter"
           guards {
-            new Csml.GuardDescription {
+            new {
               expression = "$customer == \(self.name)"
             }
           }
