@@ -1,0 +1,194 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+
+class StateMachine extends Csml.StateMachineDescription {
+  name = "waitingRoom"
+  localContext {
+    variables {
+      new {
+        name = "waitingCustomers"
+        value = "[...]"
+      }
+      new {
+        name = "barberStatus"
+        value = "''"
+      }
+    }
+  }
+  states {
+    new {
+      name = "process"
+      initial = true
+      entry {
+        new Csml.RaiseActionDescription {
+          event {
+            name = "ready"
+            channel = "global"
+          }
+        }
+      }
+      on {
+        new {
+          event = "customerEnter"
+          guards {
+            new Csml.GuardDescription {
+              expression = "waitingCustomers.size() == 3"
+            }
+          }
+          actions {
+            new Csml.RaiseActionDescription {
+              event {
+                name = "full"
+                data {
+                  new {
+                    name = "customer"
+                    value = "$customer"
+                  }
+                }
+                channel = "global"
+              }
+            }
+          }
+        }
+        new {
+          event = "customerEnter"
+          guards {
+            new Csml.GuardDescription {
+              expression = "waitingCustomers.isEmpty()"
+            }
+            new Csml.GuardDescription {
+              expression = "barberStatus == 'sleeping'"
+            }
+          }
+          actions {
+            new Csml.RaiseActionDescription {
+              event {
+                name = "enter"
+                data {
+                  new {
+                    name = "customer"
+                    value = "$customer"
+                  }
+                }
+                channel = "global"
+              }
+            }
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "barberStatus"
+                value = "'busy'"
+              }
+            }
+          }
+        }
+        new {
+          event = "customerEnter"
+          guards {
+            new Csml.GuardDescription {
+              expression = "waitingCustomers.isEmpty()"
+            }
+            new Csml.GuardDescription {
+              expression = "barberStatus == 'busy'"
+            }
+          }
+          actions {
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "waitingCustomers"
+                value = "utility:addToList(\("waitingCustomers"), $customer)"
+              }
+            }
+            new Csml.RaiseActionDescription {
+              event {
+                name = "waiting"
+                data {
+                  new {
+                    name = "customer"
+                    value = "$customer"
+                  }
+                }
+                channel = "global"
+              }
+            }
+          }
+        }
+        new {
+          event = "customerEnter"
+          guards {
+            new Csml.GuardDescription {
+              expression = "waitingCustomers.size() != 3"
+            }
+            new Csml.GuardDescription {
+              expression = "!waitingCustomers.isEmpty()"
+            }
+          }
+          actions {
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "waitingCustomers"
+                value = "utility:addToList(\("waitingCustomers"), $customer)"
+              }
+            }
+            new Csml.RaiseActionDescription {
+              event {
+                name = "waiting"
+                data {
+                  new {
+                    name = "customer"
+                    value = "$customer"
+                  }
+                }
+                channel = "global"
+              }
+            }
+          }
+        }
+        new {
+          event = "getNext"
+          guards {
+            new Csml.GuardDescription {
+              expression = "!waitingCustomers.isEmpty()"
+            }
+          }
+          actions {
+            new Csml.RaiseActionDescription {
+              event {
+                name = "enter"
+                data {
+                  new {
+                    name = "customer"
+                    value = "waitingCustomers.get(0)"
+                  }
+                }
+                channel = "global"
+              }
+            }
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "waitingCustomers"
+                value = "utility:removeFirst(\("waitingCustomers"))"
+              }
+            }
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "barberStatus"
+                value = "'busy'"
+              }
+            }
+          }
+        }
+        new {
+          event = "statusSleeping"
+          actions {
+            new Csml.AssignActionDescription {
+              variable = new {
+                name = "barberStatus"
+                value = "'sleeping'"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
