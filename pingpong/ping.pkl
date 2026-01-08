@@ -1,0 +1,66 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+
+class StateMachine extends Csml.StateMachineDescription {
+  name = "ping"
+  localContext {
+    variables {
+      new {
+        name = "totalMessages"
+        value = "100000"
+      }
+    }
+  }
+  states {
+    new {
+      name = "ping"
+      initial = true
+      entry {
+        new Csml.RaiseActionDescription {
+          event {
+            name = "ping"
+            channel = "global"
+          }
+        }
+        new Csml.AssignActionDescription {
+          variable = new {
+            name = "totalMessages"
+            value = "totalMessages - 2"
+          }
+        }
+      }
+      on {
+        new {
+          event = "pong"
+          guards {
+            new {
+              expression = "totalMessages != 0"
+            }
+          }
+          target = "ping"
+        }
+        new {
+          event = "pong"
+          guards {
+            new {
+              expression = "totalMessages == 0"
+            }
+          }
+          actions {
+            new Csml.RaiseActionDescription {
+              event {
+                name = "done"
+                channel = "global"
+              }
+            }
+          }
+          target = "done"
+        }
+      }
+    }
+    new {
+      name = "done"
+      terminal = true
+    }
+  }
+}

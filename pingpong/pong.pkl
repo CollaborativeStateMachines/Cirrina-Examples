@@ -1,0 +1,33 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+
+class StateMachine extends Csml.StateMachineDescription {
+  name = "pong"
+  states {
+    new {
+      name = "pong"
+      initial = true
+      on {
+        new {
+          event = "ping"
+          actions {
+            new Csml.RaiseActionDescription {
+              event {
+                name = "pong"
+                channel = "global"
+              }
+            }
+          }
+        }
+        new {
+          event = "done"
+          target = "done"
+        }
+      }
+    }
+    new {
+      name = "done"
+      terminal = true
+    }
+  }
+}
