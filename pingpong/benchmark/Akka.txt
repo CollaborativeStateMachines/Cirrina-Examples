@@ -1,0 +1,31 @@
+Number of pings: 50.000
+Execution - Iterations:
+PingPongAkkaActorBenchmark          Iteration-0:   316.151 ms
+PingPongAkkaActorBenchmark          Iteration-1:   118.366 ms
+PingPongAkkaActorBenchmark          Iteration-2:    77.245 ms
+PingPongAkkaActorBenchmark          Iteration-3:    84.737 ms
+PingPongAkkaActorBenchmark          Iteration-4:    70.632 ms
+PingPongAkkaActorBenchmark          Iteration-5:    76.096 ms
+PingPongAkkaActorBenchmark          Iteration-6:    72.107 ms
+PingPongAkkaActorBenchmark          Iteration-7:    67.815 ms
+PingPongAkkaActorBenchmark          Iteration-8:    64.724 ms
+PingPongAkkaActorBenchmark          Iteration-9:    65.730 ms
+PingPongAkkaActorBenchmark         Iteration-10:    68.262 ms
+PingPongAkkaActorBenchmark         Iteration-11:    64.844 ms
+
+
+Execution - Summary:
+         Total executions = 12
+      Filtered executions = 10
+PingPongAkkaActorBenchmark            Best Time:    64.724 ms
+PingPongAkkaActorBenchmark           Worst Time:    84.737 ms
+PingPongAkkaActorBenchmark               Median:    69.447 ms
+PingPongAkkaActorBenchmark     Arith. Mean Time:    71.219 ms
+PingPongAkkaActorBenchmark       Geo. Mean Time:    70.966 ms
+PingPongAkkaActorBenchmark   Harmonic Mean Time:    70.724 ms
+PingPongAkkaActorBenchmark        Std. Dev Time:     6.142 ms
+PingPongAkkaActorBenchmark     Lower Confidence:    67.412 ms
+PingPongAkkaActorBenchmark    Higher Confidence:    75.026 ms
+PingPongAkkaActorBenchmark         Error Window:     3.807 ms (5.345 percent)
+PingPongAkkaActorBenchmark  Coeff. of Variation:     0.086
+PingPongAkkaActorBenchmark             Skewness:     0.979

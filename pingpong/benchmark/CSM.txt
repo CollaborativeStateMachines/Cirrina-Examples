@@ -1,0 +1,20 @@
+Number of pings: 50.000
+Execution - Iterations:
+CsmPingPong          Iteration-0: 37631.159 ms
+CsmPingPong          Iteration-1: 41742.721 ms
+CsmPingPong          Iteration-2: 41878.055 ms
+CsmPingPong          Iteration-3: 41937.863 ms
+CsmPingPong          Iteration-4: 38841.834 ms
+CsmPingPong          Iteration-5: 38506.544 ms
+CsmPingPong          Iteration-6: 43645.336 ms
+CsmPingPong          Iteration-7: 41605.493 ms
+CsmPingPong          Iteration-8: 41993.211 ms
+CsmPingPong          Iteration-9: 41589.462 ms
+CsmPingPong         Iteration-10: 42283.925 ms
+CsmPingPong         Iteration-11: 41893.918 ms
+
+Execution - Summary:
+         Total executions = 12
+      Filtered executions = 12
+PingPongAkkaActorBenchmark            Best Time: 37631.159 ms
+PingPongAkkaActorBenchmark           Worst Time: 43645.336 ms
