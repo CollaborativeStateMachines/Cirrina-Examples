@@ -1,12 +1,11 @@
 amends
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 import "ping.pkl"
 import "pong.pkl"
 
-name = "benchmark"
-version = "3.0.0"
+version = "4.0.0"
 stateMachines {
-  new ping.StateMachine {}
-  new pong.StateMachine {}
+  ["ping"] = ping.sm
+  ["pong"] = pong.sm
 }

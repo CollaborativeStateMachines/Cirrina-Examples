@@ -1,66 +1,30 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-class StateMachine extends Csml.StateMachineDescription {
-  name = "ping"
-  localContext {
-    variables {
-      new {
-        name = "totalMessages"
-        value = "100000"
-      }
-    }
+sm = new csml.StateMachine {
+  transient {
+    ["totalMessages"] = "50000"
   }
   states {
-    new {
-      name = "ping"
-      initial = true
+    ["ping"] = new csml.Initial {
       entry {
-        new Csml.RaiseActionDescription {
-          event {
-            name = "ping"
-            channel = "global"
-          }
-        }
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = "totalMessages"
-            value = "totalMessages - 2"
-          }
-        }
+        new csml.Raise { event = new csml.Global { topic = "ping" } }
+        new csml.Eval { expression = "totalMessages = totalMessages - 1" }
       }
       on {
-        new {
-          event = "pong"
-          guards {
-            new {
-              expression = "totalMessages != 0"
-            }
+        ["pong"] = new csml.Transition {
+          iif {
+            "totalMessages != 0"
           }
-          target = "ping"
-        }
-        new {
-          event = "pong"
-          guards {
-            new {
-              expression = "totalMessages == 0"
-            }
-          }
-          actions {
-            new Csml.RaiseActionDescription {
-              event {
-                name = "done"
-                channel = "global"
-              }
-            }
-          }
-          target = "done"
+          to = "ping"
+          or = "done"
         }
       }
     }
-    new {
-      name = "done"
-      terminal = true
+    ["done"] = new csml.Terminal {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "done" } }
+      }
     }
   }
 }

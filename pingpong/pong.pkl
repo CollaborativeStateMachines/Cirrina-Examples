@@ -1,33 +1,18 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-class StateMachine extends Csml.StateMachineDescription {
-  name = "pong"
+sm = new csml.StateMachine {
   states {
-    new {
-      name = "pong"
-      initial = true
+    ["pong"] = new csml.Initial {
       on {
-        new {
-          event = "ping"
-          actions {
-            new Csml.RaiseActionDescription {
-              event {
-                name = "pong"
-                channel = "global"
-              }
-            }
+        ["ping"] = new csml.Transition {
+          do {
+            new csml.Raise { event = new csml.Global { topic = "pong" } }
           }
         }
-        new {
-          event = "done"
-          target = "done"
-        }
+        ["done"] = new csml.Transition { to = "done" }
       }
     }
-    new {
-      name = "done"
-      terminal = true
-    }
+    ["done"] = new csml.Terminal {}
   }
 }
