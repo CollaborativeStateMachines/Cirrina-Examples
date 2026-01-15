@@ -1,0 +1,127 @@
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+
+class StateMachine extends Csml.StateMachineDescription {
+  name = "customer"
+  local self = this
+  localContext {
+    variables {
+      new {
+        name = "counter"
+        value = "0"
+      }
+    }
+  }
+  states {
+    new {
+      name = "init"
+      initial = true
+      on {
+        new {
+          event = "ready"
+          target = "requestHaircut"
+        }
+      }
+    }
+    new {
+      name = "requestHaircut"
+      entry {
+        new Csml.RaiseActionDescription {
+          event {
+            name = "customerEnter"
+            data {
+              new {
+                name = "customer"
+                value = self.name
+              }
+            }
+            channel = "global"
+          }
+        }
+      }
+      on {
+        new {
+          event = "full"
+          guards {
+            new {
+              expression = "$customer == \(self.name)"
+            }
+          }
+          target = "requestHaircut"
+        }
+        new {
+          event = "enter"
+          guards {
+            new {
+              expression = "$customer == \(self.name)"
+            }
+          }
+          target = "gettingHaircut"
+        }
+        new {
+          event = "waiting"
+          guards {
+            new {
+              expression = "$customer == \(self.name)"
+            }
+          }
+          target = "waiting"
+        }
+      }
+    }
+    new {
+      name = "gettingHaircut"
+      entry {
+        new Csml.AssignActionDescription {
+          variable = new {
+            name = "counter"
+            value = "counter + 1"
+          }
+        }
+      }
+      on {
+        new {
+          event = "done"
+          guards {
+            new {
+              expression = "$customer == \(self.name)"
+            }
+            new {
+              expression = "counter < 333"
+            }
+          }
+          target = "requestHaircut"
+        }
+        new {
+          event = "done"
+          guards {
+            new {
+              expression = "$customer == \(self.name)"
+            }
+            new {
+              expression = "counter >= 333"
+            }
+          }
+          target = "leave"
+        }
+      }
+    }
+    new {
+      name = "waiting"
+      on {
+        new {
+          event = "enter"
+          guards {
+            new {
+              expression = "$customer == \(self.name)"
+            }
+          }
+          target = "gettingHaircut"
+        }
+      }
+    }
+    new {
+      name = "leave"
+      terminal = true
+    }
+  }
+}

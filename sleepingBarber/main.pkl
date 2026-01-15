@@ -1,0 +1,16 @@
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+
+import "barber.pkl"
+import "customer.pkl"
+import "defs.pkl"
+import "waitingRoom.pkl"
+
+name = "benchmark"
+version = "3.0.0"
+stateMachines {
+  new barber.StateMachine {}
+  for (_def in defs.customers) {
+    new customer.StateMachine { name = _def }
+  }
+  new waitingRoom.StateMachine {}
+}

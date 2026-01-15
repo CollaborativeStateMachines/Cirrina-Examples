@@ -1,0 +1,30 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["totalMessages"] = "50000"
+  }
+  states {
+    ["ping"] = new csml.Initial {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "ping" } }
+        new csml.Eval { expression = "totalMessages = totalMessages - 1" }
+      }
+      on {
+        ["pong"] = new csml.Transition {
+          iif {
+            "totalMessages != 0"
+          }
+          to = "ping"
+          or = "done"
+        }
+      }
+    }
+    ["done"] = new csml.Terminal {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "done" } }
+      }
+    }
+  }
+}
