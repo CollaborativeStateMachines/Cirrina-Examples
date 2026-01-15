@@ -1,0 +1,6 @@
+numpy<2
+fastapi==0.104.1
+opencv-python-headless==4.8.1.78
+opencv-contrib-python-headless==4.8.1.78
+uvicorn
+protobuf
