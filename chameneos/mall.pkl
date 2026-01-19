@@ -1,0 +1,53 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["waitingList"] = "[...]"
+    ["meetingCounter"] = "0"
+  }
+  states {
+    ["waitingForChameneos"] = new csml.Initial {
+      on {
+        ["requestingPartner"] = new csml.Transition {
+          to = "waitingForChameneos"
+          iif = "waitingList.isEmpty() && meetingCounter < 1000000"
+          do {
+            new csml.Eval {
+              expression = "waitingList = std:addToList(\("waitingList"), $chameneosId)"
+            }
+          }
+          or = "scheduleMeeting"
+        }
+      }
+    }
+    ["scheduleMeeting"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "waitingForChameneos"
+          iif = "!waitingList.isEmpty() && meetingCounter < 1000000"
+          do {
+            new csml.Eval { expression = "meetingCounter = meetingCounter + 1" }
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "matchMade"
+                data {
+                  ["chameneos"] = "waitingList.get(0)"
+                  ["partner"] = "$chameneosId"
+                  ["color"] = "$chameneosColor"
+                }
+              }
+            }
+            new csml.Eval { expression = "waitingList = std:removeFirst(\("waitingList"))" }
+          }
+          or = "done"
+        }
+      }
+    }
+    ["done"] = new csml.Terminal {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "done" } }
+      }
+    }
+  }
+}
