@@ -1,0 +1,14 @@
+amends
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+import "chameneos.pkl"
+import "defs.pkl"
+import "mall.pkl"
+
+version = "4.0.0"
+stateMachines {
+  ["mall"] = mall.sm
+  for (_def in defs.chameneos) {
+    [_def] = chameneos.sm
+  }
+}

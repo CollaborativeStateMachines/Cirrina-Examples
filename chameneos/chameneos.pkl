@@ -1,0 +1,53 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["chameneosId"] = "std:getUniqueId()"
+    ["color"] = "std:getRandomColor()"
+    ["individualMeetingCounter"] = "0"
+  }
+  states {
+    ["requestingPartner"] = new csml.Initial {
+      entry {
+        new csml.Raise {
+          event = new csml.Global {
+            topic = "requestingPartner"
+            data { ["chameneosId"] = "chameneosId"; ["chameneosColor"] = "color" }
+          }
+        }
+      }
+      on {
+        ["matchMade"] = new csml.Transition {
+          to = "matchFound"
+          iif = "$chameneos == chameneosId"
+        }
+        ["change"] = new csml.Transition {
+          to = "requestingPartner"
+          iif = "$partner == chameneosId"
+          do {
+            new csml.Eval { expression = "color = std:complement(color, $color)" }
+            new csml.Eval { expression = "individualMeetingCounter = individualMeetingCounter + 1" }
+          }
+        }
+        ["done"] = new csml.Transition {
+          to = "done"
+        }
+      }
+    }
+    ["matchFound"] = new csml.State {
+      entry {
+        new csml.Eval { expression = "color = std:complement(color, $color)" }
+        new csml.Eval { expression = "individualMeetingCounter = individualMeetingCounter + 1" }
+        new csml.Raise {
+          event = new csml.Global {
+            topic = "change"
+            data { ["partner"] = "$partner"; ["color"] = "color" }
+          }
+        }
+      }
+      always { new csml.Transition { to = "requestingPartner" } }
+    }
+    ["done"] = new csml.Terminal {}
+  }
+}
