@@ -1,0 +1,25 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["messagesSent"] = "0"
+  }
+  states {
+    ["sendMessage"] = new csml.Initial {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "increment" } }
+      }
+      on {
+        ["increment"] = new csml.Transition { to = "sendMessage" }
+        ["finalCount"] = new csml.Transition {
+          to = "success"
+          iif = "$count == 1000000"
+          or = "failure"
+        }
+      }
+    }
+    ["success"] = new csml.Terminal {}
+    ["failure"] = new csml.Terminal {}
+  }
+}
