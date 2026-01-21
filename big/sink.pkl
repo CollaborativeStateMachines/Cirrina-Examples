@@ -1,0 +1,59 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["registered"] = "''"
+    ["registeredCounter"] = "0"
+    ["doneCounter"] = "0"
+    ["cumulatedPongCounter"] = "0"
+  }
+  states {
+    ["registerBigs"] = new csml.Initial {
+      on {
+        ["registerBig"] = new csml.Transition {
+          to = "evaluateAllBigsReceived"
+          do {
+            new csml.Eval { expression = "registeredCounter = registeredCounter + 1" }
+            new csml.Eval { expression = "registered = std:registerStateMachine(\("$bigId"))" }
+          }
+        }
+      }
+    }
+    ["evaluateAllBigsReceived"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "waitingForBigs"
+          iif = "registeredCounter == 12"
+          do {
+            new csml.Raise { event = new csml.Global { topic = "allBigsRegistered" } }
+          }
+          or = "registerBigs"
+        }
+      }
+    }
+    ["waitingForBigs"] = new csml.State {
+      on {
+        ["donePinging"] = new csml.Transition {
+          to = "isFinal"
+          do {
+            new csml.Eval { expression = "doneCounter = doneCounter + 1" }
+          }
+        }
+      }
+    }
+    ["isFinal"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "done"
+          iif = "doneCounter == 12"
+          do {
+            new csml.Raise { event = new csml.Global { topic = "shutdown" } }
+          }
+          or = "waitingForBigs"
+        }
+      }
+    }
+    ["done"] = new csml.Terminal {}
+  }
+}
