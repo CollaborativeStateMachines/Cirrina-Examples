@@ -1,0 +1,92 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["bigId"] = "std:getSequentialId()"
+    ["target"] = "''"
+    ["otherBigs"] = "[...]"
+    ["pingCounter"] = "0"
+    ["pongCounter"] = "0"
+  }
+  states {
+    ["registerBig"] = new csml.Initial {
+      entry {
+        new csml.Raise {
+          event = new csml.Global { topic = "registerBig"; data { ["bigId"] = "bigId" } }
+        }
+      }
+      on {
+        ["allBigsRegistered"] = new csml.Transition {
+          to = "sendPing"
+          do {
+            new csml.Eval { expression = "otherBigs = std:getAllStateMachines()" }
+            new csml.Eval {
+              expression = "otherBigs = std:removeFromList(\("otherBigs"), \("bigId"))"
+            }
+          }
+        }
+      }
+    }
+    ["sendPing"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "waitForPingOrPong"
+          iif = "pingCounter < 20000"
+          do {
+            new csml.Eval { expression = "pingCounter = pingCounter + 1" }
+            new csml.Eval { expression = "target = std:takeRandom(\("otherBigs"))" }
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "ping"
+                data { ["sender"] = "bigId"; ["receiver"] = "target" }
+              }
+            }
+          }
+          or = "receiveRemaining"
+        }
+      }
+    }
+    ["waitForPingOrPong"] = new csml.State {
+      on {
+        ["ping"] = new csml.Transition {
+          iif = "$sender != bigId && $receiver == bigId"
+          do {
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "pong"
+                data { ["sender"] = "bigId"; ["receiver"] = "$sender" }
+              }
+            }
+          }
+        }
+        ["pong"] = new csml.Transition {
+          iif = "$receiver == bigId && $sender == target"
+          to = "sendPing"
+        }
+      }
+    }
+    ["receiveRemaining"] = new csml.State {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "donePinging" } }
+      }
+      on {
+        ["ping"] = new csml.Transition {
+          iif = "$sender != bigId && $receiver == bigId"
+          do {
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "pong"
+                data { ["sender"] = "bigId"; ["receiver"] = "$sender" }
+              }
+            }
+          }
+        }
+        ["shutdown"] = new csml.Transition {
+          to = "done"
+        }
+      }
+    }
+    ["done"] = new csml.Terminal {}
+  }
+}
