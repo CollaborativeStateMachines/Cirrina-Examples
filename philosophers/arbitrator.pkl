@@ -1,87 +1,69 @@
-import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-class StateMachine extends Csml.StateMachineDescription {
-  name = "arbitrator"
-  localContext {
-    variables {
-      new {
-        name = "allocated"
-        value = "[...]"
-      }
-    }
+sm = new csml.StateMachine {
+  transient {
+    ["allocated"] = "[...]"
+    ["doneCounter"] = "0"
   }
   states {
-   new Csml.StateDescription {
-     name = "waitingForRequests"
-     initial = true
-     on {
-         new Csml.OnTransitionDescription {
-           event = "requesting"
-           guards {
-             new Csml.GuardDescription {
-               expression = "utility:notIn(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
-             }
-           }
-           actions {
-             new Csml.AssignActionDescription {
-               variable = new {
-                 name = "allocated"
-                 value = "utility:addToList(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
-               }
-             }
-             new Csml.RaiseActionDescription {
-               event {
-                 name = "allocated"
-                 data {
-                   new {
-                     name = "forkOne"
-                     value = "$forkOne"
-                   }
-                 }
-                 channel = "global"
-               }
-             }
-           }
-         }
-       new Csml.OnTransitionDescription {
-         event = "requesting"
-         guards {
-           new {
-             expression = "!utility:notIn(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
-           }
-         }
-         actions {
-           new Csml.RaiseActionDescription {
-             event {
-               name = "denied"
-               data {
-                 new {
-                   name = "forkOne"
-                   value = "$forkOne"
-                 }
-               }
-               channel = "global"
-             }
-           }
-         }
-       }
-       new Csml.OnTransitionDescription {
-         event = "finished"
-         guards {
-           new Csml.GuardDescription {
-             expression = "utility:in(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
-           }
-         }
-         actions {
-           new Csml.AssignActionDescription {
-             variable = new {
-               name = "allocated"
-               value = "utility:removeFromList(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
-             }
-           }
-         }
-       }
-     }
-   }
+    ["waitingForRequests"] = new csml.Initial {
+      on {
+        ["requesting"] = new csml.Transition {
+          to = "waitingForRequests"
+          iif = "std:notIn(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
+          do {
+            new csml.Eval {
+              expression = "allocated = std:addToList(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
+            }
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "allocated"
+                data {
+                  ["forkOne"] = "$forkOne"
+                }
+              }
+            }
+          }
+          or = "denied"
+        }
+        ["finished"] = new csml.Transition {
+          to = "waitingForRequests"
+          iif = "std:isIn(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
+          do {
+            new csml.Eval {
+              expression =
+                "allocated = std:removeFromList(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
+            }
+          }
+        }
+        ["done"] = new csml.Transition {
+          to = "waitingForRequests"
+          iif = "doneCounter < 5"
+          do {
+            new csml.Eval { expression = "doneCounter = doneCounter + 1" }
+          }
+          or = "done"
+        }
+      }
+    }
+    ["denied"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "waitingForRequests"
+          do {
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "denied"
+                data {
+                  ["forkOne"] = "$forkOne"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    ["done"] = new csml.Terminal {}
   }
 }
