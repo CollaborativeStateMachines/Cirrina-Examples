@@ -1,127 +1,77 @@
-import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-class StateMachine extends Csml.StateMachineDescription {
-  name = "customer"
-  local self = this
-  localContext {
-    variables {
-      new {
-        name = "counter"
-        value = "0"
-      }
-    }
+sm = new csml.StateMachine {
+  transient {
+    ["counter"] = "0"
+    ["customerId"] = "std:getSequentialId()"
   }
   states {
-    new {
-      name = "init"
-      initial = true
+    ["init"] = new csml.Initial {
       on {
-        new {
-          event = "ready"
-          target = "requestHaircut"
+        ["ready"] = new csml.Transition {
+          to = "requestHaircut"
         }
       }
     }
-    new {
-      name = "requestHaircut"
+    ["requestHaircut"] = new csml.State {
       entry {
-        new Csml.RaiseActionDescription {
-          event {
-            name = "customerEnter"
+        new csml.Raise {
+          event = new csml.Global {
+            topic = "customerEnter"
             data {
-              new {
-                name = "customer"
-                value = self.name
-              }
+              ["customer"] = "customerId"
             }
-            channel = "global"
           }
         }
       }
       on {
-        new {
-          event = "full"
-          guards {
-            new {
-              expression = "$customer == \(self.name)"
-            }
-          }
-          target = "requestHaircut"
+        ["full"] = new csml.Transition {
+          to = "requestHaircut"
+          iif = "$customer == customerId"
         }
-        new {
-          event = "enter"
-          guards {
-            new {
-              expression = "$customer == \(self.name)"
-            }
-          }
-          target = "gettingHaircut"
+        ["enter"] = new csml.Transition {
+          to = "gettingHaircut"
+          iif = "$customer == customerId"
         }
-        new {
-          event = "waiting"
-          guards {
-            new {
-              expression = "$customer == \(self.name)"
-            }
-          }
-          target = "waiting"
+        ["waiting"] = new csml.Transition {
+          to = "waiting"
+          iif = "$customer == customerId"
         }
       }
     }
-    new {
-      name = "gettingHaircut"
+    ["gettingHaircut"] = new csml.State {
       entry {
-        new Csml.AssignActionDescription {
-          variable = new {
-            name = "counter"
-            value = "counter + 1"
-          }
-        }
+        new csml.Eval { expression = "counter = counter + 1" }
       }
       on {
-        new {
-          event = "done"
-          guards {
-            new {
-              expression = "$customer == \(self.name)"
-            }
-            new {
-              expression = "counter < 333"
-            }
-          }
-          target = "requestHaircut"
-        }
-        new {
-          event = "done"
-          guards {
-            new {
-              expression = "$customer == \(self.name)"
-            }
-            new {
-              expression = "counter >= 333"
-            }
-          }
-          target = "leave"
+        ["done"] = new csml.Transition {
+          to = "evaluateCounter"
+          iif = "$customer == customerId"
         }
       }
     }
-    new {
-      name = "waiting"
-      on {
-        new {
-          event = "enter"
-          guards {
-            new {
-              expression = "$customer == \(self.name)"
-            }
-          }
-          target = "gettingHaircut"
+    ["evaluateCounter"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "requestHaircut"
+          iif = "counter < 2000"
+          or = "leave"
         }
       }
     }
-    new {
-      name = "leave"
-      terminal = true
+    ["waiting"] = new csml.State {
+      on {
+        ["enter"] = new csml.Transition {
+          to = "gettingHaircut"
+          iif = "$customer == customerId"
+        }
+      }
+    }
+    ["leave"] = new csml.Terminal {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "finished" } }
+      }
     }
   }
 }
