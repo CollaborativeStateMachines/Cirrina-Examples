@@ -3,7 +3,6 @@ import
 
 sm = new csml.StateMachine {
   transient {
-    ["registered"] = "''"
     ["registeredCounter"] = "0"
     ["doneCounter"] = "0"
     ["cumulatedPongCounter"] = "0"
@@ -13,9 +12,9 @@ sm = new csml.StateMachine {
       on {
         ["registerBig"] = new csml.Transition {
           to = "evaluateAllBigsReceived"
+          iif = "std:registerStateMachine(\("$bigId"))"
           do {
             new csml.Eval { expression = "registeredCounter = registeredCounter + 1" }
-            new csml.Eval { expression = "registered = std:registerStateMachine(\("$bigId"))" }
           }
         }
       }
