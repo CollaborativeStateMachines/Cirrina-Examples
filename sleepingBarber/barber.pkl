@@ -1,59 +1,40 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-class StateMachine extends Csml.StateMachineDescription {
-  name = "barber"
+sm = new csml.StateMachine {
   states {
-    new {
-      name = "sleeping"
-      initial = true
+    ["sleeping"] = new csml.Initial {
       entry {
-        new Csml.RaiseActionDescription {
-          event {
-            name = "statusSleeping"
-            channel = "global"
-          }
-        }
+        new csml.Raise { event = new csml.Global { topic = "statusSleeping" } }
       }
       on {
-        new {
-          event = "enter"
-          target = "cutting"
+        ["enter"] = new csml.Transition {
+          to = "cutting"
+        }
+        ["terminate"] = new csml.Transition {
+          to = "done"
         }
       }
     }
-    new {
-      name = "cutting"
+    ["cutting"] = new csml.State {
       always {
-        new {
-          guards {
-            new {
-              expression = "utility:busyWait(1000) == 1000"
-            }
-          }
-          actions {
-            new Csml.RaiseActionDescription {
-              event {
-                name = "done"
+        new csml.Transition {
+          to = "sleeping"
+          iif = "std:busyWait(1000)"
+          do {
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "done"
                 data {
-                  new {
-                    name = "customer"
-                    value = "$customer"
-                  }
+                  ["customer"] = "$customer"
                 }
-                channel = "global"
               }
             }
-            new Csml.RaiseActionDescription {
-              event {
-                name = "getNext"
-                channel = "global"
-              }
-            }
+            new csml.Raise { event = new csml.Global { topic = "getNext" } }
           }
-          target = "sleeping"
         }
       }
     }
+    ["done"] = new csml.Terminal {}
   }
 }
