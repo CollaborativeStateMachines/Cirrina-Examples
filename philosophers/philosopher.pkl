@@ -3,13 +3,14 @@ import
 
 sm = new csml.StateMachine {
   transient {
-    ["counter"] = "0"
+    ["tryCounter"] = "0"
+    ["eatCounter"] = "0"
     ["philosopherId"] = "std:getSequentialIdInt()"
   }
   states {
     ["requestingFork"] = new csml.Initial {
       entry {
-        new csml.Eval { expression = "counter = counter + 1" }
+        new csml.Eval { expression = "tryCounter = tryCounter + 1" }
         new csml.Raise {
           event = new csml.Global {
             topic = "requesting"
@@ -34,13 +35,14 @@ sm = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "requestingFork"
-          iif = "counter <= 16000"
+          iif = "eatCounter <= 16000"
           or = "leave"
         }
       }
     }
     ["eating"] = new csml.State {
       entry {
+        new csml.Eval { expression = "eatCounter = eatCounter + 1" }
         new csml.Raise {
           event = new csml.Global {
             topic = "finished"
