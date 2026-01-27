@@ -3,35 +3,11 @@ import
 
 sm = new csml.StateMachine {
   transient {
-    ["registeredCounter"] = "0"
     ["doneCounter"] = "0"
     ["cumulatedPongCounter"] = "0"
   }
   states {
-    ["registerBigs"] = new csml.Initial {
-      on {
-        ["registerBig"] = new csml.Transition {
-          to = "evaluateAllBigsReceived"
-          iif = "std:registerStateMachine(\("$bigId"))"
-          do {
-            new csml.Eval { expression = "registeredCounter = registeredCounter + 1" }
-          }
-        }
-      }
-    }
-    ["evaluateAllBigsReceived"] = new csml.State {
-      always {
-        new csml.Transition {
-          to = "waitingForBigs"
-          iif = "registeredCounter == 12"
-          do {
-            new csml.Raise { event = new csml.Global { topic = "allBigsRegistered" } }
-          }
-          or = "registerBigs"
-        }
-      }
-    }
-    ["waitingForBigs"] = new csml.State {
+    ["waitingForBigs"] = new csml.Initial {
       on {
         ["donePinging"] = new csml.Transition {
           to = "isFinal"
