@@ -1,0 +1,45 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["ingredients"] = "['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', ...]"
+    ["smokedInTotal"] = "0"
+  }
+  states {
+    ["chooseIngredients"] = new csml.Initial {
+      always {
+        new csml.Transition {
+          to = "notifiedSmoker"
+          do {
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "ingredientsProvided"
+                data {
+                  ["missingIngredient"] = "std:takeRandom(\("ingredients"))"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    ["notifiedSmoker"] = new csml.State {
+      entry {
+        new csml.Eval { expression = "smokedInTotal = smokedInTotal + 1" }
+      }
+      on {
+        ["startedSmoking"] = new csml.Transition {
+          to = "chooseIngredients"
+          iif = "smokedInTotal < 20000"
+          or = "done"
+        }
+      }
+    }
+    ["done"] = new csml.Terminal {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "terminate" } }
+      }
+    }
+  }
+}

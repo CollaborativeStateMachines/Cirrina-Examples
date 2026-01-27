@@ -1,0 +1,34 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["smokeCounter"] = "0"
+    ["smokerId"] = "std:getSequentialId()"
+  }
+  states {
+    ["waitingForIngredients"] = new csml.Initial {
+      on {
+        ["ingredientsProvided"] = new csml.Transition {
+          to = "smoking"
+          iif = "$missingIngredient == smokerId"
+        }
+        ["terminate"] = new csml.Transition {
+          to = "done"
+        }
+      }
+    }
+    ["smoking"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "waitingForIngredients"
+          do {
+            new csml.Eval { expression = "smokeCounter = smokeCounter + 1" }
+            new csml.Raise { event = new csml.Global { topic = "startedSmoking" } }
+          }
+        }
+      }
+    }
+    ["done"] = new csml.Terminal {}
+  }
+}
