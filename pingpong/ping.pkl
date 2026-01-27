@@ -13,9 +13,7 @@ sm = new csml.StateMachine {
       }
       on {
         ["pong"] = new csml.Transition {
-          iif {
-            "totalMessages != 0"
-          }
+          iif = "totalMessages != 0"
           to = "ping"
           or = "done"
         }
