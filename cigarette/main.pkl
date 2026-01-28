@@ -8,7 +8,7 @@ import "smoker.pkl"
 version = "4.0.0"
 stateMachines {
   ["arbitrator"] = arbitrator.sm
-  for (_def in defs.smokers) {
-    [_def] = smoker.sm
+  for (s in defs.smokers) {
+    [s.toString()] = smoker.createSmoker(s)
   }
 }
