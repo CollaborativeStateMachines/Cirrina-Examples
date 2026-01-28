@@ -11,10 +11,10 @@ sm = new csml.StateMachine {
       on {
         ["requesting"] = new csml.Transition {
           to = "waitingForRequests"
-          iif = "std:notIn(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
+          iif = "!(allocated.contains($forkOne) || allocated.contains(($forkOne + 1) % 6))"
           do {
             new csml.Eval {
-              expression = "allocated = std:addToList(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
+              expression = "allocated + [$forkOne, ($forkOne + 1) % 6]"
             }
             new csml.Raise {
               event = new csml.Global {
@@ -29,11 +29,10 @@ sm = new csml.StateMachine {
         }
         ["finished"] = new csml.Transition {
           to = "waitingForRequests"
-          iif = "std:isIn(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
+          iif = "allocated.contains($forkOne) && allocated.contains(($forkOne + 1) % 6)"
           do {
             new csml.Eval {
-              expression =
-                "allocated = std:removeFromList(\("allocated"), $forkOne, ($forkOne + 1) % 6)"
+              expression = "allocated - [$forkOne, ($forkOne + 1) % 6]"
             }
           }
         }

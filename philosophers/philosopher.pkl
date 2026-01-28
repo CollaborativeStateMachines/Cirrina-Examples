@@ -1,11 +1,11 @@
 import
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-sm = new csml.StateMachine {
+function createPhilosopher(id: Int) = new csml.StateMachine {
   transient {
     ["tryCounter"] = "0"
     ["eatCounter"] = "0"
-    ["philosopherId"] = "std:getSequentialIdInt()"
+    ["philosopherId"] = "\(id)"
   }
   states {
     ["requestingFork"] = new csml.Initial {
