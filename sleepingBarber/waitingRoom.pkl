@@ -47,7 +47,7 @@ sm = new csml.StateMachine {
               }
             }
             new csml.Eval {
-              expression = "waitingCustomers = std:removeFirst(\("waitingCustomers"))"
+              expression = "waitingCustomers = waitingCustomers - [waitingCustomers.get(0)]"
             }
             new csml.Eval { expression = "barberStatus = 'busy'" }
           }
@@ -59,7 +59,10 @@ sm = new csml.StateMachine {
         }
         ["doneCutting"] = new csml.Transition {
           to = "process"
-          iif = "doneCounter < 14"
+          iif = "doneCounter < 15"
+          do {
+            new csml.Eval { expression = "doneCounter = doneCounter + 1" }
+          }
           or = "terminate"
         }
       }
@@ -99,7 +102,7 @@ sm = new csml.StateMachine {
           to = "process"
           do {
             new csml.Eval {
-              expression = "waitingCustomers = std:addToList(\("waitingCustomers"), $customer)"
+              expression = "waitingCustomers = waitingCustomers + [$customer]"
             }
             new csml.Raise {
               event = new csml.Global {

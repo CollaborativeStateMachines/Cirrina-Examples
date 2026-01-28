@@ -1,10 +1,10 @@
 import
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-sm = new csml.StateMachine {
+function createCustomer(id: Int) = new csml.StateMachine {
   transient {
     ["counter"] = "0"
-    ["customerId"] = "std:getSequentialId()"
+    ["customerId"] = "\(id)"
   }
   states {
     ["init"] = new csml.Initial {
@@ -55,7 +55,7 @@ sm = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "requestHaircut"
-          iif = "counter < 333"
+          iif = "counter < 1000"
           or = "leave"
         }
       }

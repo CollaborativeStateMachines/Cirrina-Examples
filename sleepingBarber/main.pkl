@@ -9,8 +9,8 @@ import "waitingRoom.pkl"
 version = "4.0.0"
 stateMachines {
   ["barber"] = barber.sm
-  for (_def in defs.customers) {
-    [_def] = customer.sm
+  for (c in defs.customers) {
+    [c.toString()] = customer.createCustomer(c)
   }
   ["waitingRoom"] = waitingRoom.sm
 }
