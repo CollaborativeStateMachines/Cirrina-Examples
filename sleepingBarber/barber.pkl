@@ -23,7 +23,7 @@ sm = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "sleeping"
-          iif = "std:busyWait(1000)"
+          iif = "(function (){ let x = 0; while ( x < 1000) {x++}; return true})()"
           do {
             new csml.Raise {
               event = new csml.Global {
