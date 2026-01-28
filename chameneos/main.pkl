@@ -8,7 +8,7 @@ import "mall.pkl"
 version = "4.0.0"
 stateMachines {
   ["mall"] = mall.sm
-  for (_def in defs.chameneos) {
-    [_def] = chameneos.sm
+  for (c in defs.chameneos) {
+    [c.toString()] = chameneos.createChameneos(c)
   }
 }

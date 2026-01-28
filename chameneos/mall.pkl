@@ -11,10 +11,10 @@ sm = new csml.StateMachine {
       on {
         ["requestingPartner"] = new csml.Transition {
           to = "waitingForChameneos"
-          iif = "waitingList.isEmpty() && meetingCounter < 1000000"
+          iif = "waitingList.isEmpty() && meetingCounter < 20000"
           do {
             new csml.Eval {
-              expression = "waitingList = std:addToList(\("waitingList"), $chameneosId)"
+              expression = "waitingList = waitingList + [$chameneosId]"
             }
           }
           or = "scheduleMeeting"
@@ -25,7 +25,7 @@ sm = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "waitingForChameneos"
-          iif = "!waitingList.isEmpty() && meetingCounter < 1000000"
+          iif = "!waitingList.isEmpty() && meetingCounter < 20000"
           do {
             new csml.Eval { expression = "meetingCounter = meetingCounter + 1" }
             new csml.Raise {
@@ -38,7 +38,7 @@ sm = new csml.StateMachine {
                 }
               }
             }
-            new csml.Eval { expression = "waitingList = std:removeFirst(\("waitingList"))" }
+            new csml.Eval { expression = "waitingList = waitingList - [waitingList.get(0)]" }
           }
           or = "done"
         }

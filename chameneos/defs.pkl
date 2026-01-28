@@ -1,0 +1,8 @@
+chameneos = List(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)
+
+colorComplementMap =
+  Map(
+    "RED", Map("RED", "RED", "YELLOW", "BLUE", "BLUE", "YELLOW"),
+    "YELLOW", Map("RED", "BLUE", "YELLOW", "YELLOW", "BLUE", "RED"),
+    "BLUE", Map("RED", "YELLOW", "YELLOW", "RED", "BLUE", "RED")
+  )

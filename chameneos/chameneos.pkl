@@ -1,10 +1,15 @@
 import
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-sm = new csml.StateMachine {
+import "defs.pkl"
+
+function complement(myColor: String, otherColor: String): String =
+  defs.colorComplementMap[myColor][otherColor]
+
+function createChameneos(id: Int) = new csml.StateMachine {
   transient {
-    ["chameneosId"] = "std:getUniqueId()"
-    ["color"] = "std:getRandomColor()"
+    ["chameneosId"] = "\(id)"
+    ["color"] = "std:takeRandom([1,2,3,...])"
     ["individualMeetingCounter"] = "0"
   }
   states {
@@ -26,7 +31,10 @@ sm = new csml.StateMachine {
           to = "requestingPartner"
           iif = "$partner == chameneosId"
           do {
-            new csml.Eval { expression = "color = std:complement(color, $color)" }
+            new csml.Eval {
+              expression =
+                "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
+            }
             new csml.Eval { expression = "individualMeetingCounter = individualMeetingCounter + 1" }
           }
         }
@@ -37,7 +45,6 @@ sm = new csml.StateMachine {
     }
     ["matchFound"] = new csml.State {
       entry {
-        new csml.Eval { expression = "color = std:complement(color, $color)" }
         new csml.Eval { expression = "individualMeetingCounter = individualMeetingCounter + 1" }
         new csml.Raise {
           event = new csml.Global {
@@ -45,8 +52,12 @@ sm = new csml.StateMachine {
             data { ["partner"] = "$partner"; ["color"] = "color" }
           }
         }
+
+        new csml.Eval {
+          expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
+        }
       }
-      always { new csml.Transition { to = "requestingPartner" } }
+      always { new csml.Transition { to = "requestingPartner"; iif = "color < 4"; or = "done" } }
     }
     ["done"] = new csml.Terminal {}
   }
