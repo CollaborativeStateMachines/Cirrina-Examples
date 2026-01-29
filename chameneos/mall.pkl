@@ -14,7 +14,7 @@ sm = new csml.StateMachine {
           iif = "waitingList.isEmpty() && meetingCounter < 20000"
           do {
             new csml.Eval {
-              expression = "waitingList = waitingList + [$chameneosId]"
+              expression = "waitingList += [$chameneosId]"
             }
           }
           or = "scheduleMeeting"
@@ -27,7 +27,7 @@ sm = new csml.StateMachine {
           to = "waitingForChameneos"
           iif = "!waitingList.isEmpty() && meetingCounter < 20000"
           do {
-            new csml.Eval { expression = "meetingCounter = meetingCounter + 1" }
+            new csml.Eval { expression = "++meetingCounter" }
             new csml.Raise {
               event = new csml.Global {
                 topic = "matchMade"
@@ -38,7 +38,7 @@ sm = new csml.StateMachine {
                 }
               }
             }
-            new csml.Eval { expression = "waitingList = waitingList - [waitingList.get(0)]" }
+            new csml.Eval { expression = "waitingList -= [waitingList.get(0)]" }
           }
           or = "done"
         }

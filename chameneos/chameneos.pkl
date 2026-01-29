@@ -35,7 +35,7 @@ function createChameneos(id: Int) = new csml.StateMachine {
               expression =
                 "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
             }
-            new csml.Eval { expression = "individualMeetingCounter = individualMeetingCounter + 1" }
+            new csml.Eval { expression = "++individualMeetingCounter" }
           }
         }
         ["done"] = new csml.Transition {
@@ -45,7 +45,7 @@ function createChameneos(id: Int) = new csml.StateMachine {
     }
     ["matchFound"] = new csml.State {
       entry {
-        new csml.Eval { expression = "individualMeetingCounter = individualMeetingCounter + 1" }
+        new csml.Eval { expression = "++individualMeetingCounter" }
         new csml.Raise {
           event = new csml.Global {
             topic = "change"
@@ -57,7 +57,7 @@ function createChameneos(id: Int) = new csml.StateMachine {
           expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
         }
       }
-      always { new csml.Transition { to = "requestingPartner"; iif = "color < 4"; or = "done" } }
+      always { new csml.Transition { to = "requestingPartner" } }
     }
     ["done"] = new csml.Terminal {}
   }
