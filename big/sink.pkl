@@ -12,7 +12,7 @@ sm = new csml.StateMachine {
         ["donePinging"] = new csml.Transition {
           to = "isFinal"
           do {
-            new csml.Eval { expression = "doneCounter = doneCounter + 1" }
+            new csml.Eval { expression = "++doneCounter" }
           }
         }
       }

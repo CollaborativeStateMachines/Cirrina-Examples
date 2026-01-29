@@ -16,8 +16,8 @@ function createBig(id: Int) = new csml.StateMachine {
           to = "waitForPingOrPong"
           iif = "pingCounter < 20000"
           do {
-            new csml.Eval { expression = "pingCounter = pingCounter + 1" }
-            new csml.Eval { expression = "target = std:rand(otherBigs)" }
+            new csml.Eval { expression = "++pingCounter" }
+            new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
             new csml.Raise {
               event = new csml.Global {
                 topic = "ping"
