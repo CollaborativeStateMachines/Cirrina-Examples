@@ -1,11 +1,9 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-function createBig(id: Int) = new csml.StateMachine {
+sm = new csml.StateMachine {
   transient {
-    ["bigId"] = "\(id)"
     ["target"] = "''"
-    ["otherBigs"] = "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, ...] - [\(id)]"
     ["pingCounter"] = "0"
     ["pongCounter"] = "0"
   }
@@ -14,15 +12,16 @@ function createBig(id: Int) = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "waitForPingOrPong"
-          iif = "pingCounter < 20000"
+          iif = "pingCounter < 100"
           do {
             new csml.Eval { expression = "++pingCounter" }
             new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
             new csml.Raise {
               event = new csml.Global {
                 topic = "ping"
-                data { ["sender"] = "bigId"; ["receiver"] = "target" }
+                data { ["sender"] = "bigId" }
               }
+              target = "target"
             }
           }
           or = "receiveRemaining"
@@ -32,18 +31,18 @@ function createBig(id: Int) = new csml.StateMachine {
     ["waitForPingOrPong"] = new csml.State {
       on {
         ["ping"] = new csml.Transition {
-          iif = "$sender != bigId && $receiver == bigId"
           do {
             new csml.Raise {
               event = new csml.Global {
                 topic = "pong"
-                data { ["sender"] = "bigId"; ["receiver"] = "$sender" }
+                data { ["sender"] = "bigId" }
               }
+              target = "$sender"
             }
           }
         }
         ["pong"] = new csml.Transition {
-          iif = "$receiver == bigId && $sender == target"
+          iif = "$sender == target"
           to = "sendPing"
         }
       }
@@ -54,12 +53,11 @@ function createBig(id: Int) = new csml.StateMachine {
       }
       on {
         ["ping"] = new csml.Transition {
-          iif = "$sender != bigId && $receiver == bigId"
           do {
             new csml.Raise {
               event = new csml.Global {
                 topic = "pong"
-                data { ["sender"] = "bigId"; ["receiver"] = "$sender" }
+                data { ["sender"] = "bigId" }
               }
             }
           }

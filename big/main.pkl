@@ -1,14 +1,30 @@
 amends
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 import "big.pkl"
 import "defs.pkl"
 import "sink.pkl"
 
 version = "4.0.0"
-stateMachines {
-  ["sink"] = sink.sm
-  for (b in defs.bigs) {
-    [b.toString()] = big.createBig(b)
+collaborativeStateMachine {
+  stateMachines {
+    ["sink"] = sink.sm
+    ["big"] = big.sm
   }
 }
+
+instantiate {
+  ["sink"] = "sink"
+  for (b in defs.bigs) {
+    [b] = "big"
+  }
+}
+instanceData {
+  for (b in defs.bigs) {
+    [b] {
+      ["bigId"] = "'\(b)'"
+      ["otherBigs"] = "['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', ...] - ['\(b)']"
+    }
+  }
+}
+instanceSubscriptions {}
