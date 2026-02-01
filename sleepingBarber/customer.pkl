@@ -1,10 +1,9 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-function createCustomer(id: Int) = new csml.StateMachine {
+sm = new csml.StateMachine {
   transient {
     ["counter"] = "0"
-    ["customerId"] = "\(id)"
   }
   states {
     ["init"] = new csml.Initial {
@@ -28,26 +27,22 @@ function createCustomer(id: Int) = new csml.StateMachine {
       on {
         ["full"] = new csml.Transition {
           to = "requestHaircut"
-          iif = "$customer == customerId"
         }
-        ["enter"] = new csml.Transition {
+        ["comeIn"] = new csml.Transition {
           to = "gettingHaircut"
-          iif = "$customer == customerId"
         }
         ["waiting"] = new csml.Transition {
           to = "waiting"
-          iif = "$customer == customerId"
         }
       }
     }
     ["gettingHaircut"] = new csml.State {
       entry {
-        new csml.Eval { expression = "counter = counter + 1" }
+        new csml.Eval { expression = "++counter" }
       }
       on {
         ["done"] = new csml.Transition {
           to = "evaluateCounter"
-          iif = "$customer == customerId"
         }
       }
     }
@@ -62,9 +57,8 @@ function createCustomer(id: Int) = new csml.StateMachine {
     }
     ["waiting"] = new csml.State {
       on {
-        ["enter"] = new csml.Transition {
+        ["comeIn"] = new csml.Transition {
           to = "gettingHaircut"
-          iif = "$customer == customerId"
         }
       }
     }

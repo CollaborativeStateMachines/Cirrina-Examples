@@ -1,5 +1,5 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient {
@@ -18,7 +18,7 @@ sm = new csml.StateMachine {
         }
       }
     }
-    ["process"] = new csml.Initial {
+    ["process"] = new csml.State {
       on {
         ["customerEnter"] = new csml.Transition {
           to = "process"
@@ -27,10 +27,8 @@ sm = new csml.StateMachine {
             new csml.Raise {
               event = new csml.Global {
                 topic = "full"
-                data {
-                  ["customer"] = "$customer"
-                }
               }
+              target = "$customer"
             }
           }
           or = "evaluateWaitingRoom"
@@ -45,6 +43,7 @@ sm = new csml.StateMachine {
                   ["customer"] = "waitingCustomers.get(0)"
                 }
               }
+              target = "'barber'"
             }
             new csml.Eval {
               expression = "waitingCustomers = waitingCustomers - [waitingCustomers.get(0)]"
@@ -61,7 +60,7 @@ sm = new csml.StateMachine {
           to = "process"
           iif = "doneCounter < 15"
           do {
-            new csml.Eval { expression = "doneCounter = doneCounter + 1" }
+            new csml.Eval { expression = "++doneCounter" }
           }
           or = "terminate"
         }
@@ -89,6 +88,7 @@ sm = new csml.StateMachine {
                   ["customer"] = "$customer"
                 }
               }
+              target = "'barber'"
             }
             new csml.Eval { expression = "barberStatus = 'busy'" }
           }
@@ -107,10 +107,8 @@ sm = new csml.StateMachine {
             new csml.Raise {
               event = new csml.Global {
                 topic = "waiting"
-                data {
-                  ["customer"] = "$customer"
-                }
               }
+              target = "$customer"
             }
           }
         }
