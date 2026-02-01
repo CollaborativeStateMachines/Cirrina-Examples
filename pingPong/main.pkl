@@ -1,11 +1,23 @@
 amends
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 import "ping.pkl"
 import "pong.pkl"
 
 version = "4.0.0"
-stateMachines {
-  ["ping"] = ping.sm
-  ["pong"] = pong.sm
+collaborativeStateMachine {
+  stateMachines {
+    ["pingMachine"] = ping.sm
+    ["pongMachine"] = pong.sm
+  }
+}
+
+instantiate {
+  ["ping"] = "pingMachine"
+  ["pong"] = "pongMachine"
+}
+
+instanceSubscriptions {
+  ["ping"] { "pong" }
+  ["pong"] { "ping" }
 }
