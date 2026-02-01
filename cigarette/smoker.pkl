@@ -1,17 +1,15 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-function createSmoker(id: Int) = new csml.StateMachine {
+sm = new csml.StateMachine {
   transient {
     ["smokeCounter"] = "0"
-    ["smokerId"] = "\(id)"
   }
   states {
     ["waitingForIngredients"] = new csml.Initial {
       on {
         ["ingredientsProvided"] = new csml.Transition {
           to = "smoking"
-          iif = "$missingIngredient == smokerId"
         }
         ["terminate"] = new csml.Transition {
           to = "done"
@@ -23,7 +21,7 @@ function createSmoker(id: Int) = new csml.StateMachine {
         new csml.Transition {
           to = "waitingForIngredients"
           do {
-            new csml.Eval { expression = "smokeCounter = smokeCounter + 1" }
+            new csml.Eval { expression = "++smokeCounter" }
             new csml.Raise { event = new csml.Global { topic = "startedSmoking" } }
             new csml.Eval {
               expression = "(function (){ let x = 0; while ( x < 1000) {x++}; return true})()"
