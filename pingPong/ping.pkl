@@ -9,7 +9,7 @@ sm = new csml.StateMachine {
     ["ping"] = new csml.Initial {
       entry {
         new csml.Raise { event = new csml.Global { topic = "ping" } }
-        new csml.Eval { expression = "totalMessages = totalMessages - 1" }
+        new csml.Eval { expression = "--totalMessages" }
       }
       on {
         ["pong"] = new csml.Transition {
