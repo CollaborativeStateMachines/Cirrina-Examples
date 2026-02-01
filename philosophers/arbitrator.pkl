@@ -1,5 +1,5 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient {
@@ -11,28 +11,26 @@ sm = new csml.StateMachine {
       on {
         ["requesting"] = new csml.Transition {
           to = "waitingForRequests"
-          iif = "!(allocated.contains($forkOne) || allocated.contains(($forkOne + 1) % 6))"
+          iif = "!(allocated.contains(idMap[$forkOne]) || allocated.contains((idMap[$forkOne] + 1) % 6))"
           do {
             new csml.Eval {
-              expression = "allocated + [$forkOne, ($forkOne + 1) % 6]"
+              expression = "allocated + [idMap[$forkOne], (idMap[$forkOne] + 1) % 6]"
             }
             new csml.Raise {
               event = new csml.Global {
                 topic = "allocated"
-                data {
-                  ["forkOne"] = "$forkOne"
-                }
               }
+              target = "$forkOne"
             }
           }
           or = "denied"
         }
         ["finished"] = new csml.Transition {
           to = "waitingForRequests"
-          iif = "allocated.contains($forkOne) && allocated.contains(($forkOne + 1) % 6)"
+          iif = "allocated.contains(idMap[$forkOne]) && allocated.contains((idMap[$forkOne] + 1) % 6)"
           do {
             new csml.Eval {
-              expression = "allocated - [$forkOne, ($forkOne + 1) % 6]"
+              expression = "allocated - [idMap[$forkOne], (idMap[$forkOne] + 1) % 6]"
             }
           }
         }
@@ -54,10 +52,8 @@ sm = new csml.StateMachine {
             new csml.Raise {
               event = new csml.Global {
                 topic = "denied"
-                data {
-                  ["forkOne"] = "$forkOne"
-                }
               }
+              target = "$forkOne"
             }
           }
         }
