@@ -1,14 +1,8 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-import "defs.pkl"
-
-function complement(myColor: String, otherColor: String): String =
-  defs.colorComplementMap[myColor][otherColor]
-
-function createChameneos(id: Int) = new csml.StateMachine {
+sm = new csml.StateMachine {
   transient {
-    ["chameneosId"] = "\(id)"
     ["color"] = "std:takeRandom([1,2,3,...])"
     ["individualMeetingCounter"] = "0"
   }
@@ -25,11 +19,9 @@ function createChameneos(id: Int) = new csml.StateMachine {
       on {
         ["matchMade"] = new csml.Transition {
           to = "matchFound"
-          iif = "$chameneos == chameneosId"
         }
         ["change"] = new csml.Transition {
           to = "requestingPartner"
-          iif = "$partner == chameneosId"
           do {
             new csml.Eval {
               expression =
@@ -49,8 +41,9 @@ function createChameneos(id: Int) = new csml.StateMachine {
         new csml.Raise {
           event = new csml.Global {
             topic = "change"
-            data { ["partner"] = "$partner"; ["color"] = "color" }
+            data { ["color"] = "color" }
           }
+          target = "$partner"
         }
 
         new csml.Eval {

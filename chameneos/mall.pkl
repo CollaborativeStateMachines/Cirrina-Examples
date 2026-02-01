@@ -1,5 +1,5 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient {
@@ -32,11 +32,11 @@ sm = new csml.StateMachine {
               event = new csml.Global {
                 topic = "matchMade"
                 data {
-                  ["chameneos"] = "waitingList.get(0)"
                   ["partner"] = "$chameneosId"
                   ["color"] = "$chameneosColor"
                 }
               }
+              target = "waitingList.get(0)"
             }
             new csml.Eval { expression = "waitingList -= [waitingList.get(0)]" }
           }
