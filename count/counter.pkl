@@ -1,5 +1,5 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient {
@@ -9,8 +9,8 @@ sm = new csml.StateMachine {
     ["counting"] = new csml.Initial {
       on {
         ["increment"] = new csml.Transition {
-          iif = "count < 1000000"
-          do { new csml.Eval { expression = "count = count + 1" } }
+          iif = "count < 50000"
+          do { new csml.Eval { expression = "++count" } }
           to = "counting"
           or = "done"
         }
