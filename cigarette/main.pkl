@@ -12,7 +12,7 @@ collaborativeStateMachine {
     ["smoker"] = smoker.sm
   }
 }
-instantiate {
+instances {
   ["arbitrator"] = "arbitrator"
   for (s in defs.smokers) { [s] = "smoker" }
 }
