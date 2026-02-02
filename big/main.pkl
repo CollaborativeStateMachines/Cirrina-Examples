@@ -14,9 +14,7 @@ collaborativeStateMachine {
 }
 instances {
   ["sink"] = "sink"
-  for (b in defs.bigs) {
-    [b] = "big"
-  }
+  for (b in defs.bigs) { [b] = "big" }
 }
 instanceData {
   for (b in defs.bigs) {
@@ -27,4 +25,3 @@ instanceData {
     }
   }
 }
-instanceSubscriptions {}
