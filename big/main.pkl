@@ -23,8 +23,11 @@ instanceData {
   for (b in defs.bigs) {
     [b] {
       ["bigId"] = "'\(b)'"
-      ["otherBigs"] = "['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', ...] - ['\(b)']"
+      ["otherBigs"] =
+        "['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', ...] - ['\(b)']"
+      ["numPings"] = "20000"
     }
   }
+  ["sink"] { ["numBigs"] = "12" }
 }
 instanceSubscriptions {}

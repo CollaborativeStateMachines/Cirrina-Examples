@@ -12,7 +12,7 @@ sm = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "waitForPingOrPong"
-          iif = "pingCounter < 100"
+          iif = "pingCounter < numPings"
           do {
             new csml.Eval { expression = "++pingCounter" }
             new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
@@ -48,9 +48,7 @@ sm = new csml.StateMachine {
       }
     }
     ["receiveRemaining"] = new csml.State {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "donePinging" } }
-      }
+      entry { new csml.Raise { event = new csml.Global { topic = "donePinging" } } }
       on {
         ["ping"] = new csml.Transition {
           do {
@@ -62,9 +60,7 @@ sm = new csml.StateMachine {
             }
           }
         }
-        ["shutdown"] = new csml.Transition {
-          to = "done"
-        }
+        ["shutdown"] = new csml.Transition { to = "done" }
       }
     }
     ["done"] = new csml.Terminal {}

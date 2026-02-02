@@ -11,9 +11,7 @@ sm = new csml.StateMachine {
       on {
         ["donePinging"] = new csml.Transition {
           to = "isFinal"
-          do {
-            new csml.Eval { expression = "++doneCounter" }
-          }
+          do { new csml.Eval { expression = "++doneCounter" } }
         }
       }
     }
@@ -21,10 +19,8 @@ sm = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "done"
-          iif = "doneCounter == 12"
-          do {
-            new csml.Raise { event = new csml.Global { topic = "shutdown" } }
-          }
+          iif = "doneCounter == numBigs"
+          do { new csml.Raise { event = new csml.Global { topic = "shutdown" } } }
           or = "waitingForBigs"
         }
       }
