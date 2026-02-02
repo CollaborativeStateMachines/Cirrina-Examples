@@ -3,7 +3,8 @@ import
 
 sm = new csml.StateMachine {
   transient {
-    ["ingredients"] = "['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', ...]"
+    ["ingredients"] =
+      "['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', ...]"
     ["smokedInTotal"] = "0"
   }
   states {
@@ -13,9 +14,7 @@ sm = new csml.StateMachine {
           to = "notifiedSmoker"
           do {
             new csml.Raise {
-              event = new csml.Global {
-                topic = "ingredientsProvided"
-              }
+              event = new csml.Global { topic = "ingredientsProvided" }
               target = "std:takeRandom(\("ingredients"))"
             }
           }
@@ -23,9 +22,7 @@ sm = new csml.StateMachine {
       }
     }
     ["notifiedSmoker"] = new csml.State {
-      entry {
-        new csml.Eval { expression = "++smokedInTotal" }
-      }
+      entry { new csml.Eval { expression = "++smokedInTotal" } }
       on {
         ["startedSmoking"] = new csml.Transition {
           to = "chooseIngredients"
@@ -35,9 +32,7 @@ sm = new csml.StateMachine {
       }
     }
     ["done"] = new csml.Terminal {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "terminate" } }
-      }
+      entry { new csml.Raise { event = new csml.Global { topic = "terminate" } } }
     }
   }
 }

@@ -8,12 +8,8 @@ sm = new csml.StateMachine {
   states {
     ["waitingForIngredients"] = new csml.Initial {
       on {
-        ["ingredientsProvided"] = new csml.Transition {
-          to = "smoking"
-        }
-        ["terminate"] = new csml.Transition {
-          to = "done"
-        }
+        ["ingredientsProvided"] = new csml.Transition { to = "smoking" }
+        ["terminate"] = new csml.Transition { to = "done" }
       }
     }
     ["smoking"] = new csml.State {

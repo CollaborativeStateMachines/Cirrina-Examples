@@ -14,15 +14,10 @@ collaborativeStateMachine {
 }
 instantiate {
   ["arbitrator"] = "arbitrator"
-  for (s in defs.smokers) {
-    [s] = "smoker"
-  }
+  for (s in defs.smokers) { [s] = "smoker" }
 }
 instanceData {
   for (s in defs.smokers) {
-    [s] {
-      ["smokerId"] = "'\(s)'"
-    }
+    [s] { ["smokerId"] = "'\(s)'" }
   }
 }
-instanceSubscriptions {}
