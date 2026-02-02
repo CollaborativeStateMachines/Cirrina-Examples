@@ -3,7 +3,6 @@ amends
 
 import "big.pkl"
 import "defs.pkl"
-import "guardian.pkl"
 import "sink.pkl"
 
 version = "4.0.0"
