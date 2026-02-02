@@ -6,9 +6,7 @@ sm = new csml.StateMachine {
     ["pong"] = new csml.Initial {
       on {
         ["ping"] = new csml.Transition {
-          do {
-            new csml.Raise { event = new csml.Global { topic = "pong" } }
-          }
+          do { new csml.Raise { event = new csml.Global { topic = "pong" } } }
         }
         ["done"] = new csml.Transition { to = "done" }
       }
