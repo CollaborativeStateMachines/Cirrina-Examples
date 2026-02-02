@@ -14,7 +14,7 @@ collaborativeStateMachine {
     ["waitingRoom"] = waitingRoom.sm
   }
 }
-instantiate {
+instances {
   ["barber"] = "barber"
   for (c in defs.customers) { [c] = "customer" }
   ["waitingRoom"] = "waitingRoom"
