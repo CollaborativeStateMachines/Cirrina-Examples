@@ -1,14 +1,25 @@
-amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+amends
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 import "arbitrator.pkl"
 import "defs.pkl"
 import "philosopher.pkl"
 
-
-name = "benchmark"
-version = "3.0.0"
-stateMachines {
-  new arbitrator.StateMachine {}
-  for (_name in defs.philosophers) {
-    new philosopher.StateMachine {name = _name }
+version = "4.0.0"
+collaborativeStateMachine {
+  stateMachines {
+    ["arbitrator"] = arbitrator.sm
+    ["philosopher"] = philosopher.sm
+  }
 }
+instances {
+  ["arbitrator"] = "arbitrator"
+  for (p in defs.philosophers) { [p] = "philosopher" }
+}
+instanceData {
+  for (p in defs.philosophers.mapIndexed((i, name) -> new Dynamic { idx = i; id = name })) {
+    [p.id] {
+      ["philosopherId"] = "'\(p.id)'"
+      ["forkId"] = "\(p.idx)"
+    }
+  }
 }

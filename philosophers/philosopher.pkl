@@ -1,122 +1,57 @@
-import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+import
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-class StateMachine extends Csml.StateMachineDescription {
-  name = "philosopher"
-  local self = this
-  localContext {
-    variables {
-      new {
-        name = "counter"
-        value = "0"
-      }
-    }
+sm = new csml.StateMachine {
+  transient {
+    ["tryCounter"] = "0"
+    ["eatCounter"] = "0"
   }
   states {
-   new {
-     name = "requestingFork"
-     initial = true
-     entry {
-       new Csml.AssignActionDescription {
-         variable = new {
-           name = "counter"
-           value = "counter + 1"
-         }
-       }
-       new Csml.RaiseActionDescription {
-         event {
-           name = "requesting"
-           data {
-             new {
-               name = "forkOne"
-               value = self.name
-             }
-           }
-           channel = "global"
-         }
-       }
-     }
-     on {
-         new  {
-           event = "allocated"
-           guards {
-             new {
-               expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
-             }
-           }
-           target = "eating"
-         }
-       new {
-         event = "denied"
-         guards {
-           new {
-             expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
-           }
-           new {
-             expression = "counter <= 16000"
-           }
-         }
-         target = "requestingFork"
-       }
-       new {
-         event = "denied"
-         guards {
-           new {
-             expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
-           }
-           new {
-             expression = "counter > 16000"
-           }
-         }
-         target = "leave"
-       }
-     }
-   }
-    new Csml.StateDescription {
-      name = "eating"
+    ["requestingFork"] = new csml.Initial {
       entry {
-        new Csml.RaiseActionDescription {
-          event {
-            name = "finished"
+        new csml.Eval { expression = "++tryCounter" }
+        new csml.Raise {
+          event = new csml.Global {
+            topic = "requesting"
             data {
-              new {
-                name = "forkOne"
-                value = self.name
-              }
+              ["replyTo"] = "philosopherId"
+              ["forkId"] = "forkId"
             }
-            channel = "global"
           }
         }
       }
       on {
-        new Csml.OnTransitionDescription {
-          event = "finished"
-          guards {
-            new Csml.GuardDescription {
-              expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
-            }
-            new Csml.GuardDescription {
-              expression = "counter <= 16000"
-            }
-          }
-          target = "requestingFork"
-        }
-        new Csml.OnTransitionDescription {
-          event = "finished"
-          guards {
-            new Csml.GuardDescription {
-              expression = "$forkOne == \(self.name) && ($forkOne + 1) % 6 == (\(self.name) + 1) % 6"
-            }
-            new Csml.GuardDescription {
-              expression = "counter > 16000"
-            }
-          }
-          target = "leave"
+        ["allocated"] = new csml.Transition { to = "eating" }
+        ["denied"] = new csml.Transition { to = "evaluateCounter" }
+      }
+    }
+    ["evaluateCounter"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "requestingFork"
+          iif = "eatCounter < 16000"
+          or = "leave"
         }
       }
     }
-    new Csml.StateDescription {
-      name = "leave"
-      terminal = true
+    ["eating"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "evaluateCounter"
+          do {
+            new csml.Eval { expression = "++eatCounter" }
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "finished"
+                data { ["forkId"] = "forkId" }
+              }
+            }
+          }
+        }
+      }
+    }
+    ["leave"] = new csml.Terminal {
+      entry { new csml.Raise { event = new csml.Global { topic = "done" } } }
     }
   }
 }
