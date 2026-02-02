@@ -11,7 +11,7 @@ collaborativeStateMachine {
     ["philosopher"] = philosopher.sm
   }
 }
-instantiate {
+instances {
   ["arbitrator"] = "arbitrator"
   for (p in defs.philosophers) { [p] = "philosopher" }
 }
