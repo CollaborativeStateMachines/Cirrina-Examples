@@ -1,5 +1,5 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient {
@@ -9,7 +9,7 @@ sm = new csml.StateMachine {
     ["ping"] = new csml.Initial {
       entry {
         new csml.Raise { event = new csml.Global { topic = "ping" } }
-        new csml.Eval { expression = "totalMessages = totalMessages - 1" }
+        new csml.Eval { expression = "--totalMessages" }
       }
       on {
         ["pong"] = new csml.Transition {
