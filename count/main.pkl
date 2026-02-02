@@ -11,11 +11,7 @@ collaborativeStateMachine {
     ["counterMachine"] = counter.sm
   }
 }
-instantiate {
+instances {
   ["producer"] = "producerMachine"
   ["counter"] = "counterMachine"
-}
-instanceSubscriptions {
-  ["counter"] { "producer" }
-  ["producer"] { "counter" }
 }
