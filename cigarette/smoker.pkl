@@ -1,0 +1,31 @@
+import
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["smokeCounter"] = "0"
+  }
+  states {
+    ["waitingForIngredients"] = new csml.Initial {
+      on {
+        ["ingredientsProvided"] = new csml.Transition { to = "smoking" }
+        ["terminate"] = new csml.Transition { to = "done" }
+      }
+    }
+    ["smoking"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "waitingForIngredients"
+          do {
+            new csml.Eval { expression = "++smokeCounter" }
+            new csml.Raise { event = new csml.Global { topic = "startedSmoking" } }
+            new csml.Eval {
+              expression = "(function (){ let x = 0; while ( x < 1000) {x++}; return true})()"
+            }
+          }
+        }
+      }
+    }
+    ["done"] = new csml.Terminal {}
+  }
+}
