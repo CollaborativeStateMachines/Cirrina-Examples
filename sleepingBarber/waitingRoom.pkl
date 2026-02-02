@@ -1,20 +1,18 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient {
     ["waitingCustomers"] = "[...]"
     ["barberStatus"] = "''"
-    ["finishedCounter"] = "0"
+    ["doneCounter"] = "0"
   }
   states {
     ["init"] = new csml.Initial {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "ready" } }
-      }
       always {
         new csml.Transition {
           to = "process"
+          do { new csml.Raise { event = new csml.Global { topic = "ready" } } }
         }
       }
     }
@@ -23,12 +21,8 @@ sm = new csml.StateMachine {
         ["customerEnter"] = new csml.Transition {
           to = "process"
           iif = "waitingCustomers.size() == 3"
-          do {
-            new csml.Raise {
-              event = new csml.Global { topic = "full"; data { ["customer"] = "$customer" } }
-            }
-          }
-          or = "checkWaitingRoom"
+          do { new csml.Raise { event = new csml.Global { topic = "full" }; target = "$customer" } }
+          or = "evaluateWaitingRoom"
         }
         ["getNext"] = new csml.Transition {
           iif = "!waitingCustomers.isEmpty()"
@@ -38,38 +32,35 @@ sm = new csml.StateMachine {
                 topic = "enter"
                 data { ["customer"] = "waitingCustomers.get(0)" }
               }
+              target = "'barber'"
             }
             new csml.Eval {
-              expression = "waitingCustomers = std:removeFirst(\("waitingCustomers"))"
+              expression = "waitingCustomers = waitingCustomers - [waitingCustomers.get(0)]"
             }
             new csml.Eval { expression = "barberStatus = 'busy'" }
           }
         }
         ["statusSleeping"] = new csml.Transition {
-          do {
-            new csml.Eval { expression = "barberStatus = 'sleeping'" }
-          }
+          do { new csml.Eval { expression = "barberStatus = 'sleeping'" } }
         }
-        ["finished"] = new csml.Transition {
+        ["doneCutting"] = new csml.Transition {
           to = "process"
-          iif = "finishedCounter < 14"
-          do {
-            new csml.Eval { expression = "finishedCounter = finishedCounter + 1" }
-          }
-          or = "stop"
+          iif = "doneCounter < 15"
+          do { new csml.Eval { expression = "++doneCounter" } }
+          or = "terminate"
         }
       }
     }
-    ["checkWaitingRoom"] = new csml.State {
+    ["evaluateWaitingRoom"] = new csml.State {
       always {
         new csml.Transition {
-          to = "checkBarberStatus"
+          to = "evaluateBarberStatus"
           iif = "waitingCustomers.isEmpty()"
           or = "addToWaitingRoom"
         }
       }
     }
-    ["checkBarberStatus"] = new csml.State {
+    ["evaluateBarberStatus"] = new csml.State {
       always {
         new csml.Transition {
           to = "process"
@@ -77,6 +68,7 @@ sm = new csml.StateMachine {
           do {
             new csml.Raise {
               event = new csml.Global { topic = "enter"; data { ["customer"] = "$customer" } }
+              target = "'barber'"
             }
             new csml.Eval { expression = "barberStatus = 'busy'" }
           }
@@ -89,20 +81,14 @@ sm = new csml.StateMachine {
         new csml.Transition {
           to = "process"
           do {
-            new csml.Eval {
-              expression = "waitingCustomers = std:addToList(\("waitingCustomers"), $customer)"
-            }
-            new csml.Raise {
-              event = new csml.Global { topic = "waiting"; data { ["customer"] = "$customer" } }
-            }
+            new csml.Eval { expression = "waitingCustomers = waitingCustomers + [$customer]" }
+            new csml.Raise { event = new csml.Global { topic = "waiting" }; target = "$customer" }
           }
         }
       }
     }
-    ["stop"] = new csml.Terminal {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "stopCutting" } }
-      }
+    ["terminate"] = new csml.Terminal {
+      entry { new csml.Raise { event = new csml.Global { topic = "terminate" } } }
     }
   }
 }

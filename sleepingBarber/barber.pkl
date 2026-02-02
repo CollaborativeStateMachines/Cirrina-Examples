@@ -4,22 +4,15 @@ import
 sm = new csml.StateMachine {
   states {
     ["sleeping"] = new csml.Initial {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "statusSleeping" } }
-      }
+      entry { new csml.Raise { event = new csml.Global { topic = "statusSleeping" } } }
       on {
-        ["ready"] = new csml.Transition {
-          do {}
-        }
         ["enter"] = new csml.Transition {
           to = "cutting"
           do {
-            new csml.Raise { event = new csml.Global { topic = "comeIn"} target = "$customer"}
+            new csml.Raise { event = new csml.Global { topic = "comeIn" }; target = "$customer" }
           }
         }
-        ["stopCutting"] = new csml.Transition {
-          to = "stop"
-        }
+        ["terminate"] = new csml.Transition { to = "done" }
       }
     }
     ["cutting"] = new csml.State {
@@ -28,19 +21,12 @@ sm = new csml.StateMachine {
           to = "sleeping"
           iif = "(function (){ let x = 0; while ( x < 1000) {x++}; return true})()"
           do {
-            new csml.Raise {
-              event = new csml.Global {
-                topic = "done"
-              }
-              target = "$customer"
-            }
-            new csml.Raise {
-              event = new csml.Global { topic = "getNext" }
-            }
+            new csml.Raise { event = new csml.Global { topic = "done" }; target = "$customer" }
+            new csml.Raise { event = new csml.Global { topic = "getNext" } }
           }
         }
       }
     }
-    ["stop"] = new csml.Terminal {}
+    ["done"] = new csml.Terminal {}
   }
 }
