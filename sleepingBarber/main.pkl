@@ -7,10 +7,20 @@ import "defs.pkl"
 import "waitingRoom.pkl"
 
 version = "4.0.0"
-stateMachines {
-  ["barber"] = barber.sm
-  for (_def in defs.customers) {
-    [_def] = customer.sm
+collaborativeStateMachine {
+  stateMachines {
+    ["barber"] = barber.sm
+    ["customer"] = customer.sm
+    ["waitingRoom"] = waitingRoom.sm
   }
-  ["waitingRoom"] = waitingRoom.sm
+}
+instances {
+  ["barber"] = "barber"
+  for (c in defs.customers) { [c] = "customer" }
+  ["waitingRoom"] = "waitingRoom"
+}
+instanceData {
+  for (c in defs.customers) {
+    [c] { ["customerId"] = "'\(c)'" }
+  }
 }
