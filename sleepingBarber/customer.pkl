@@ -2,16 +2,11 @@ import
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
-  transient {
-    ["counter"] = "0"
-    ["customerId"] = "std:getSequentialId()"
-  }
+  transient { ["counter"] = "0" }
   states {
     ["init"] = new csml.Initial {
       on {
-        ["ready"] = new csml.Transition {
-          to = "requestHaircut"
-        }
+        ["ready"] = new csml.Transition { to = "requestHaircut" }
       }
     }
     ["requestHaircut"] = new csml.State {
@@ -19,59 +14,38 @@ sm = new csml.StateMachine {
         new csml.Raise {
           event = new csml.Global {
             topic = "customerEnter"
-            data {
-              ["customer"] = "customerId"
-            }
+            data { ["customer"] = "customerId" }
           }
         }
       }
       on {
-        ["full"] = new csml.Transition {
-          to = "requestHaircut"
-          iif = "$customer == customerId"
-        }
-        ["enter"] = new csml.Transition {
-          to = "gettingHaircut"
-          iif = "$customer == customerId"
-        }
-        ["waiting"] = new csml.Transition {
-          to = "waiting"
-          iif = "$customer == customerId"
-        }
+        ["full"] = new csml.Transition { to = "requestHaircut" }
+        ["comeIn"] = new csml.Transition { to = "gettingHaircut" }
+        ["waiting"] = new csml.Transition { to = "waiting" }
       }
     }
     ["gettingHaircut"] = new csml.State {
-      entry {
-        new csml.Eval { expression = "counter = counter + 1" }
-      }
+      entry { new csml.Eval { expression = "++counter" } }
       on {
-        ["done"] = new csml.Transition {
-          to = "evaluateCounter"
-          iif = "$customer == customerId"
-        }
+        ["done"] = new csml.Transition { to = "evaluateCounter" }
       }
     }
     ["evaluateCounter"] = new csml.State {
       always {
         new csml.Transition {
           to = "requestHaircut"
-          iif = "counter < 2000"
+          iif = "counter < 1000"
           or = "leave"
         }
       }
     }
     ["waiting"] = new csml.State {
       on {
-        ["enter"] = new csml.Transition {
-          to = "gettingHaircut"
-          iif = "$customer == customerId"
-        }
+        ["comeIn"] = new csml.Transition { to = "gettingHaircut" }
       }
     }
     ["leave"] = new csml.Terminal {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "finished" } }
-      }
+      entry { new csml.Raise { event = new csml.Global { topic = "doneCutting" } } }
     }
   }
 }
