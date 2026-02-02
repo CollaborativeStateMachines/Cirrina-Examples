@@ -1,0 +1,68 @@
+import
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["target"] = "''"
+    ["pingCounter"] = "0"
+    ["pongCounter"] = "0"
+  }
+  states {
+    ["sendPing"] = new csml.Initial {
+      always {
+        new csml.Transition {
+          to = "waitForPingOrPong"
+          iif = "pingCounter < 20000"
+          do {
+            new csml.Eval { expression = "++pingCounter" }
+            new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "ping"
+                data { ["sender"] = "bigId" }
+              }
+              target = "target"
+            }
+          }
+          or = "receiveRemaining"
+        }
+      }
+    }
+    ["waitForPingOrPong"] = new csml.State {
+      on {
+        ["ping"] = new csml.Transition {
+          do {
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "pong"
+                data { ["sender"] = "bigId" }
+              }
+              target = "$sender"
+            }
+          }
+        }
+        ["pong"] = new csml.Transition {
+          iif = "$sender == target"
+          to = "sendPing"
+        }
+      }
+    }
+    ["receiveRemaining"] = new csml.State {
+      entry { new csml.Raise { event = new csml.Global { topic = "donePinging" } } }
+      on {
+        ["ping"] = new csml.Transition {
+          do {
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "pong"
+                data { ["sender"] = "bigId" }
+              }
+            }
+          }
+        }
+        ["shutdown"] = new csml.Transition { to = "done" }
+      }
+    }
+    ["done"] = new csml.Terminal {}
+  }
+}

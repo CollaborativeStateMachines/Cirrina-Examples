@@ -1,0 +1,30 @@
+import
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["doneCounter"] = "0"
+    ["cumulatedPongCounter"] = "0"
+  }
+  states {
+    ["waitingForBigs"] = new csml.Initial {
+      on {
+        ["donePinging"] = new csml.Transition {
+          to = "isFinal"
+          do { new csml.Eval { expression = "++doneCounter" } }
+        }
+      }
+    }
+    ["isFinal"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "done"
+          iif = "doneCounter == 12"
+          do { new csml.Raise { event = new csml.Global { topic = "shutdown" } } }
+          or = "waitingForBigs"
+        }
+      }
+    }
+    ["done"] = new csml.Terminal {}
+  }
+}

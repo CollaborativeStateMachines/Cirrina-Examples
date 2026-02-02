@@ -1,192 +1,107 @@
-import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/Csml.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-class StateMachine extends Csml.StateMachineDescription {
-  name = "waitingRoom"
-  localContext {
-    variables {
-      new {
-        name = "waitingCustomers"
-        value = "[...]"
-      }
-      new {
-        name = "barberStatus"
-        value = "''"
-      }
-    }
+sm = new csml.StateMachine {
+  transient {
+    ["waitingCustomers"] = "[...]"
+    ["barberStatus"] = "''"
+    ["finishedCounter"] = "0"
   }
   states {
-    new {
-      name = "process"
-      initial = true
+    ["init"] = new csml.Initial {
       entry {
-        new Csml.RaiseActionDescription {
-          event {
-            name = "ready"
-            channel = "global"
+        new csml.Raise { event = new csml.Global { topic = "ready" } }
+      }
+      always {
+        new csml.Transition {
+          to = "process"
+        }
+      }
+    }
+    ["process"] = new csml.State {
+      on {
+        ["customerEnter"] = new csml.Transition {
+          to = "process"
+          iif = "waitingCustomers.size() == 3"
+          do {
+            new csml.Raise {
+              event = new csml.Global { topic = "full"; data { ["customer"] = "$customer" } }
+            }
+          }
+          or = "checkWaitingRoom"
+        }
+        ["getNext"] = new csml.Transition {
+          iif = "!waitingCustomers.isEmpty()"
+          do {
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "enter"
+                data { ["customer"] = "waitingCustomers.get(0)" }
+              }
+            }
+            new csml.Eval {
+              expression = "waitingCustomers = std:removeFirst(\("waitingCustomers"))"
+            }
+            new csml.Eval { expression = "barberStatus = 'busy'" }
+          }
+        }
+        ["statusSleeping"] = new csml.Transition {
+          do {
+            new csml.Eval { expression = "barberStatus = 'sleeping'" }
+          }
+        }
+        ["finished"] = new csml.Transition {
+          to = "process"
+          iif = "finishedCounter < 14"
+          do {
+            new csml.Eval { expression = "finishedCounter = finishedCounter + 1" }
+          }
+          or = "stop"
+        }
+      }
+    }
+    ["checkWaitingRoom"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "checkBarberStatus"
+          iif = "waitingCustomers.isEmpty()"
+          or = "addToWaitingRoom"
+        }
+      }
+    }
+    ["checkBarberStatus"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "process"
+          iif = "barberStatus == 'sleeping'"
+          do {
+            new csml.Raise {
+              event = new csml.Global { topic = "enter"; data { ["customer"] = "$customer" } }
+            }
+            new csml.Eval { expression = "barberStatus = 'busy'" }
+          }
+          or = "addToWaitingRoom"
+        }
+      }
+    }
+    ["addToWaitingRoom"] = new csml.State {
+      always {
+        new csml.Transition {
+          to = "process"
+          do {
+            new csml.Eval {
+              expression = "waitingCustomers = std:addToList(\("waitingCustomers"), $customer)"
+            }
+            new csml.Raise {
+              event = new csml.Global { topic = "waiting"; data { ["customer"] = "$customer" } }
+            }
           }
         }
       }
-      on {
-        new {
-          event = "customerEnter"
-          guards {
-            new {
-              expression = "waitingCustomers.size() == 3"
-            }
-          }
-          actions {
-            new Csml.RaiseActionDescription {
-              event {
-                name = "full"
-                data {
-                  new {
-                    name = "customer"
-                    value = "$customer"
-                  }
-                }
-                channel = "global"
-              }
-            }
-          }
-        }
-        new {
-          event = "customerEnter"
-          guards {
-            new {
-              expression = "waitingCustomers.isEmpty()"
-            }
-            new {
-              expression = "barberStatus == 'sleeping'"
-            }
-          }
-          actions {
-            new Csml.RaiseActionDescription {
-              event {
-                name = "enter"
-                data {
-                  new {
-                    name = "customer"
-                    value = "$customer"
-                  }
-                }
-                channel = "global"
-              }
-            }
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = "barberStatus"
-                value = "'busy'"
-              }
-            }
-          }
-        }
-        new {
-          event = "customerEnter"
-          guards {
-            new {
-              expression = "waitingCustomers.isEmpty()"
-            }
-            new Csml.GuardDescription {
-              expression = "barberStatus == 'busy'"
-            }
-          }
-          actions {
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = "waitingCustomers"
-                value = "utility:addToList(\("waitingCustomers"), $customer)"
-              }
-            }
-            new Csml.RaiseActionDescription {
-              event {
-                name = "waiting"
-                data {
-                  new {
-                    name = "customer"
-                    value = "$customer"
-                  }
-                }
-                channel = "global"
-              }
-            }
-          }
-        }
-        new {
-          event = "customerEnter"
-          guards {
-            new {
-              expression = "waitingCustomers.size() != 3"
-            }
-            new {
-              expression = "!waitingCustomers.isEmpty()"
-            }
-          }
-          actions {
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = "waitingCustomers"
-                value = "utility:addToList(\("waitingCustomers"), $customer)"
-              }
-            }
-            new Csml.RaiseActionDescription {
-              event {
-                name = "waiting"
-                data {
-                  new {
-                    name = "customer"
-                    value = "$customer"
-                  }
-                }
-                channel = "global"
-              }
-            }
-          }
-        }
-        new {
-          event = "getNext"
-          guards {
-            new {
-              expression = "!waitingCustomers.isEmpty()"
-            }
-          }
-          actions {
-            new Csml.RaiseActionDescription {
-              event {
-                name = "enter"
-                data {
-                  new {
-                    name = "customer"
-                    value = "waitingCustomers.get(0)"
-                  }
-                }
-                channel = "global"
-              }
-            }
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = "waitingCustomers"
-                value = "utility:removeFirst(\("waitingCustomers"))"
-              }
-            }
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = "barberStatus"
-                value = "'busy'"
-              }
-            }
-          }
-        }
-        new {
-          event = "statusSleeping"
-          actions {
-            new Csml.AssignActionDescription {
-              variable = new {
-                name = "barberStatus"
-                value = "'sleeping'"
-              }
-            }
-          }
-        }
+    }
+    ["stop"] = new csml.Terminal {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "stopCutting" } }
       }
     }
   }
