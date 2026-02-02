@@ -1,0 +1,54 @@
+import
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient {
+    ["color"] = "std:takeRandom([1,2,3,...])"
+    ["individualMeetingCounter"] = "0"
+  }
+  states {
+    ["requestingPartner"] = new csml.Initial {
+      entry {
+        new csml.Raise {
+          event = new csml.Global {
+            topic = "requestingPartner"
+            data { ["chameneosId"] = "chameneosId"; ["chameneosColor"] = "color" }
+          }
+        }
+      }
+      on {
+        ["matchMade"] = new csml.Transition {
+          to = "matchFound"
+        }
+        ["change"] = new csml.Transition {
+          to = "requestingPartner"
+          do {
+            new csml.Eval {
+              expression =
+                "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
+            }
+            new csml.Eval { expression = "++individualMeetingCounter" }
+          }
+        }
+        ["done"] = new csml.Transition { to = "done" }
+      }
+    }
+    ["matchFound"] = new csml.State {
+      entry {
+        new csml.Eval { expression = "++individualMeetingCounter" }
+        new csml.Raise {
+          event = new csml.Global {
+            topic = "change"
+            data { ["color"] = "color" }
+          }
+          target = "$partner"
+        }
+        new csml.Eval {
+          expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
+        }
+      }
+      always { new csml.Transition { to = "requestingPartner" } }
+    }
+    ["done"] = new csml.Terminal {}
+  }
+}
