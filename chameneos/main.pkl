@@ -12,17 +12,12 @@ collaborativeStateMachine {
     ["chameneos"] = chameneos.sm
   }
 }
-instantiate {
+instances {
   ["mall"] = "mall"
-  for (c in defs.chameneos) {
-    [c] = "chameneos"
-  }
+  for (c in defs.chameneos) { [c] = "chameneos" }
 }
 instanceData {
   for (c in defs.chameneos) {
-    [c] {
-      ["chameneosId"] = "'\(c)'"
-    }
+    [c] { ["chameneosId"] = "'\(c)'" }
   }
 }
-instanceSubscriptions {}
