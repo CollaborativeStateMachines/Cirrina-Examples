@@ -2,7 +2,6 @@ import
   "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
-  transient { ["numIncrements"] = "50000" }
   states {
     ["sendMessage"] = new csml.Initial {
       entry {
@@ -12,7 +11,7 @@ sm = new csml.StateMachine {
         ["increment"] = new csml.Transition { to = "sendMessage" }
         ["finalCount"] = new csml.Transition {
           to = "success"
-          iif = "$count == numIncrements"
+          iif = "$count ==  50000"
           or = "failure"
         }
       }

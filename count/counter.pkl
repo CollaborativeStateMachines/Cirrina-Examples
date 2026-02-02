@@ -4,13 +4,12 @@ import
 sm = new csml.StateMachine {
   transient {
     ["count"] = "0"
-    ["numIncrements"] = "50000"
   }
   states {
     ["counting"] = new csml.Initial {
       on {
         ["increment"] = new csml.Transition {
-          iif = "count < numIncrements"
+          iif = "count < 50000"
           do { new csml.Eval { expression = "++count" } }
           to = "counting"
           or = "done"
