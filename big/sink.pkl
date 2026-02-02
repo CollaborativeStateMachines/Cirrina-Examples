@@ -19,7 +19,7 @@ sm = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "done"
-          iif = "doneCounter == numBigs"
+          iif = "doneCounter == 12"
           do { new csml.Raise { event = new csml.Global { topic = "shutdown" } } }
           or = "waitingForBigs"
         }

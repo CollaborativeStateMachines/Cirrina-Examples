@@ -25,9 +25,7 @@ instanceData {
       ["bigId"] = "'\(b)'"
       ["otherBigs"] =
         "['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', ...] - ['\(b)']"
-      ["numPings"] = "20000"
     }
   }
-  ["sink"] { ["numBigs"] = "12" }
 }
 instanceSubscriptions {}

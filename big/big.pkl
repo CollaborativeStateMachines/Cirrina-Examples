@@ -12,7 +12,7 @@ sm = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "waitForPingOrPong"
-          iif = "pingCounter < numPings"
+          iif = "pingCounter < 20000"
           do {
             new csml.Eval { expression = "++pingCounter" }
             new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
