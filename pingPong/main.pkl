@@ -11,11 +11,7 @@ collaborativeStateMachine {
     ["pongMachine"] = pong.sm
   }
 }
-instantiate {
+instances {
   ["ping"] = "pingMachine"
   ["pong"] = "pongMachine"
-}
-instanceSubscriptions {
-  ["ping"] { "pong" }
-  ["pong"] { "ping" }
 }
