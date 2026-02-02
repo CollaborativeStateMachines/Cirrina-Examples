@@ -2,15 +2,11 @@ import
   "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
-  transient {
-    ["counter"] = "0"
-  }
+  transient { ["counter"] = "0" }
   states {
     ["init"] = new csml.Initial {
       on {
-        ["ready"] = new csml.Transition {
-          to = "requestHaircut"
-        }
+        ["ready"] = new csml.Transition { to = "requestHaircut" }
       }
     }
     ["requestHaircut"] = new csml.State {
@@ -18,32 +14,20 @@ sm = new csml.StateMachine {
         new csml.Raise {
           event = new csml.Global {
             topic = "customerEnter"
-            data {
-              ["customer"] = "customerId"
-            }
+            data { ["customer"] = "customerId" }
           }
         }
       }
       on {
-        ["full"] = new csml.Transition {
-          to = "requestHaircut"
-        }
-        ["comeIn"] = new csml.Transition {
-          to = "gettingHaircut"
-        }
-        ["waiting"] = new csml.Transition {
-          to = "waiting"
-        }
+        ["full"] = new csml.Transition { to = "requestHaircut" }
+        ["comeIn"] = new csml.Transition { to = "gettingHaircut" }
+        ["waiting"] = new csml.Transition { to = "waiting" }
       }
     }
     ["gettingHaircut"] = new csml.State {
-      entry {
-        new csml.Eval { expression = "++counter" }
-      }
+      entry { new csml.Eval { expression = "++counter" } }
       on {
-        ["done"] = new csml.Transition {
-          to = "evaluateCounter"
-        }
+        ["done"] = new csml.Transition { to = "evaluateCounter" }
       }
     }
     ["evaluateCounter"] = new csml.State {
@@ -57,15 +41,11 @@ sm = new csml.StateMachine {
     }
     ["waiting"] = new csml.State {
       on {
-        ["comeIn"] = new csml.Transition {
-          to = "gettingHaircut"
-        }
+        ["comeIn"] = new csml.Transition { to = "gettingHaircut" }
       }
     }
     ["leave"] = new csml.Terminal {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "doneCutting" } }
-      }
+      entry { new csml.Raise { event = new csml.Global { topic = "doneCutting" } } }
     }
   }
 }

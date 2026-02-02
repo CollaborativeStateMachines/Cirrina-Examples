@@ -16,17 +16,12 @@ collaborativeStateMachine {
 }
 instantiate {
   ["barber"] = "barber"
-  for (c in defs.customers) {
-    [c] = "customer"
-  }
+  for (c in defs.customers) { [c] = "customer" }
   ["waitingRoom"] = "waitingRoom"
 }
-
 instanceData {
   for (c in defs.customers) {
-    [c] {
-      ["customerId"] = "'\(c)'"
-    }
+    [c] { ["customerId"] = "'\(c)'" }
   }
 }
 instanceSubscriptions {}
