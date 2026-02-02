@@ -1,4 +1,1 @@
 philosophers = List("zero", "one", "two", "three", "four", "five")
-
-function createIdMap(ids: List<String>): String =
-  "{ \(ids.mapIndexed((index, id) -> "'\(id)': \(index)").join(", ")) }"

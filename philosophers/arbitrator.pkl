@@ -11,35 +11,22 @@ sm = new csml.StateMachine {
       on {
         ["requesting"] = new csml.Transition {
           to = "waitingForRequests"
-          iif = "!(allocated.contains(idMap[$forkOne]) || allocated.contains((idMap[$forkOne] + 1) % 6))"
+          iif = "!(allocated.contains($forkId) || allocated.contains(($forkId + 1) % 6))"
           do {
-            new csml.Eval {
-              expression = "allocated + [idMap[$forkOne], (idMap[$forkOne] + 1) % 6]"
-            }
-            new csml.Raise {
-              event = new csml.Global {
-                topic = "allocated"
-              }
-              target = "$forkOne"
-            }
+            new csml.Eval { expression = "allocated + [$forkId, ($forkId + 1) % 6]" }
+            new csml.Raise { event = new csml.Global { topic = "allocated" }; target = "$replyTo" }
           }
           or = "denied"
         }
         ["finished"] = new csml.Transition {
           to = "waitingForRequests"
-          iif = "allocated.contains(idMap[$forkOne]) && allocated.contains((idMap[$forkOne] + 1) % 6)"
-          do {
-            new csml.Eval {
-              expression = "allocated - [idMap[$forkOne], (idMap[$forkOne] + 1) % 6]"
-            }
-          }
+          iif = "allocated.contains($forkId) && allocated.contains(($forkId + 1) % 6)"
+          do { new csml.Eval { expression = "allocated - [$forkId, ($forkId + 1) % 6]" } }
         }
         ["done"] = new csml.Transition {
           to = "waitingForRequests"
           iif = "doneCounter < 5"
-          do {
-            new csml.Eval { expression = "doneCounter = doneCounter + 1" }
-          }
+          do { new csml.Eval { expression = "doneCounter = doneCounter + 1" } }
           or = "done"
         }
       }
@@ -49,12 +36,7 @@ sm = new csml.StateMachine {
         new csml.Transition {
           to = "waitingForRequests"
           do {
-            new csml.Raise {
-              event = new csml.Global {
-                topic = "denied"
-              }
-              target = "$forkOne"
-            }
+            new csml.Raise { event = new csml.Global { topic = "denied" }; target = "$replyTo" }
           }
         }
       }

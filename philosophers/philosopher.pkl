@@ -14,25 +14,22 @@ sm = new csml.StateMachine {
           event = new csml.Global {
             topic = "requesting"
             data {
-              ["forkOne"] = "philosopherId"
+              ["replyTo"] = "philosopherId"
+              ["forkId"] = "forkId"
             }
           }
         }
       }
       on {
-        ["allocated"] = new csml.Transition {
-          to = "eating"
-        }
-        ["denied"] = new csml.Transition {
-          to = "evaluateCounter"
-        }
+        ["allocated"] = new csml.Transition { to = "eating" }
+        ["denied"] = new csml.Transition { to = "evaluateCounter" }
       }
     }
     ["evaluateCounter"] = new csml.State {
       always {
         new csml.Transition {
           to = "requestingFork"
-          iif = "eatCounter <= 16000"
+          iif = "eatCounter < 16000"
           or = "leave"
         }
       }
@@ -46,9 +43,7 @@ sm = new csml.StateMachine {
             new csml.Raise {
               event = new csml.Global {
                 topic = "finished"
-                data {
-                  ["forkOne"] = "philosopherId"
-                }
+                data { ["forkId"] = "forkId" }
               }
             }
           }
@@ -56,9 +51,7 @@ sm = new csml.StateMachine {
       }
     }
     ["leave"] = new csml.Terminal {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "done" } }
-      }
+      entry { new csml.Raise { event = new csml.Global { topic = "done" } } }
     }
   }
 }

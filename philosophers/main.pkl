@@ -13,17 +13,13 @@ collaborativeStateMachine {
 }
 instantiate {
   ["arbitrator"] = "arbitrator"
-  for (p in defs.philosophers) {
-    [p] = "philosopher"
-  }
+  for (p in defs.philosophers) { [p] = "philosopher" }
 }
 instanceData {
-  for (p in defs.philosophers) {
-    [p] {
-      ["philosopherId"] = "'\(p)'"
+  for (p in defs.philosophers.mapIndexed((i, name) -> new Dynamic { idx = i; id = name })) {
+    [p.id] {
+      ["philosopherId"] = "'\(p.id)'"
+      ["forkId"] = "\(p.idx)"
     }
-  }
-  ["arbitrator"] {
-    ["idMap"] = defs.createIdMap(defs.philosophers)
   }
 }
