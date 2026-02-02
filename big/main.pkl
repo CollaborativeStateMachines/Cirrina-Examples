@@ -12,8 +12,7 @@ collaborativeStateMachine {
     ["big"] = big.sm
   }
 }
-
-instantiate {
+instances {
   ["sink"] = "sink"
   for (b in defs.bigs) {
     [b] = "big"
