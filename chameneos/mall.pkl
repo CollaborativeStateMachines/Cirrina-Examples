@@ -12,11 +12,7 @@ sm = new csml.StateMachine {
         ["requestingPartner"] = new csml.Transition {
           to = "waitingForChameneos"
           iif = "waitingList.isEmpty() && meetingCounter < 20000"
-          do {
-            new csml.Eval {
-              expression = "waitingList += [$chameneosId]"
-            }
-          }
+          do { new csml.Eval { expression = "waitingList += [$chameneosId]" } }
           or = "scheduleMeeting"
         }
       }
@@ -45,9 +41,7 @@ sm = new csml.StateMachine {
       }
     }
     ["done"] = new csml.Terminal {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "done" } }
-      }
+      entry { new csml.Raise { event = new csml.Global { topic = "done" } } }
     }
   }
 }

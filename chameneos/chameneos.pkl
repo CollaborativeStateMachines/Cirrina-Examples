@@ -30,9 +30,7 @@ sm = new csml.StateMachine {
             new csml.Eval { expression = "++individualMeetingCounter" }
           }
         }
-        ["done"] = new csml.Transition {
-          to = "done"
-        }
+        ["done"] = new csml.Transition { to = "done" }
       }
     }
     ["matchFound"] = new csml.State {
@@ -45,7 +43,6 @@ sm = new csml.StateMachine {
           }
           target = "$partner"
         }
-
         new csml.Eval {
           expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
         }
