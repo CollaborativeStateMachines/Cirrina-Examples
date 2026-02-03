@@ -1,5 +1,5 @@
 amends
-  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 import "arbitrator.pkl"
 import "defs.pkl"
 import "philosopher.pkl"

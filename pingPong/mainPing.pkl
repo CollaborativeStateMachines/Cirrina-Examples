@@ -1,17 +1,14 @@
 amends
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-import "counter.pkl"
-import "producer.pkl"
+import "ping.pkl"
 
 version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
-    ["producerMachine"] = producer.sm
-    ["counterMachine"] = counter.sm
+    ["pingMachine"] = ping.sm
   }
 }
 instances {
-  ["producer"] = "producerMachine"
-  ["counter"] = "counterMachine"
+  ["ping"] = "pingMachine"
 }
