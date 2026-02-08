@@ -25,7 +25,7 @@ sm = new csml.StateMachine {
           do {
             new csml.Eval {
               expression =
-                "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
+                "color = $color"
             }
             new csml.Eval { expression = "++individualMeetingCounter" }
           }
@@ -35,6 +35,9 @@ sm = new csml.StateMachine {
     }
     ["matchFound"] = new csml.State {
       entry {
+        new csml.Eval {
+          expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
+        }
         new csml.Eval { expression = "++individualMeetingCounter" }
         new csml.Raise {
           event = new csml.Global {
@@ -42,9 +45,6 @@ sm = new csml.StateMachine {
             data { ["color"] = "color" }
           }
           target = "$partner"
-        }
-        new csml.Eval {
-          expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
         }
       }
       always { new csml.Transition { to = "requestingPartner" } }

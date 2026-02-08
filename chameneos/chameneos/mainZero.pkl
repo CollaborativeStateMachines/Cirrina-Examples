@@ -1,23 +1,17 @@
 amends
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-import "chameneos.pkl"
-import "defs.pkl"
-import "mall.pkl"
+import "../chameneos.pkl"
 
 version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
-    ["mall"] = mall.sm
     ["chameneos"] = chameneos.sm
   }
 }
 instances {
-  ["mall"] = "mall"
-  for (c in defs.chameneos) { [c] = "chameneos" }
+  ["zero"] = "chameneos"
 }
 instanceData {
-  for (c in defs.chameneos) {
-    [c] { ["chameneosId"] = "'\(c)'" }
-  }
+  ["zero"] { ["chameneosId"] = "'zero'" }
 }

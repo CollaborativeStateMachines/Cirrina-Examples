@@ -2,13 +2,22 @@ import
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
+  transient {
+    ["count"] = "50000"
+  }
   states {
     ["sendMessage"] = new csml.Initial {
       entry {
         new csml.Raise { event = new csml.Global { topic = "increment" } }
       }
       on {
-        ["increment"] = new csml.Transition { to = "sendMessage" }
+        ["increment"] = new csml.Transition {
+          to = "sendMessage"
+          iif = "count > 1"
+          do {
+            new csml.Eval { expression = "--count"}
+          }
+        }
         ["finalCount"] = new csml.Transition {
           to = "success"
           iif = "$count ==  50000"

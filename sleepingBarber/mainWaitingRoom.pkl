@@ -1,26 +1,14 @@
 amends
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-import "barber.pkl"
-import "customer.pkl"
-import "defs.pkl"
 import "waitingRoom.pkl"
 
 version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
-    ["barber"] = barber.sm
-    ["customer"] = customer.sm
     ["waitingRoom"] = waitingRoom.sm
   }
 }
 instances {
-  ["barber"] = "barber"
-  for (c in defs.customers) { [c] = "customer" }
   ["waitingRoom"] = "waitingRoom"
-}
-instanceData {
-  for (c in defs.customers) {
-    [c] { ["customerId"] = "'\(c)'" }
-  }
 }

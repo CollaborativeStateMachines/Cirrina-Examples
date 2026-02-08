@@ -1,23 +1,17 @@
 amends
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-import "arbitrator.pkl"
-import "defs.pkl"
-import "smoker.pkl"
+import "../smoker.pkl"
 
 version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
-    ["arbitrator"] = arbitrator.sm
     ["smoker"] = smoker.sm
   }
 }
 instances {
-  ["arbitrator"] = "arbitrator"
-  for (s in defs.smokers) { [s] = "smoker" }
+  ["four"] = "smoker"
 }
 instanceData {
-  for (s in defs.smokers) {
-    [s] { ["smokerId"] = "'\(s)'" }
-  }
+  ["four"] { ["smokerId"] = "'four'" }
 }

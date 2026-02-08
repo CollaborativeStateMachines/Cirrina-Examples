@@ -1,16 +1,14 @@
 amends
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-import "big.pkl"
-import "defs.pkl"
-import "sink.pkl"
+import "counter.pkl"
 
 version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
-    ["sink"] = sink.sm
+    ["counterMachine"] = counter.sm
   }
 }
 instances {
-  ["sink"] = "sink"
+  ["counter"] = "counterMachine"
 }
