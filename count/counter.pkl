@@ -9,22 +9,22 @@ sm = new csml.StateMachine {
     ["counting"] = new csml.Initial {
       on {
         ["increment"] = new csml.Transition {
-          iif = "count < 50000"
           do { new csml.Eval { expression = "++count" } }
           to = "counting"
-          or = "done"
         }
-      }
-    }
-    ["done"] = new csml.Terminal {
-      entry {
-        new csml.Raise {
-          event = new csml.Global {
-            topic = "finalCount"
-            data { ["count"] = "count" }
+        ["getFinalCount"] = new csml.Transition {
+          to = "done"
+          do {
+            new csml.Raise {
+              event = new csml.Global {
+                topic = "finalCount"
+                data { ["count"] = "count" }
+              }
+            }
           }
         }
       }
     }
+    ["done"] = new csml.Terminal {}
   }
 }

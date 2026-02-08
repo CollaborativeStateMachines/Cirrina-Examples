@@ -7,17 +7,23 @@ sm = new csml.StateMachine {
   }
   states {
     ["sendMessage"] = new csml.Initial {
-      entry {
-        new csml.Raise { event = new csml.Global { topic = "increment" } }
-      }
-      on {
-        ["increment"] = new csml.Transition {
+      always {
+        new csml.Transition {
           to = "sendMessage"
           iif = "count > 1"
           do {
+            new csml.Raise { event = new csml.Global { topic = "increment" } }
             new csml.Eval { expression = "--count"}
           }
+          or = "getFinal"
         }
+      }
+    }
+    ["getFinal"] = new csml.State {
+      entry {
+        new csml.Raise { event = new csml.Global { topic = "getFinalCount" } }
+      }
+      on {
         ["finalCount"] = new csml.Transition {
           to = "success"
           iif = "$count ==  50000"
