@@ -1,0 +1,76 @@
+x-worker-base: &worker-base
+  image: cirrina
+  build:
+    context: .
+  depends_on:
+    - sink-node
+  networks:
+    - cirrina-net
+  volumes:
+    - ./:/big
+
+services:
+  sink-node:
+    image: cirrina
+    build:
+      context: .
+    environment:
+      - CSM_BARRIER=barrier
+      - CSM_MAIN_URI=file:///project/main.pkl
+      - CSM_PARTIES=13
+    networks:
+      - cirrina-net
+    volumes:
+      - ./:/project
+
+  w0:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainZero.pkl, CSM_PARTIES=13 }
+
+  w1:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainOne.pkl, CSM_PARTIES=13 }
+
+  w2:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainTwo.pkl, CSM_PARTIES=13 }
+
+  w3:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainThree.pkl, CSM_PARTIES=13 }
+
+  w4:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainFour.pkl, CSM_PARTIES=13 }
+
+  w5:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainFive.pkl, CSM_PARTIES=13 }
+
+  w6:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainSix.pkl, CSM_PARTIES=13 }
+
+  w7:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainSeven.pkl, CSM_PARTIES=13 }
+
+  w8:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainEight.pkl, CSM_PARTIES=13 }
+
+  w9:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainNine.pkl, CSM_PARTIES=13 }
+
+  w10:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainTen.pkl, CSM_PARTIES=13 }
+
+  w11:
+    <<: *worker-base
+    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainEleven.pkl, CSM_PARTIES=13 }
+
+networks:
+  cirrina-net:
+    driver: bridge
