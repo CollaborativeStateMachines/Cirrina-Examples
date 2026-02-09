@@ -13,8 +13,8 @@ instances {
   ["eleven"] = "big"
 }
 instanceData {
-  ["ten"] {
-    ["eleven"] = "'eleven'"
+  ["eleven"] {
+    ["bigId"] = "'eleven'"
     ["otherBigs"] = "['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', ...]"
   }
 }
