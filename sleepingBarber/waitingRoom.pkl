@@ -1,18 +1,16 @@
-import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
+// --- WAITING ROOM ---
 sm = new csml.StateMachine {
   transient {
     ["waitingCustomers"] = "[...]"
     ["barberStatus"] = "''"
-    ["doneCounter"] = "0"
   }
   states {
     ["init"] = new csml.Initial {
       always {
         new csml.Transition {
           to = "process"
-          do { new csml.Raise { event = new csml.Global { topic = "ready" } } }
         }
       }
     }
@@ -43,12 +41,8 @@ sm = new csml.StateMachine {
         ["statusSleeping"] = new csml.Transition {
           do { new csml.Eval { expression = "barberStatus = 'sleeping'" } }
         }
-        ["doneCutting"] = new csml.Transition {
-          to = "process"
-          iif = "doneCounter < 9"
-          do { new csml.Eval { expression = "++doneCounter" } }
-          or = "terminate"
-        }
+        // ADDED: Termination handling
+        ["terminate"] = new csml.Transition { to = "terminated" }
       }
     }
     ["evaluateWaitingRoom"] = new csml.State {
@@ -87,8 +81,6 @@ sm = new csml.StateMachine {
         }
       }
     }
-    ["terminate"] = new csml.Terminal {
-      entry { new csml.Raise { event = new csml.Global { topic = "terminate" } } }
-    }
+    ["terminated"] = new csml.Terminal {}
   }
 }

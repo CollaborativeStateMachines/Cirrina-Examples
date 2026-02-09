@@ -1,14 +1,20 @@
 amends
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-import "sink.pkl"
+import "../philosopher.pkl"
 
 version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
-    ["sink"] = sink.sm
+    ["philosopher"] = philosopher.sm
   }
 }
 instances {
-  ["sink"] = "sink"
+  ["five"] = "philosopher"
+}
+instanceData {
+    ["five"] {
+      ["philosopherId"] = "'five'"
+      ["forkId"] = "5"
+    }
 }

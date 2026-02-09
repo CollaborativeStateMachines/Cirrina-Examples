@@ -1,0 +1,26 @@
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient { ["finishedCount"] = "0" }
+  states {
+    ["init"] = new csml.Initial {
+      entry { new csml.Raise { event = new csml.Global { topic = "ready" } } }
+      always {
+        new csml.Transition { to = "counting" }
+      }
+    }
+    ["counting"] = new csml.State {
+      on {
+        ["doneCutting"] = new csml.Transition {
+          to = "counting"
+          iif = "finishedCount < 9"
+          do { new csml.Eval { expression = "++finishedCount" } }
+          or = "finish"
+        }
+      }
+    }
+    ["finish"] = new csml.Terminal {
+      entry { new csml.Raise { event = new csml.Global { topic = "terminate" } } }
+    }
+  }
+}

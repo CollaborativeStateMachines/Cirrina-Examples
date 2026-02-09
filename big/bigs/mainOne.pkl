@@ -1,0 +1,20 @@
+amends
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+import "../big.pkl"
+
+version = "4.0.0"
+collaborativeStateMachine {
+  stateMachines {
+    ["big"] = big.sm
+  }
+}
+instances {
+  ["one"] = "big"
+}
+instanceData {
+  ["one"] {
+    ["bigId"] = "'one'"
+    ["otherBigs"] = "['zero', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', ...]"
+  }
+}
