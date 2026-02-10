@@ -1,5 +1,5 @@
 import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient {
@@ -8,9 +8,15 @@ sm = new csml.StateMachine {
     ["count"] = "0"
   }
   states {
-    ["run"] = new csml.Initial {
+    ["wait"] = new csml.Initial {
+      on {
+        ["start"] = new csml.Transition {
+          to = "run"
+        }
+      }
+    }
+    ["run"] = new csml.State {
       entry {
-        new csml.Raise { event = new csml.Global { topic = "done" } }
         new csml.Eval { expression = "++count" }
         new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
         new csml.Raise {
@@ -23,31 +29,28 @@ sm = new csml.StateMachine {
       }
       on {
         ["ping"] = new csml.Transition {
-          iif = "$sender != bigId"
           do {
-            new csml.Eval { expression = "sender = $sender"}
             new csml.Raise {
               event = new csml.Global {
                 topic = "pong"
                 data { ["sender"] = "bigId" }
               }
-              target = "sender"
+              target = "$sender"
             }
           }
         }
         ["pong"] = new csml.Transition {
-          iif = "$sender == target"
           do {
             new csml.Match {
-              value = "count < 20000"
               cases {
                 new csml.Case {
-                  of = "false"; then {
+                  of = "count == 20000"; then {
+                    new csml.Eval { expression = "++count" }
                     new csml.Raise { event = new csml.Global { topic = "done" } }
                   }
                 }
                 new csml.Case {
-                  of = "true"; then {
+                  of = "count < 20000"; then {
                     new csml.Eval { expression = "++count" }
                     new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
                     new csml.Raise {
