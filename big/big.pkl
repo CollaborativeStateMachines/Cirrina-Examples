@@ -3,28 +3,18 @@ import
 
 sm = new csml.StateMachine {
   transient {
-    ["target"] = "''"
-    ["sender"] = "''"
     ["count"] = "0"
   }
   states {
-    ["wait"] = new csml.Initial {
-      on {
-        ["start"] = new csml.Transition {
-          to = "run"
-        }
-      }
-    }
-    ["run"] = new csml.State {
+    ["run"] = new csml.Initial {
       entry {
         new csml.Eval { expression = "++count" }
-        new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
         new csml.Raise {
           event = new csml.Global {
             topic = "ping"
             data { ["sender"] = "bigId" }
           }
-          target = "target"
+          target = "std:takeRandom(otherBigs)"
         }
       }
       on {
@@ -52,13 +42,12 @@ sm = new csml.StateMachine {
                 new csml.Case {
                   of = "count < 20000"; then {
                     new csml.Eval { expression = "++count" }
-                    new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
                     new csml.Raise {
                       event = new csml.Global {
                         topic = "ping"
                         data { ["sender"] = "bigId" }
                       }
-                      target = "target"
+                      target = "std:takeRandom(otherBigs)"
                     }
                   }
                 }
@@ -66,9 +55,7 @@ sm = new csml.StateMachine {
             }
           }
         }
-        ["shutdown"] = new csml.Transition {
-          to = "done"
-        }
+        ["shutdown"] = new csml.Transition { to = "done" }
       }
     }
     ["done"] = new csml.Terminal {}

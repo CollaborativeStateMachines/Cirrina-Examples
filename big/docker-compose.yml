@@ -13,54 +13,55 @@ services:
     build:
       context: .
     environment:
+      - CSM_PARTIES=13
       - CSM_MAIN_URI=file:///big/main.pkl
     volumes:
       - ./:/big
 
   w0:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainZero.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainZero.pkl }
 
   w1:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainOne.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainOne.pkl }
 
   w2:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainTwo.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainTwo.pkl }
 
   w3:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainThree.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainThree.pkl }
 
   w4:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainFour.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainFour.pkl }
 
   w5:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainFive.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainFive.pkl }
 
   w6:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainSix.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainSix.pkl }
 
   w7:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainSeven.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainSeven.pkl }
 
   w8:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainEight.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainEight.pkl }
 
   w9:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainNine.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainNine.pkl }
 
   w10:
     <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainTen.pkl }
+    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainTen.pkl }
 
-  w11:
-    <<: *worker-base
-    environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainEleven.pkl }
+  #w11:
+  #  <<: *worker-base
+  #  environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainEleven.pkl }
