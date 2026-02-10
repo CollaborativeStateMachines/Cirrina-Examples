@@ -4,8 +4,6 @@ x-worker-base: &worker-base
     context: .
   depends_on:
     - sink-node
-  networks:
-    - cirrina-net
   volumes:
     - ./:/big
 
@@ -16,12 +14,10 @@ services:
       context: .
     environment:
       - CSM_BARRIER=barrier
-      - CSM_MAIN_URI=file:///project/main.pkl
+      - CSM_MAIN_URI=file:///big/main.pkl
       - CSM_PARTIES=13
-    networks:
-      - cirrina-net
     volumes:
-      - ./:/project
+      - ./:/big
 
   w0:
     <<: *worker-base
@@ -70,7 +66,3 @@ services:
   w11:
     <<: *worker-base
     environment: { CSM_BARRIER: barrier,  CSM_MAIN_URI: file:///big/bigs/mainEleven.pkl, CSM_PARTIES=13 }
-
-networks:
-  cirrina-net:
-    driver: bridge
