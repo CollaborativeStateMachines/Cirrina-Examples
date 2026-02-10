@@ -2,29 +2,24 @@ import
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
-  transient {
-    ["doneCounter"] = "0"
-    ["cumulatedPongCounter"] = "0"
-  }
+  transient { ["count"] = "0" }
   states {
-    ["waitingForBigs"] = new csml.Initial {
+    ["wait"] = new csml.Initial {
       on {
-        ["donePinging"] = new csml.Transition {
-          to = "isFinal"
-          do { new csml.Eval { expression = "++doneCounter" } }
+        ["done"] = new csml.Transition {
+          to = "wait"
+          do { new csml.Eval { expression = "++count" } }
         }
       }
-    }
-    ["isFinal"] = new csml.State {
       always {
         new csml.Transition {
           to = "done"
-          iif = "doneCounter == 12"
-          do { new csml.Raise { event = new csml.Global { topic = "shutdown" } } }
-          or = "waitingForBigs"
+          iif = "count == 12"
         }
       }
     }
-    ["done"] = new csml.Terminal {}
+    ["done"] = new csml.Terminal {
+      entry { new csml.Raise { event = new csml.Global { topic = "shutdown" } } }
+    }
   }
 }

@@ -4,31 +4,29 @@ import
 sm = new csml.StateMachine {
   transient {
     ["target"] = "''"
-    ["pingCounter"] = "0"
-    ["pongCounter"] = "0"
+    ["sender"] = "''"
+    ["count"] = "0"
   }
   states {
-    ["sendPing"] = new csml.Initial {
-      always {
-        new csml.Transition {
-          to = "waitForPingOrPong"
-          iif = "pingCounter < 20000"
-          do {
-            new csml.Eval { expression = "++pingCounter" }
-            new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
-            new csml.Raise {
-              event = new csml.Global {
-                topic = "ping"
-                data { ["sender"] = "bigId" }
-              }
-              target = "target"
-            }
-          }
-          or = "receiveRemaining"
+    ["wait"] = new csml.Initial {
+      on {
+        ["start"] = new csml.Transition {
+          to = "run"
         }
       }
     }
-    ["waitForPingOrPong"] = new csml.State {
+    ["run"] = new csml.State {
+      entry {
+        new csml.Eval { expression = "++count" }
+        new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
+        new csml.Raise {
+          event = new csml.Global {
+            topic = "ping"
+            data { ["sender"] = "bigId" }
+          }
+          target = "target"
+        }
+      }
       on {
         ["ping"] = new csml.Transition {
           do {
@@ -42,25 +40,35 @@ sm = new csml.StateMachine {
           }
         }
         ["pong"] = new csml.Transition {
-          iif = "$sender == target"
-          to = "sendPing"
-        }
-      }
-    }
-    ["receiveRemaining"] = new csml.State {
-      entry { new csml.Raise { event = new csml.Global { topic = "donePinging" } } }
-      on {
-        ["ping"] = new csml.Transition {
           do {
-            new csml.Raise {
-              event = new csml.Global {
-                topic = "pong"
-                data { ["sender"] = "bigId" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "count == 20000"; then {
+                    new csml.Eval { expression = "++count" }
+                    new csml.Raise { event = new csml.Global { topic = "done" } }
+                  }
+                }
+                new csml.Case {
+                  of = "count < 20000"; then {
+                    new csml.Eval { expression = "++count" }
+                    new csml.Eval { expression = "target = std:takeRandom(otherBigs)" }
+                    new csml.Raise {
+                      event = new csml.Global {
+                        topic = "ping"
+                        data { ["sender"] = "bigId" }
+                      }
+                      target = "target"
+                    }
+                  }
+                }
               }
             }
           }
         }
-        ["shutdown"] = new csml.Transition { to = "done" }
+        ["shutdown"] = new csml.Transition {
+          to = "done"
+        }
       }
     }
     ["done"] = new csml.Terminal {}
