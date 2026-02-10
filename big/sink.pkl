@@ -14,7 +14,7 @@ sm = new csml.StateMachine {
       always {
         new csml.Transition {
           to = "done"
-          iif = "count == 5"
+          iif = "count == 12"
         }
       }
     }
