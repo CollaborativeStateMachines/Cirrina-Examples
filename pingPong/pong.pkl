@@ -1,16 +1,20 @@
-import
+amends
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-sm = new csml.StateMachine {
-  states {
-    ["pong"] = new csml.Initial {
-      on {
-        ["ping"] = new csml.Transition {
-          do { new csml.Raise { event = new csml.Global { topic = "pong" } } }
+version = "4.0.0"
+collaborativeStateMachine {
+  stateMachines {
+    ["pong"] = new StateMachine {
+      states {
+        ["pong"] = new Initial {
+          on {
+            ["ping"] = new Transition { do { new Raise { event = new Global { topic = "pong" } } } }
+            ["done"] = new Transition { to = "done" }
+          }
         }
-        ["done"] = new csml.Transition { to = "done" }
+        ["done"] = new Terminal {}
       }
     }
-    ["done"] = new csml.Terminal {}
   }
 }
+instances { ["pong"] = "pong" }
