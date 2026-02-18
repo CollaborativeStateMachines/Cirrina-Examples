@@ -5,7 +5,7 @@ x-worker-base: &worker-base
   depends_on:
     - sink-node
   volumes:
-    - ./:/big
+    - ./:/app
 
 services:
   sink-node:
@@ -13,55 +13,54 @@ services:
     build:
       context: .
     environment:
-      - CSM_PARTIES=13
-      - CSM_MAIN_URI=file:///big/main.pkl
+      - RUN=sink
     volumes:
-      - ./:/big
+      - ./:/app
 
   w0:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainZero.pkl }
+    environment: { RUN: big0 }
 
   w1:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainOne.pkl }
+    environment: { RUN: big1 }
 
   w2:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainTwo.pkl }
+    environment: { RUN: big2 }
 
   w3:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainThree.pkl }
+    environment: { RUN: big3 }
 
   w4:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainFour.pkl }
+    environment: { RUN: big4 }
 
   w5:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainFive.pkl }
+    environment: { RUN: big5 }
 
   w6:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainSix.pkl }
+    environment: { RUN: big6 }
 
   w7:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainSeven.pkl }
+    environment: { RUN: big7 }
 
   w8:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainEight.pkl }
+    environment: { RUN: big8 }
 
   w9:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainNine.pkl }
+    environment: { RUN: big9 }
 
   w10:
     <<: *worker-base
-    environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainTen.pkl }
+    environment: { RUN: big10 }
 
-  #w11:
-  #  <<: *worker-base
-  #  environment: { CSM_PARTIES: 13, CSM_MAIN_URI: file:///big/bigs/mainEleven.pkl }
+  w11:
+    <<: *worker-base
+    environment: { RUN: big11 }

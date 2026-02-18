@@ -1,7 +1,0 @@
-{
-  "editor.wordWrap": "wordWrapColumn",
-  "editor.wordWrapColumn": 110,
-  "editor.rulers": [110],
-  "editor.indentSize": "tabSize",
-  "editor.tabSize": 2
-}

@@ -1,0 +1,43 @@
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+version = "4.0.0"
+collaborativeStateMachine {
+  stateMachines {
+    ["ping"] {
+      transient { ["numPings"] = "50000" }
+      states {
+        ["ping"] = new Initial {
+          entry {
+            new Raise { event { topic = "ping" } }
+            new Eval { expression = "--numPings" }
+          }
+          on {
+            ["pong"] { 
+              iif = "numPings != 0"
+              to = "ping"
+              or = "done"
+            }
+          }
+        }
+        ["done"] = new Terminal {
+          entry { new Raise { event { topic = "done" } } }
+        }
+      }
+    }
+    ["pong"] = new StateMachine {
+      states {
+        ["pong"] = new Initial {
+          on {
+            ["ping"] { do { new Raise { event { topic = "pong" } } } }
+            ["done"] { to = "done" }
+          }
+        }
+        ["done"] = new Terminal {}
+      }
+    }
+  }
+}
+instances { 
+  ["ping"] { stateMachineName = "ping" }
+  ["pong"] { stateMachineName = "pong" }
+}
