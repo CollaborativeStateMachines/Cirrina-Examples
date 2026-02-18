@@ -1,14 +1,104 @@
-amends
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
-
-import "sink.pkl"
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
-    ["sink"] = sink.sm
+    ["big"] {
+      transient { ["count"] = "0" }
+      states {
+        ["run"] = new Initial {
+          entry {
+            new Eval { expression = "++count" }
+            new Raise {
+              event {
+                topic = "ping"
+                data { ["sender"] = "id" }
+              }
+              target = "std:takeRandom(peers)"
+            }
+          }
+          on {
+            ["ping"] {
+              do {
+                new Raise {
+                  event {
+                    topic = "pong"
+                    data { ["sender"] = "id" }
+                  }
+                  target = "$sender"
+                }
+              }
+            }
+            ["pong"] {
+              do {
+                new Match {
+                  cases {
+                    new Case {
+                      of = "count == 20000"
+                      then {
+                        new Eval { expression = "++count" }
+                        new Raise { event { topic = "done" } }
+                      }
+                    }
+                    new Case {
+                      of = "count < 20000"
+                      then {
+                        new Eval { expression = "++count" }
+                        new Raise {
+                          event {
+                            topic = "ping"
+                            data { ["sender"] = "id" }
+                          }
+                          target = "std:takeRandom(peers)"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+            ["shutdown"] { to = "done" }
+          }
+        }
+        ["done"] = new Terminal {}
+      }
+    }
+    ["sink"] = new StateMachine {
+      transient {  ["count"] = "0" }
+      states {
+        ["wait"] = new Initial {
+          on {
+            ["done"] {
+              to = "wait"
+              do { new Eval { expression = "++count" } }
+            }
+          }
+          always {
+            new Transition {
+              to = "done"
+              iif = "count == 12"
+            }
+          }
+        }
+        ["done"] = new Terminal {
+          entry { new Raise { event { topic = "shutdown" } } }
+        }
+      }
+    }
   }
 }
 instances {
-  ["sink"] = "sink"
+  ["sink"]  { stateMachineName = "sink" }
+  ["big0"]  { stateMachineName = "big"; data { ["id"] = "0";  ["peers"] = "(0..11) - [0]"  } }
+  ["big1"]  { stateMachineName = "big"; data { ["id"] = "1";  ["peers"] = "(0..11) - [1]"  } }
+  ["big2"]  { stateMachineName = "big"; data { ["id"] = "2";  ["peers"] = "(0..11) - [2]"  } }
+  ["big3"]  { stateMachineName = "big"; data { ["id"] = "3";  ["peers"] = "(0..11) - [3]"  } }
+  ["big4"]  { stateMachineName = "big"; data { ["id"] = "4";  ["peers"] = "(0..11) - [4]"  } }
+  ["big5"]  { stateMachineName = "big"; data { ["id"] = "5";  ["peers"] = "(0..11) - [5]"  } }
+  ["big6"]  { stateMachineName = "big"; data { ["id"] = "6";  ["peers"] = "(0..11) - [6]"  } }
+  ["big7"]  { stateMachineName = "big"; data { ["id"] = "7";  ["peers"] = "(0..11) - [7]"  } }
+  ["big8"]  { stateMachineName = "big"; data { ["id"] = "8";  ["peers"] = "(0..11) - [8]"  } }
+  ["big9"]  { stateMachineName = "big"; data { ["id"] = "9";  ["peers"] = "(0..11) - [9]"  } }
+  ["big10"] { stateMachineName = "big"; data { ["id"] = "10"; ["peers"] = "(0..11) - [10]" } }
+  ["big11"] { stateMachineName = "big"; data { ["id"] = "11"; ["peers"] = "(0..11) - [11]" } }
 }
