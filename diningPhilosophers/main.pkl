@@ -1,0 +1,105 @@
+amends
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+collaborativeStateMachine {
+  stateMachines {
+    ["arbitrator"] {
+      transient {
+        ["forks"] = "[...]"
+        ["count"] = "0"
+      }
+      states {
+        ["wait"] = new Initial {
+          on {
+            ["requesting"] {
+              yields {
+                new Match {
+                  cases {
+                    new Case {
+                      of = "!(forks.contains($fid) || forks.contains(($fid + 1) % 6))"
+                      yields {
+                        new Assign { expression = "forks += [$fid, ($fid + 1) % 6]" }
+                        new Emit { 
+                          event { topic = "allocated" }
+                          target = "$recipient"
+                        }
+                      }
+                    }
+                  }
+                  default = new Emit { 
+                    event { topic = "denied" }
+                    target = "$recipient" 
+                  }
+                }
+              }
+            }
+            ["finished"] {
+              yields { new Assign { expression = "forks -= [$fid, ($fid + 1) % 6]" } }
+            }
+            ["done"] {
+              to = "wait"; provided = "count < 5"
+              yields { new Assign { expression = "++count" } }
+              or = "done"
+            }
+          }
+        }
+        ["done"] = new Terminal {}
+      }
+    }
+    ["philosopher"] {
+      transient {
+        ["try"] = "0"
+        ["eat"] = "0"
+      }
+      states {
+        ["requesting"] = new Initial {
+          entry {
+            new Assign { expression = "++try" }
+            new Emit {
+              event {
+                topic = "requesting"
+                data {
+                  ["recipient"] = "id"
+                  ["fid"] = "fid"
+                }
+              }
+            }
+          }
+          on {
+            ["allocated"] { to = "eating" }
+            ["denied"] { to = "requesting" }
+          }
+        }
+        ["eating"] {
+          always {
+            new Transition {
+              to = "requesting"; provided = "eat < 16000"
+              yields {
+                new Assign { expression = "++eat" }
+                new Emit {
+                  event {
+                    topic = "finished"
+                    data { ["fid"] = "fid" }
+                  }
+                }
+              }
+              or = "leave"
+            }
+          }
+        }
+        ["leave"] = new Terminal {
+          entry { new Emit { event { topic = "done" } } }
+        }
+      }
+    }
+  }
+}
+instances {
+  ["arbitrator"]   { stateMachineName = "arbitrator" }
+  ["philosopher0"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher0'"; ["fid"] = "0" } }
+  ["philosopher1"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher1'"; ["fid"] = "1" } }
+  ["philosopher2"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher2'"; ["fid"] = "2" } }
+  ["philosopher3"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher3'"; ["fid"] = "3" } }
+  ["philosopher4"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher4'"; ["fid"] = "4" } }
+  ["philosopher5"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher5'"; ["fid"] = "5" } }
+}

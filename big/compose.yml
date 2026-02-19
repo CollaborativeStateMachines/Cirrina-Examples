@@ -3,12 +3,12 @@ x-worker-base: &worker-base
   build:
     context: .
   depends_on:
-    - sink-node
+    - sink
   volumes:
     - ./:/app
 
 services:
-  sink-node:
+  sink:
     image: cirrina
     build:
       context: .

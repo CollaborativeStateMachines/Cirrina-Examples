@@ -1,0 +1,42 @@
+x-worker-base: &worker-base
+  image: cirrina
+  build:
+    context: .
+  depends_on:
+    - arbitrator
+  volumes:
+    - ./:/app
+
+services:
+  arbitrator:
+    image: cirrina
+    build:
+      context: .
+    environment:
+      - RUN=arbitrator
+    volumes:
+      - ./:/app
+
+  w0:
+    <<: *worker-base
+    environment: { RUN: philosopher0 }
+
+  w1:
+    <<: *worker-base
+    environment: { RUN: philosopher1 }
+
+  w2:
+    <<: *worker-base
+    environment: { RUN: philosopher2 }
+
+  w3:
+    <<: *worker-base
+    environment: { RUN: philosopher3 }
+
+  w4:
+    <<: *worker-base
+    environment: { RUN: philosopher4 }
+
+  w5:
+    <<: *worker-base
+    environment: { RUN: philosopher5 }
