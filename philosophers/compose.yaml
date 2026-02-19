@@ -3,64 +3,40 @@ x-worker-base: &worker-base
   build:
     context: .
   depends_on:
-    - sink-node
+    - arbitrator
   volumes:
     - ./:/app
 
 services:
-  sink-node:
+  arbitrator:
     image: cirrina
     build:
       context: .
     environment:
-      - RUN=sink
+      - RUN=arbitrator
     volumes:
       - ./:/app
 
   w0:
     <<: *worker-base
-    environment: { RUN: big0 }
+    environment: { RUN: philosopher0 }
 
   w1:
     <<: *worker-base
-    environment: { RUN: big1 }
+    environment: { RUN: philosopher1 }
 
   w2:
     <<: *worker-base
-    environment: { RUN: big2 }
+    environment: { RUN: philosopher2 }
 
   w3:
     <<: *worker-base
-    environment: { RUN: big3 }
+    environment: { RUN: philosopher3 }
 
   w4:
     <<: *worker-base
-    environment: { RUN: big4 }
+    environment: { RUN: philosopher4 }
 
   w5:
     <<: *worker-base
-    environment: { RUN: big5 }
-
-  w6:
-    <<: *worker-base
-    environment: { RUN: big6 }
-
-  w7:
-    <<: *worker-base
-    environment: { RUN: big7 }
-
-  w8:
-    <<: *worker-base
-    environment: { RUN: big8 }
-
-  w9:
-    <<: *worker-base
-    environment: { RUN: big9 }
-
-  w10:
-    <<: *worker-base
-    environment: { RUN: big10 }
-
-  w11:
-    <<: *worker-base
-    environment: { RUN: big11 }
+    environment: { RUN: philosopher5 }
