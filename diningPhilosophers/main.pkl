@@ -1,43 +1,56 @@
-amends
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 collaborativeStateMachine {
   stateMachines {
     ["arbitrator"] {
       transient {
-        ["forks"] = "[...]"
+        ["forks"] = "[false, false, false, false, false, false]"
+        ["waiting"] = "[false, false, false, false, false, false]"
         ["count"] = "0"
       }
       states {
-        ["wait"] = new Initial {
+        ["serving"] = new Initial {
           on {
-            ["requesting"] {
+            ["hungry"] {
               yields {
                 new Match {
                   cases {
                     new Case {
-                      of = "!(forks.contains($fid) || forks.contains(($fid + 1) % 6))"
+                      of = "!(forks[$fid] || forks[($fid + 1) % 6])"
                       yields {
-                        new Assign { expression = "forks += [$fid, ($fid + 1) % 6]" }
-                        new Emit { 
-                          event { topic = "allocated" }
-                          target = "$recipient"
-                        }
+                        new Assign { expression = "forks[$fid] = forks[($fid + 1) % 6] = true" }
+                        new Emit { event { topic = "acquire" }; target = "$recipient" }
                       }
                     }
                   }
-                  default = new Emit { 
-                    event { topic = "denied" }
-                    target = "$recipient" 
+                  default = new Assign { expression = "waiting[$fid] = true" }
+                }
+              }
+            }
+            ["release"] {
+              yields {
+                new Assign { expression = "forks[$fid] = forks[($fid + 1) % 6] = false" }
+                new Emit { event = new Internal { topic = "test"; data { ["nid"] = "($fid + 5) % 6" } } }
+                new Emit { event = new Internal { topic = "test"; data { ["nid"] = "($fid + 1) % 6" } } }
+              }
+            }
+            ["test"] {
+              yields {
+                new Match {
+                  cases {
+                    new Case {
+                      of = "waiting[$nid] && !(forks[$nid] || forks[($nid + 1) % 6])"
+                      yields {
+                        new Assign { expression = "waiting[$nid] = false; forks[$nid] = forks[($nid + 1) % 6] = true" }
+                        new Emit { event { topic = "acquire" }; target = "'philosopher' + $nid" }
+                      }
+                    }
                   }
                 }
               }
             }
-            ["finished"] {
-              yields { new Assign { expression = "forks -= [$fid, ($fid + 1) % 6]" } }
-            }
             ["done"] {
-              to = "wait"; provided = "count < 5"
+              to = "serving"; provided = "count < 5"
               yields { new Assign { expression = "++count" } }
               or = "done"
             }
@@ -48,48 +61,36 @@ collaborativeStateMachine {
     }
     ["philosopher"] {
       transient {
-        ["try"] = "0"
-        ["eat"] = "0"
+        ["meals"] = "0"
       }
       states {
-        ["requesting"] = new Initial {
+        ["hungry"] = new Initial {
           entry {
-            new Assign { expression = "++try" }
-            new Emit {
-              event {
-                topic = "requesting"
-                data {
-                  ["recipient"] = "id"
-                  ["fid"] = "fid"
-                }
-              }
-            }
+            new Emit { event { topic = "hungry"; data { ["recipient"] = "id"; ["fid"] = "fid" } } }
           }
           on {
-            ["allocated"] { to = "eating" }
-            ["denied"] { to = "requesting" }
+            ["acquire"] { to = "eating" }
           }
         }
         ["eating"] {
           exit {
-            new Emit {
-              event {
-                topic = "finished"
-                data { ["fid"] = "fid" }
-              }
+            new Emit { event { topic = "release"; data { ["fid"] = "fid" } } }
+          }
+          after {
+            ["meals"] = new Timeout {
+              delay = "0"
+              triggers = new Emit { event = new Internal { topic = "think" } }
             }
           }
-          always {
-            new Transition {
-              to = "requesting"; provided = "eat < 16000"
-              yields {
-                new Assign { expression = "++eat" }
-              }
-              or = "leave"
+          on {
+            ["think"] {
+              to = "hungry"; provided = "meals < 16000"
+              yields { new Assign { expression = "++meals" } }
+              or = "sated"
             }
           }
         }
-        ["leave"] = new Terminal {
+        ["sated"] = new Terminal {
           entry { new Emit { event { topic = "done" } } }
         }
       }
