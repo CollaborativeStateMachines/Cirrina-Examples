@@ -1,0 +1,66 @@
+x-worker-base: &worker-base
+  image: cirrina
+  build:
+    context: .
+  depends_on:
+    - sink-node
+  volumes:
+    - ./:/app
+
+services:
+  sink-node:
+    image: cirrina
+    build:
+      context: .
+    environment:
+      - RUN=sink
+    volumes:
+      - ./:/app
+
+  w0:
+    <<: *worker-base
+    environment: { RUN: big0 }
+
+  w1:
+    <<: *worker-base
+    environment: { RUN: big1 }
+
+  w2:
+    <<: *worker-base
+    environment: { RUN: big2 }
+
+  w3:
+    <<: *worker-base
+    environment: { RUN: big3 }
+
+  w4:
+    <<: *worker-base
+    environment: { RUN: big4 }
+
+  w5:
+    <<: *worker-base
+    environment: { RUN: big5 }
+
+  w6:
+    <<: *worker-base
+    environment: { RUN: big6 }
+
+  w7:
+    <<: *worker-base
+    environment: { RUN: big7 }
+
+  w8:
+    <<: *worker-base
+    environment: { RUN: big8 }
+
+  w9:
+    <<: *worker-base
+    environment: { RUN: big9 }
+
+  w10:
+    <<: *worker-base
+    environment: { RUN: big10 }
+
+  w11:
+    <<: *worker-base
+    environment: { RUN: big11 }
