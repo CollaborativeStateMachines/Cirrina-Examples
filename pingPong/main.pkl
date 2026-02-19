@@ -1,6 +1,5 @@
 amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
     ["ping"] {
@@ -8,19 +7,17 @@ collaborativeStateMachine {
       states {
         ["ping"] = new Initial {
           entry {
-            new Raise { event { topic = "ping" } }
-            new Eval { expression = "--numPings" }
+            new Emit { event { topic = "ping" } }
+            new Assign { expression = "--numPings" }
           }
           on {
             ["pong"] { 
-              iif = "numPings != 0"
-              to = "ping"
-              or = "done"
+              to = "ping"; provided = "numPings != 0"; or = "done"
             }
           }
         }
         ["done"] = new Terminal {
-          entry { new Raise { event { topic = "done" } } }
+          entry { new Emit { event { topic = "done" } } }
         }
       }
     }
@@ -28,7 +25,7 @@ collaborativeStateMachine {
       states {
         ["pong"] = new Initial {
           on {
-            ["ping"] { do { new Raise { event { topic = "pong" } } } }
+            ["ping"] { yields { new Emit { event { topic = "pong" } } } }
             ["done"] { to = "done" }
           }
         }

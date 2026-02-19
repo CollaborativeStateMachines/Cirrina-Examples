@@ -1,7 +1,6 @@
 amends
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
     ["arbitrator"] {
@@ -13,21 +12,21 @@ collaborativeStateMachine {
         ["wait"] = new Initial {
           on {
             ["requesting"] {
-              do {
+              yields {
                 new Match {
                   cases {
                     new Case {
                       of = "!(forks.contains($fid) || forks.contains(($fid + 1) % 6))"
-                      then {
-                        new Eval { expression = "forks + [$fid, ($fid + 1) % 6]" }
-                        new Raise { 
+                      yields {
+                        new Assign { expression = "forks += [$fid, ($fid + 1) % 6]" }
+                        new Emit { 
                           event { topic = "allocated" }
                           target = "$recipient"
                         }
                       }
                     }
                   }
-                  default = new Raise { 
+                  default = new Emit { 
                     event { topic = "denied" }
                     target = "$recipient" 
                   }
@@ -35,12 +34,11 @@ collaborativeStateMachine {
               }
             }
             ["finished"] {
-              do { new Eval { expression = "forks - [$fid, ($fid + 1) % 6]" } }
+              yields { new Assign { expression = "forks -= [$fid, ($fid + 1) % 6]" } }
             }
             ["done"] {
-              to = "wait" // TODO: Would be nice being able to drop this to
-              iif = "count < 5"
-              do { new Eval { expression = "count += 1" } }
+              to = "wait"; provided = "count < 5"
+              yields { new Assign { expression = "++count" } }
               or = "done"
             }
           }
@@ -56,8 +54,8 @@ collaborativeStateMachine {
       states {
         ["requesting"] = new Initial {
           entry {
-            new Eval { expression = "++try" }
-            new Raise {
+            new Assign { expression = "++try" }
+            new Emit {
               event {
                 topic = "requesting"
                 data {
@@ -75,11 +73,10 @@ collaborativeStateMachine {
         ["eating"] {
           always {
             new Transition {
-              to = "requesting"
-              iif = "eat < 16000"
-              do {
-                new Eval { expression = "++eat" }
-                new Raise {
+              to = "requesting"; provided = "eat < 16000"
+              yields {
+                new Assign { expression = "++eat" }
+                new Emit {
                   event {
                     topic = "finished"
                     data { ["fid"] = "fid" }
@@ -91,7 +88,7 @@ collaborativeStateMachine {
           }
         }
         ["leave"] = new Terminal {
-          entry { new Raise { event { topic = "done" } } }
+          entry { new Emit { event { topic = "done" } } }
         }
       }
     }

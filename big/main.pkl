@@ -1,6 +1,5 @@
 amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
-version = "4.0.0"
 collaborativeStateMachine {
   stateMachines {
     ["big"] {
@@ -8,8 +7,8 @@ collaborativeStateMachine {
       states {
         ["run"] = new Initial {
           entry {
-            new Eval { expression = "++count" }
-            new Raise {
+            new Assign { expression = "++count" }
+            new Emit {
               event {
                 topic = "ping"
                 data { ["sender"] = "id" }
@@ -19,8 +18,8 @@ collaborativeStateMachine {
           }
           on {
             ["ping"] {
-              do {
-                new Raise {
+              yields {
+                new Emit {
                   event {
                     topic = "pong"
                     data { ["sender"] = "id" }
@@ -30,21 +29,21 @@ collaborativeStateMachine {
               }
             }
             ["pong"] {
-              do {
+              yields {
                 new Match {
                   cases {
                     new Case {
                       of = "count == 20000"
-                      then {
-                        new Eval { expression = "++count" }
-                        new Raise { event { topic = "done" } }
+                      yields {
+                        new Assign { expression = "++count" }
+                        new Emit { event { topic = "done" } }
                       }
                     }
                     new Case {
                       of = "count < 20000"
-                      then {
-                        new Eval { expression = "++count" }
-                        new Raise {
+                      yields {
+                        new Assign { expression = "++count" }
+                        new Emit {
                           event {
                             topic = "ping"
                             data { ["sender"] = "id" }
@@ -70,18 +69,17 @@ collaborativeStateMachine {
           on {
             ["done"] {
               to = "wait"
-              do { new Eval { expression = "++count" } }
+              yields { new Assign { expression = "++count" } }
             }
           }
           always {
             new Transition {
-              to = "done"
-              iif = "count == 12"
+              to = "done"; provided = "count == 12"
             }
           }
         }
         ["done"] = new Terminal {
-          entry { new Raise { event { topic = "shutdown" } } }
+          entry { new Emit { event { topic = "shutdown" } } }
         }
       }
     }
