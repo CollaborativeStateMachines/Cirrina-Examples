@@ -71,17 +71,19 @@ collaborativeStateMachine {
           }
         }
         ["eating"] {
+          exit {
+            new Emit {
+              event {
+                topic = "finished"
+                data { ["fid"] = "fid" }
+              }
+            }
+          }
           always {
             new Transition {
               to = "requesting"; provided = "eat < 16000"
               yields {
                 new Assign { expression = "++eat" }
-                new Emit {
-                  event {
-                    topic = "finished"
-                    data { ["fid"] = "fid" }
-                  }
-                }
               }
               or = "leave"
             }
