@@ -1,11 +1,13 @@
 amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
+local n = 6
+
 collaborativeStateMachine {
   stateMachines {
     ["arbitrator"] {
       transient {
-        ["forks"] = "[false, false, false, false, false, false]"
-        ["waiting"] = "[false, false, false, false, false, false]"
+        ["forks"] = "std:repeat(false, \(n))"
+        ["waiting"] = "std:repeat(false, \(n))"
         ["count"] = "0"
       }
       states {
@@ -98,11 +100,11 @@ collaborativeStateMachine {
   }
 }
 instances {
-  ["arbitrator"]   { stateMachineName = "arbitrator" }
-  ["philosopher0"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher0'"; ["fid"] = "0" } }
-  ["philosopher1"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher1'"; ["fid"] = "1" } }
-  ["philosopher2"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher2'"; ["fid"] = "2" } }
-  ["philosopher3"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher3'"; ["fid"] = "3" } }
-  ["philosopher4"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher4'"; ["fid"] = "4" } }
-  ["philosopher5"] { stateMachineName = "philosopher"; data { ["id"] = "'philosopher5'"; ["fid"] = "5" } }
+  ["arbitrator"] { stateMachineName = "arbitrator" }
+  for (i in IntSeq(0, n - 1)) {
+    ["philosopher\(i)"] { 
+      stateMachineName = "philosopher"
+      data { ["id"] = "'philosopher\(i)'"; ["fid"] = "\(i)" } 
+    }
+  }
 }
