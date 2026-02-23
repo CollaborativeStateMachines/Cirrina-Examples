@@ -1,6 +1,0 @@
-fastapi
-uvicorn
-protobuf
-opentelemetry-distro
-opentelemetry-exporter-otlp
-opentelemetry-instrumentation-fastapi
