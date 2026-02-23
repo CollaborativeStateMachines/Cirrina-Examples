@@ -1,0 +1,69 @@
+amends
+"https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+collaborativeStateMachine {
+  stateMachines {
+    ["producer"] {
+      transient { ["count"] = "50000" }
+      states {
+        ["send"] = new Initial {
+          on {
+            ["done"] = new Transition {
+              to = "success"
+              provided = "$count == 50000"
+              or = "failure"
+            }
+          }
+          always { new Transition {
+            to = "send"
+            provided = "count > -1"
+            yields {
+              new Match {
+                cases {
+                  new Case { of = "count > 0"
+                    yields {
+                      new Emit { event { topic = "increment" } }
+                      new Assign { expression = "--count"}
+                    }
+                  }
+                  new Case { of = "count == 0"
+                    yields {
+                      new Emit { event { topic = "retrieve" } }
+                      new Assign { expression = "--count"}
+                    }
+                  }
+                }
+              }
+            }
+          } }
+        }
+        ["success"] = new Terminal { entry { new Log {message = "'Count is correct: ' + $count"} } }
+        ["failure"] = new Terminal { entry { new Log {message = "'Count is incorrect: ' + $count"} } }
+      }
+    }
+    ["counter"] {
+      transient { ["count"] = "0" }
+      states {
+        ["count"] = new Initial {
+          on {
+            ["increment"] = new Transition { yields { new Assign { expression = "++count" } } }
+            ["retrieve"] = new Transition {
+              to = "done"
+              yields { new Emit { event {
+                    topic = "done"
+                    data { ["count"] = "count" }
+                  }
+                }
+              }
+            }
+          }
+        }
+        ["done"] = new Terminal {}
+      }
+    }
+  }
+}
+instances {
+  ["counter"]  { stateMachineName = "counter" }
+  ["producer"]  { stateMachineName = "producer" }
+}
