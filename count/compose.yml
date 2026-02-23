@@ -1,0 +1,22 @@
+x-worker-base: &worker-base
+  image: cirrina
+  build:
+    context: .
+  depends_on:
+    - counter
+  volumes:
+    - ./:/app
+
+services:
+  counter:
+    image: cirrina
+    build:
+      context: .
+    environment:
+      - RUN=counter
+    volumes:
+      - ./:/app
+
+  producer:
+    <<: *worker-base
+    environment: { RUN: producer }
