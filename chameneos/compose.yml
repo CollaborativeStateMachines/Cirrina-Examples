@@ -18,48 +18,48 @@ services:
       - ./:/app
   w0:
     <<: *worker-base
-    environment: { RUN: zero }
+    environment: { RUN: chameneos0 }
 
   w1:
     <<: *worker-base
-    environment: { RUN: one }
+    environment: { RUN: chameneos1 }
 
   w2:
     <<: *worker-base
-    environment: { RUN: two }
+    environment: { RUN: chameneos2 }
 
   w3:
     <<: *worker-base
-    environment: { RUN: three }
+    environment: { RUN: chameneos3 }
 
   w4:
     <<: *worker-base
-    environment: { RUN: four }
+    environment: { RUN: chameneos4 }
 
   w5:
     <<: *worker-base
-    environment: { RUN: five }
+    environment: { RUN: chameneos5 }
 
   w6:
     <<: *worker-base
-    environment: { RUN: six }
+    environment: { RUN: chameneos6 }
 
   w7:
     <<: *worker-base
-    environment: { RUN: seven }
+    environment: { RUN: chameneos7 }
 
   w8:
     <<: *worker-base
-    environment: { RUN: eight }
+    environment: { RUN: chameneos8 }
 
   w9:
     <<: *worker-base
-    environment: { RUN: nine }
+    environment: { RUN: chameneos9 }
 
   w10:
     <<: *worker-base
-    environment: { RUN: ten }
+    environment: { RUN: chameneos10 }
 
   w11:
     <<: *worker-base
-    environment: { RUN: eleven }
+    environment: { RUN: chameneos11 }

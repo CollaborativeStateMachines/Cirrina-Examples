@@ -109,16 +109,16 @@ collaborativeStateMachine {
 
 instances {
   ["mall"] { stateMachineName = "mall" }
-  ["zero"] { stateMachineName = "chameneos"; data { ["id"] = "0"; } }
-  ["one"] { stateMachineName = "chameneos"; data { ["id"] = "1"; } }
-  ["two"] { stateMachineName = "chameneos"; data { ["id"] = "2"; } }
-  ["three"] { stateMachineName = "chameneos"; data { ["id"] = "3"; } }
-  ["four"] { stateMachineName = "chameneos"; data { ["id"] = "4"; } }
-  ["five"] { stateMachineName = "chameneos"; data { ["id"] = "5"; } }
-  ["six"] { stateMachineName = "chameneos"; data { ["id"] = "6"; } }
-  ["seven"] { stateMachineName = "chameneos"; data { ["id"] = "7"; } }
-  ["eight"] { stateMachineName = "chameneos"; data { ["id"] = "8"; } }
-  ["nine"] { stateMachineName = "chameneos"; data { ["id"] = "9"; } }
-  ["ten"] { stateMachineName = "chameneos"; data { ["id"] = "10"; } }
-  ["eleven"] { stateMachineName = "chameneos"; data { ["id"] = "11"; } }
+  ["chameneos0"] { stateMachineName = "chameneos"; data { ["id"] = "0"; } }
+  ["chameneos1"] { stateMachineName = "chameneos"; data { ["id"] = "1"; } }
+  ["chameneos2"] { stateMachineName = "chameneos"; data { ["id"] = "2"; } }
+  ["chameneos3"] { stateMachineName = "chameneos"; data { ["id"] = "3"; } }
+  ["chameneos4"] { stateMachineName = "chameneos"; data { ["id"] = "4"; } }
+  ["chameneos5"] { stateMachineName = "chameneos"; data { ["id"] = "5"; } }
+  ["chameneos6"] { stateMachineName = "chameneos"; data { ["id"] = "6"; } }
+  ["chameneos7"] { stateMachineName = "chameneos"; data { ["id"] = "7"; } }
+  ["chameneos8"] { stateMachineName = "chameneos"; data { ["id"] = "8"; } }
+  ["chameneos9"] { stateMachineName = "chameneos"; data { ["id"] = "9"; } }
+  ["chameneos10"] { stateMachineName = "chameneos"; data { ["id"] = "10"; } }
+  ["chameneos11"] { stateMachineName = "chameneos"; data { ["id"] = "11"; } }
 }
