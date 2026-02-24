@@ -1,0 +1,124 @@
+amends
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+collaborativeStateMachine {
+  stateMachines {
+    ["chameneos"] {
+      transient {
+        ["color"] = "std:takeRandom([1,2,3,...])"
+        ["count"] = "0"
+      }
+      states {
+        ["kickoff"] = new Initial {
+          on {
+            ["start"] = new Transition { to = "request"}
+          }
+        }
+        ["request"] = new State {
+          entry {
+            new Emit {
+              event {
+                topic = "requesting"
+                data { ["id"] = "id"; ["color"] = "color" }
+              }
+            }
+          }
+          on {
+            ["matchMade"] = new Transition {
+              to = "request"
+              yields {
+                new Assign {
+                  expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
+                }
+                new Assign { expression = "++count" }
+                new Emit {
+                  event {
+                    topic = "change"
+                    data { ["color"] = "color" }
+                  }
+                  target = "$partner"
+                }
+              }
+            }
+            ["change"] = new Transition {
+              to = "request"
+              yields {
+                new Assign { expression = "color = $color" }
+                new Assign { expression = "++count" }
+              }
+            }
+            ["done"] = new Transition { to = "done" }
+          }
+        }
+        ["done"] = new Terminal {}
+      }
+    }
+    ["mall"] {
+      transient {
+        ["waiting"] = "[...]"
+        ["count"] = "0"
+        ["terminated"] = "0"
+      }
+      states {
+        ["wait"] = new Initial {
+          on {
+            ["requesting"] = new Transition {
+              yields {
+                new Match {
+                  cases {
+                    new Case {
+                      of = "waiting.isEmpty() && count < 20000"
+                      yields {
+                        new Assign { expression = "waiting += [$id]" }
+                      }
+                    }
+                    new Case {
+                      of = "!waiting.isEmpty() && count < 20000"
+                      yields {
+                        new Assign { expression = "++count" }
+                        new Emit {
+                          event {
+                            topic = "matchMade"
+                            data {
+                              ["partner"] = "$id"
+                              ["color"] = "$color"
+                            }
+                          }
+                          target = "waiting.get(0)"
+                        }
+                        new Assign { expression = "waiting -= [waiting.get(0)]" }
+                      }
+                    }
+                    new Case { of = "count == 20000"; yields {
+                      new Emit { event { topic = "done" } }
+                      new Assign { expression = "++count" }
+                    }}
+                  }
+
+                }
+              }
+            }
+            ["done"] = new Transition { to = "done" }
+          }
+        }
+        ["done"] = new State {}
+      }
+    }
+  }
+}
+
+instances {
+  ["mall"] { stateMachineName = "mall" }
+  ["zero"] { stateMachineName = "chameneos"; data { ["id"] = "0"; } }
+  ["one"] { stateMachineName = "chameneos"; data { ["id"] = "1"; } }
+  ["two"] { stateMachineName = "chameneos"; data { ["id"] = "2"; } }
+  ["three"] { stateMachineName = "chameneos"; data { ["id"] = "3"; } }
+  ["four"] { stateMachineName = "chameneos"; data { ["id"] = "4"; } }
+  ["five"] { stateMachineName = "chameneos"; data { ["id"] = "5"; } }
+  ["six"] { stateMachineName = "chameneos"; data { ["id"] = "6"; } }
+  ["seven"] { stateMachineName = "chameneos"; data { ["id"] = "7"; } }
+  ["eight"] { stateMachineName = "chameneos"; data { ["id"] = "8"; } }
+  ["nine"] { stateMachineName = "chameneos"; data { ["id"] = "9"; } }
+  ["ten"] { stateMachineName = "chameneos"; data { ["id"] = "10"; } }
+  ["eleven"] { stateMachineName = "chameneos"; data { ["id"] = "11"; } }
+}

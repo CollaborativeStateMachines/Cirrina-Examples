@@ -1,0 +1,65 @@
+x-worker-base: &worker-base
+  image: cirrina
+  build:
+    context: .
+  depends_on:
+    - mall
+  volumes:
+    - ./:/app
+
+services:
+  mall:
+    image: cirrina
+    build:
+      context: .
+    environment:
+      - RUN=mall
+    volumes:
+      - ./:/app
+  w0:
+    <<: *worker-base
+    environment: { RUN: zero }
+
+  w1:
+    <<: *worker-base
+    environment: { RUN: one }
+
+  w2:
+    <<: *worker-base
+    environment: { RUN: two }
+
+  w3:
+    <<: *worker-base
+    environment: { RUN: three }
+
+  w4:
+    <<: *worker-base
+    environment: { RUN: four }
+
+  w5:
+    <<: *worker-base
+    environment: { RUN: five }
+
+  w6:
+    <<: *worker-base
+    environment: { RUN: six }
+
+  w7:
+    <<: *worker-base
+    environment: { RUN: seven }
+
+  w8:
+    <<: *worker-base
+    environment: { RUN: eight }
+
+  w9:
+    <<: *worker-base
+    environment: { RUN: nine }
+
+  w10:
+    <<: *worker-base
+    environment: { RUN: ten }
+
+  w11:
+    <<: *worker-base
+    environment: { RUN: eleven }
