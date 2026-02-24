@@ -1,16 +1,13 @@
 amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
+local n = 12
+
 collaborativeStateMachine {
   stateMachines {
     ["big"] {
       transient { ["count"] = "0" }
       states {
-        ["wait"] = new Initial {
-          on {
-            ["start"] = new Transition { to = "run" }
-          }
-        }
-        ["run"] = new State {
+        ["run"] = new Initial {
           entry {
             new Assign { expression = "++count" }
             new Emit {
@@ -68,7 +65,7 @@ collaborativeStateMachine {
       }
     }
     ["sink"] = new StateMachine {
-      transient {  ["count"] = "0" }
+      transient { ["count"] = "0" }
       states {
         ["wait"] = new Initial {
           on {
@@ -79,29 +76,25 @@ collaborativeStateMachine {
           }
           always {
             new Transition {
-              to = "done"; provided = "count == 12"
+              to = "done"
+              provided = "count == 12"
             }
           }
         }
-        ["done"] = new Terminal {
-          entry { new Emit { event { topic = "shutdown" } } }
-        }
+        ["done"] = new Terminal { entry { new Emit { event { topic = "shutdown" } } } }
       }
     }
   }
 }
 instances {
-  ["sink"]  { stateMachineName = "sink" }
-  ["big0"]  { stateMachineName = "big"; data { ["id"] = "0";  ["peers"] = "(0..11) - [0]"  } }
-  ["big1"]  { stateMachineName = "big"; data { ["id"] = "1";  ["peers"] = "(0..11) - [1]"  } }
-  ["big2"]  { stateMachineName = "big"; data { ["id"] = "2";  ["peers"] = "(0..11) - [2]"  } }
-  ["big3"]  { stateMachineName = "big"; data { ["id"] = "3";  ["peers"] = "(0..11) - [3]"  } }
-  ["big4"]  { stateMachineName = "big"; data { ["id"] = "4";  ["peers"] = "(0..11) - [4]"  } }
-  ["big5"]  { stateMachineName = "big"; data { ["id"] = "5";  ["peers"] = "(0..11) - [5]"  } }
-  ["big6"]  { stateMachineName = "big"; data { ["id"] = "6";  ["peers"] = "(0..11) - [6]"  } }
-  ["big7"]  { stateMachineName = "big"; data { ["id"] = "7";  ["peers"] = "(0..11) - [7]"  } }
-  ["big8"]  { stateMachineName = "big"; data { ["id"] = "8";  ["peers"] = "(0..11) - [8]"  } }
-  ["big9"]  { stateMachineName = "big"; data { ["id"] = "9";  ["peers"] = "(0..11) - [9]"  } }
-  ["big10"] { stateMachineName = "big"; data { ["id"] = "10"; ["peers"] = "(0..11) - [10]" } }
-  ["big11"] { stateMachineName = "big"; data { ["id"] = "11"; ["peers"] = "(0..11) - [11]" } }
+  ["sink"] { stateMachineName = "sink" }
+  for (i in IntSeq(0, n - 1)) {
+    ["big\(i)"] {
+      stateMachineName = "big"
+      data {
+        ["id"] = "'big\(i)'"
+        ["peers"] = "['big0', 'big1', 'big2', 'big3', 'big4', 'big5', 'big6', 'big7', 'big8', 'big9', 'big10', 'big11'] - ['big\(i)']"
+      }
+    }
+  }
 }
