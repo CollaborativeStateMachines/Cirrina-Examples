@@ -9,7 +9,7 @@ collaborativeStateMachine {
         ["count"] = "0"
       }
       states {
-        ["kickoff"] = new Initial {
+        ["wait"] = new Initial {
           on {
             ["start"] = new Transition { to = "request"}
           }
