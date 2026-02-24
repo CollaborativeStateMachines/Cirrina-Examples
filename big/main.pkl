@@ -5,7 +5,12 @@ collaborativeStateMachine {
     ["big"] {
       transient { ["count"] = "0" }
       states {
-        ["run"] = new Initial {
+        ["wait"] = new Initial {
+          on {
+            ["start"] = new Transition { to = "run" }
+          }
+        }
+        ["run"] = new State {
           entry {
             new Assign { expression = "++count" }
             new Emit {
