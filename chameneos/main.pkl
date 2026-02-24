@@ -1,5 +1,6 @@
-amends
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+local n = 12
 
 collaborativeStateMachine {
   stateMachines {
@@ -9,12 +10,7 @@ collaborativeStateMachine {
         ["count"] = "0"
       }
       states {
-        ["wait"] = new Initial {
-          on {
-            ["start"] = new Transition { to = "request"}
-          }
-        }
-        ["request"] = new State {
+        ["request"] = new Initial {
           entry {
             new Emit {
               event {
@@ -27,9 +23,7 @@ collaborativeStateMachine {
             ["matchMade"] = new Transition {
               to = "request"
               yields {
-                new Assign {
-                  expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)"
-                }
+                new Assign { expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)" }
                 new Assign { expression = "++count" }
                 new Emit {
                   event {
@@ -68,9 +62,7 @@ collaborativeStateMachine {
                   cases {
                     new Case {
                       of = "waiting.isEmpty() && count < 20000"
-                      yields {
-                        new Assign { expression = "waiting += [$id]" }
-                      }
+                      yields { new Assign { expression = "waiting += [$id]" } }
                     }
                     new Case {
                       of = "!waiting.isEmpty() && count < 20000"
@@ -101,7 +93,7 @@ collaborativeStateMachine {
             ["done"] = new Transition { to = "done" }
           }
         }
-        ["done"] = new State {}
+        ["done"] = new Terminal {}
       }
     }
   }
@@ -109,16 +101,10 @@ collaborativeStateMachine {
 
 instances {
   ["mall"] { stateMachineName = "mall" }
-  ["chameneos0"] { stateMachineName = "chameneos"; data { ["id"] = "0"; } }
-  ["chameneos1"] { stateMachineName = "chameneos"; data { ["id"] = "1"; } }
-  ["chameneos2"] { stateMachineName = "chameneos"; data { ["id"] = "2"; } }
-  ["chameneos3"] { stateMachineName = "chameneos"; data { ["id"] = "3"; } }
-  ["chameneos4"] { stateMachineName = "chameneos"; data { ["id"] = "4"; } }
-  ["chameneos5"] { stateMachineName = "chameneos"; data { ["id"] = "5"; } }
-  ["chameneos6"] { stateMachineName = "chameneos"; data { ["id"] = "6"; } }
-  ["chameneos7"] { stateMachineName = "chameneos"; data { ["id"] = "7"; } }
-  ["chameneos8"] { stateMachineName = "chameneos"; data { ["id"] = "8"; } }
-  ["chameneos9"] { stateMachineName = "chameneos"; data { ["id"] = "9"; } }
-  ["chameneos10"] { stateMachineName = "chameneos"; data { ["id"] = "10"; } }
-  ["chameneos11"] { stateMachineName = "chameneos"; data { ["id"] = "11"; } }
+  for (i in IntSeq(0, n - 1)) {
+    ["chameneos\(i)"] {
+      stateMachineName = "chameneos"
+      data { ["id"] = "'chameneos\(i)'" }
+    }
+  }
 }

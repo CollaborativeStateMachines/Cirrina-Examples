@@ -66,12 +66,7 @@ collaborativeStateMachine {
         ["meals"] = "0"
       }
       states {
-        ["wait"] = new Initial {
-          on {
-            ["start"] = new Transition { to = "hungry" }
-          }
-        }
-        ["hungry"] = new State {
+        ["hungry"] = new Initial {
           entry {
             new Emit { event { topic = "hungry"; data { ["recipient"] = "id"; ["fid"] = "fid" } } }
           }
