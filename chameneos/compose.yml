@@ -1,0 +1,65 @@
+x-worker-base: &worker-base
+  image: cirrina
+  build:
+    context: .
+  depends_on:
+    - mall
+  volumes:
+    - ./:/app
+
+services:
+  mall:
+    image: cirrina
+    build:
+      context: .
+    environment:
+      - RUN=mall
+    volumes:
+      - ./:/app
+  w0:
+    <<: *worker-base
+    environment: { RUN: chameneos0 }
+
+  w1:
+    <<: *worker-base
+    environment: { RUN: chameneos1 }
+
+  w2:
+    <<: *worker-base
+    environment: { RUN: chameneos2 }
+
+  w3:
+    <<: *worker-base
+    environment: { RUN: chameneos3 }
+
+  w4:
+    <<: *worker-base
+    environment: { RUN: chameneos4 }
+
+  w5:
+    <<: *worker-base
+    environment: { RUN: chameneos5 }
+
+  w6:
+    <<: *worker-base
+    environment: { RUN: chameneos6 }
+
+  w7:
+    <<: *worker-base
+    environment: { RUN: chameneos7 }
+
+  w8:
+    <<: *worker-base
+    environment: { RUN: chameneos8 }
+
+  w9:
+    <<: *worker-base
+    environment: { RUN: chameneos9 }
+
+  w10:
+    <<: *worker-base
+    environment: { RUN: chameneos10 }
+
+  w11:
+    <<: *worker-base
+    environment: { RUN: chameneos11 }
