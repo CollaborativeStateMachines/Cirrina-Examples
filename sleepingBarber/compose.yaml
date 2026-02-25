@@ -1,0 +1,77 @@
+x-worker-base: &worker-base
+  image: cirrina
+  build:
+    context: .
+  depends_on:
+    - barber
+  volumes:
+    - ./:/app
+
+services:
+  barber:
+    image: cirrina
+    build:
+      context: .
+    depends_on:
+      - waitingRoom
+    environment:
+      - RUN=barber
+    volumes:
+      - ./:/app
+
+  waitingRoom:
+    image: cirrina
+    build:
+      context: .
+    environment:
+      - RUN=waitingRoom
+    volumes:
+      - ./:/app
+
+  w0:
+    <<: *worker-base
+    environment: { RUN: customer0 }
+
+  w1:
+    <<: *worker-base
+    environment: { RUN: customer1 }
+
+  w2:
+    <<: *worker-base
+    environment: { RUN: customer2 }
+
+  w3:
+    <<: *worker-base
+    environment: { RUN: customer3 }
+
+  w4:
+    <<: *worker-base
+    environment: { RUN: customer4 }
+
+  w5:
+    <<: *worker-base
+    environment: { RUN: customer5 }
+
+  w6:
+    <<: *worker-base
+    environment: { RUN: customer6 }
+
+  w7:
+    <<: *worker-base
+    environment: { RUN: customer7 }
+
+  w8:
+    <<: *worker-base
+    environment: { RUN: customer8 }
+
+  w9:
+    <<: *worker-base
+    environment: { RUN: customer9 }
+
+  w10:
+    <<: *worker-base
+    environment: { RUN: customer10 }
+
+  w11:
+    <<: *worker-base
+    environment: { RUN: customer11 }

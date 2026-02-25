@@ -1,0 +1,137 @@
+amends
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+local n = 12
+
+collaborativeStateMachine {
+  stateMachines {
+    ["barber"] {
+      states {
+        ["sleeping"] = new Initial {
+          entry { new Emit { event { topic = "ready" }; target = "'waitingRoom'" } }
+          on {
+            ["sit"] = new Transition {
+              to = "cutting"
+              yields { new Emit { event { topic = "comeIn" }; target = "$customer" } }
+            }
+            ["terminate"] = new Transition { to = "done" }
+          }
+        }
+        ["cutting"] = new State {
+          after {
+            ["busyWait"] = new Timeout {
+              delay = "0"
+              triggers = new Emit { event = new Internal { topic = "continue" } }
+            }
+          }
+          on {
+            ["continue"] = new Transition {
+              to = "sleeping"
+              yields { new Emit { event { topic = "done" }; target = "$customer" } }
+            }
+          }
+        }
+        ["done"] = new Terminal {}
+      }
+    }
+    ["customer"] {
+      transient { ["counter"] = "0" }
+      states {
+        ["request"] = new Initial {
+          entry {
+            new Emit { event { topic = "enter"; data { ["customer"] = "id" } }
+              target = "'waitingRoom'"
+            }
+          }
+          on {
+            ["full"] = new Transition { to = "request" }
+            ["comeIn"] = new Transition { to = "haircut" }
+          }
+        }
+        ["haircut"] = new State {
+          entry { new Assign { expression = "++counter" } }
+          on {
+            ["done"] = new Transition {
+              to = "request"
+              provided = "counter < 1000"
+              or = "leave"
+            }
+          }
+        }
+        ["leave"] = new Terminal { entry { new Emit { event { topic = "finish" } } } }
+      }
+    }
+    ["waitingRoom"] {
+      transient {
+        ["waiting"] = "[...]"
+        ["barber"] = "'sleeping'"
+        ["count"] = "0"
+      }
+      states {
+        ["process"] = new Initial {
+          on {
+            ["enter"] = new Transition {
+              yields {
+                new Match {
+                  cases {
+                    new Case { of = "waiting.size() == 3"; yields { new Emit { event { topic = "full" }; target = "$customer" } } }
+                    new Case { of = "barber == 'sleeping' && waiting.isEmpty()"; yields {
+                      new Emit {
+                        event { topic = "sit"; data { ["customer"] = "$customer" } }
+                        target = "'barber'"
+                      }
+                      new Assign { expression = "barber = 'busy'" }
+                    }}
+                    new Case { of = "barber == 'sleeping' && !waiting.isEmpty()"; yields {
+                      new Assign { expression = "waiting += [$customer]" }
+                      new Emit {
+                        event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
+                        target = "'barber'"
+                      }
+                      new Assign { expression = "barber = 'busy'" }
+                      new Assign { expression = "waiting -= [waiting.get(0)]" }
+                    }}
+                    new Case { of = "barber == 'busy' && waiting.size() < 3"; yields { new Assign { expression = "waiting += [$customer]" } }}
+                  }
+                }
+              }
+            }
+            ["ready"] = new Transition {
+              yields {
+                new Assign { expression = "barber = 'sleeping'" }
+                new Match {
+                  cases {
+                    new Case { of = "!waiting.isEmpty()"; yields {
+                      new Assign { expression = "barber = 'busy'" }
+                      new Emit { event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
+                        target = "'barber'"
+                      }
+                      new Assign { expression = "waiting -= [waiting.get(0)]" }
+                    }}
+                  }
+                }
+              }
+            }
+            ["finish"] = new Transition {
+              to = "process"
+              provided = "count < 11"
+              yields { new Assign { expression = "++count" } }
+              or = "done"
+            }
+          }
+        }
+        ["done"] = new Terminal {entry { new Emit { event { topic = "terminate" } } }}
+      }
+    }
+  }
+}
+instances {
+  ["barber"]  { stateMachineName = "barber" }
+  ["waitingRoom"]  { stateMachineName = "waitingRoom" }
+  for (i in IntSeq(0, n - 1)) {
+    ["customer\(i)"] {
+      stateMachineName = "customer"
+      data { ["id"] = "'customer\(i)'" }
+    }
+  }
+}
