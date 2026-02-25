@@ -1,0 +1,70 @@
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+local n = 3
+
+collaborativeStateMachine {
+  stateMachines {
+    ["arbiter"] {
+      transient {
+        ["ingredients"] = "(0..2)"
+        ["count"] = "0"
+      }
+      states {
+        ["run"] = new Initial {
+          entry {
+            new Assign { expression = "++count" }
+            new Emit {
+              event  {
+                topic = "provided"
+                data { ["ingredients"] = "ingredients - [std:takeRandom(ingredients)]" }
+              }
+            }
+          }
+          on {
+            ["finish"] = new Transition {
+              to = "run"
+              provided = "count < 20000"
+              or = "done"
+            }
+          }
+        }
+        ["done"] = new Terminal { entry { new Emit { event  { topic = "done" } } } }
+      }
+    }
+    ["smoker"] {
+      transient { ["count"] = "0" }
+      states {
+        ["wait"] = new Initial {
+          on {
+            ["provided"] = new Transition {
+              to = "smoking"
+              provided = "!($ingredients.contains(id))"
+            }
+            ["done"] = new Transition { to = "done" }
+          }
+        }
+        ["smoking"] = new State {
+          after {
+            ["wait"] = new Timeout {
+              delay = "0"
+              triggers = new Emit { event = new Internal { topic = "continue" } }
+            }
+          }
+          on { ["continue"] = new Transition {
+            to = "wait"
+            yields { new Emit { event { topic = "finish" } target = "'arbiter'"} } } }
+        }
+        ["done"] = new Terminal {}
+      }
+    }
+  }
+}
+instances {
+  ["arbiter"]  { stateMachineName = "arbiter" }
+  for (i in IntSeq(0, n - 1)) {
+    ["smoker\(i)"] {
+      stateMachineName = "smoker"
+      data { ["id"] = "\(i)" }
+    }
+  }
+}
