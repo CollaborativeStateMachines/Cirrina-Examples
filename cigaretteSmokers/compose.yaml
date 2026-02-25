@@ -1,0 +1,30 @@
+x-worker-base: &worker-base
+  image: cirrina
+  build:
+    context: .
+  depends_on:
+    - arbiter
+  volumes:
+    - ./:/app
+
+services:
+  arbiter:
+    image: cirrina
+    build:
+      context: .
+    environment:
+      - RUN=arbiter
+    volumes:
+      - ./:/app
+
+  w0:
+    <<: *worker-base
+    environment: { RUN: smoker0 }
+
+  w1:
+    <<: *worker-base
+    environment: { RUN: smoker1 }
+
+  w2:
+    <<: *worker-base
+    environment: { RUN: smoker2 }

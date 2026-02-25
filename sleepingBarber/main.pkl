@@ -19,7 +19,7 @@ collaborativeStateMachine {
         }
         ["cutting"] = new State {
           after {
-            ["busyWait"] = new Timeout {
+            ["wait"] = new Timeout {
               delay = "0"
               triggers = new Emit { event = new Internal { topic = "continue" } }
             }
