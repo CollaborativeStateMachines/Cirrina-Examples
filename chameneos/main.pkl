@@ -17,11 +17,11 @@ collaborativeStateMachine {
                 topic = "requesting"
                 data { ["id"] = "id"; ["color"] = "color" }
               }
+              target = "'mall'"
             }
           }
           on {
             ["matchMade"] = new Transition {
-              to = "request"
               yields {
                 new Assign { expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)" }
                 new Assign { expression = "++count" }
@@ -32,13 +32,26 @@ collaborativeStateMachine {
                   }
                   target = "$partner"
                 }
+                new Emit {
+                  event {
+                    topic = "requesting"
+                    data { ["id"] = "id"; ["color"] = "color" }
+                  }
+                  target = "'mall'"
+                }
               }
             }
             ["change"] = new Transition {
-              to = "request"
               yields {
                 new Assign { expression = "color = $color" }
                 new Assign { expression = "++count" }
+                new Emit {
+                  event {
+                    topic = "requesting"
+                    data { ["id"] = "id"; ["color"] = "color" }
+                  }
+                  target = "'mall'"
+                }
               }
             }
             ["done"] = new Transition { to = "done" }
@@ -81,10 +94,7 @@ collaborativeStateMachine {
                         new Assign { expression = "waiting -= [waiting.get(0)]" }
                       }
                     }
-                    new Case { of = "count == 20000"; yields {
-                      new Emit { event { topic = "done" } }
-                      new Assign { expression = "++count" }
-                    }}
+                    new Case { of = "count == 20000"; yields { new Emit { event { topic = "done" } } } }
                   }
 
                 }
