@@ -113,11 +113,16 @@ collaborativeStateMachine {
               }
             }
             ["finish"] = new Transition {
-              to = "process"
-              provided = "count < 11"
-              yields { new Assign { expression = "++count" } }
-              or = "done"
+              yields {
+                new Match {
+                  cases {
+                    new Case { of = "count < 11" yields { new Assign { expression = "++count" } } }
+                    new Case { of = "count == 11" yields { new Emit { event = new Internal { topic = "done" } } } }
+                  }
+                }
+              }
             }
+            ["done"] = new Transition { to = "done" }
           }
         }
         ["done"] = new Terminal {entry { new Emit { event { topic = "terminate" } } }}
