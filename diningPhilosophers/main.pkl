@@ -52,16 +52,10 @@ collaborativeStateMachine {
               }
             }
             ["done"] {
-              yields {
-                new Match {
-                  cases {
-                    new Case { of = "count < 5" yields { new Assign { expression = "++count" } } }
-                    new Case { of = "count == 5" yields { new Emit { event = new Internal { topic = "terminate"} } } }
-                  }
-                }
-              }
+              to = "serving"; provided = "count < 5"
+              yields { new Assign { expression = "++count" } }
+              or = "done"
             }
-            ["terminate"] = new Transition { to = "done" }
           }
         }
         ["done"] = new Terminal {}
