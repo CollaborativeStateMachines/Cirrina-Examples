@@ -8,10 +8,10 @@ collaborativeStateMachine {
       transient {
         ["forks"] = "std:repeat(false, \(n))"
         ["waiting"] = "std:repeat(false, \(n))"
-        ["count"] = "0"
       }
       states {
         ["serving"] = new Initial {
+          static { ["count"] = "0" }
           on {
             ["hungry"] {
               yields {
@@ -62,9 +62,6 @@ collaborativeStateMachine {
       }
     }
     ["philosopher"] {
-      transient {
-        ["meals"] = "0"
-      }
       states {
         ["hungry"] = new Initial {
           entry {
@@ -75,6 +72,7 @@ collaborativeStateMachine {
           }
         }
         ["eating"] {
+          static { ["meals"] = "0" }
           exit {
             new Emit { event { topic = "release"; data { ["fid"] = "fid" } } }
           }
