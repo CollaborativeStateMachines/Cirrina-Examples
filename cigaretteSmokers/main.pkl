@@ -32,7 +32,6 @@ collaborativeStateMachine {
       }
     }
     ["smoker"] {
-      transient { ["count"] = "0" }
       states {
         ["wait"] = new Initial {
           on {
