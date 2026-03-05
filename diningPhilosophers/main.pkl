@@ -1,4 +1,4 @@
-amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+amends "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 local n = 6
 
@@ -18,22 +18,22 @@ collaborativeStateMachine {
                 new Match {
                   cases {
                     new Case {
-                      of = "!(forks[$fid] || forks[($fid + 1) % 6])"
+                      of = "!(forks[$id] || forks[($id + 1) % 6])"
                       yields {
-                        new Assign { expression = "forks[$fid] = forks[($fid + 1) % 6] = true" }
-                        new Emit { event { topic = "acquire" }; target = "$recipient" }
+                        new Eval { expression = "forks[$id] = forks[($id + 1) % 6] = true" }
+                        new Emit { event { topic = "acquire" }; target = "$id" }
                       }
                     }
                   }
-                  default = new Assign { expression = "waiting[$fid] = true" }
+                  default = new Eval { expression = "waiting[$id] = true" }
                 }
               }
             }
             ["release"] {
               yields {
-                new Assign { expression = "forks[$fid] = forks[($fid + 1) % 6] = false" }
-                new Emit { event = new Internal { topic = "test"; data { ["nid"] = "($fid + 5) % 6" } } }
-                new Emit { event = new Internal { topic = "test"; data { ["nid"] = "($fid + 1) % 6" } } }
+                new Eval { expression = "forks[$id] = forks[($id + 1) % 6] = false" }
+                new Emit { event = new Internal { topic = "test"; data { ["nid"] = "($id + 5) % 6" } } }
+                new Emit { event = new Internal { topic = "test"; data { ["nid"] = "($id + 1) % 6" } } }
               }
             }
             ["test"] {
@@ -43,8 +43,8 @@ collaborativeStateMachine {
                     new Case {
                       of = "waiting[$nid] && !(forks[$nid] || forks[($nid + 1) % 6])"
                       yields {
-                        new Assign { expression = "waiting[$nid] = false; forks[$nid] = forks[($nid + 1) % 6] = true" }
-                        new Emit { event { topic = "acquire" }; target = "'philosopher' + $nid" }
+                        new Eval { expression = "waiting[$nid] = false; forks[$nid] = forks[($nid + 1) % 6] = true" }
+                        new Emit { event { topic = "acquire" }; target = "$nid" }
                       }
                     }
                   }
@@ -52,8 +52,8 @@ collaborativeStateMachine {
               }
             }
             ["done"] {
-              to = "serving"; provided = "count < 5"
-              yields { new Assign { expression = "++count" } }
+              to = "serving"; provided = "count < \(n - 1)"
+              yields { new Eval { expression = "++count" } }
               or = "done"
             }
           }
@@ -65,7 +65,7 @@ collaborativeStateMachine {
       states {
         ["hungry"] = new Initial {
           entry {
-            new Emit { event { topic = "hungry"; data { ["recipient"] = "id"; ["fid"] = "fid" } } }
+            new Emit { event { topic = "hungry"; data { ["id"] = "id" } } }
           }
           on {
             ["acquire"] { to = "eating" }
@@ -74,7 +74,7 @@ collaborativeStateMachine {
         ["eating"] {
           static { ["meals"] = "0" }
           exit {
-            new Emit { event { topic = "release"; data { ["fid"] = "fid" } } }
+            new Emit { event { topic = "release"; data { ["id"] = "id" } } }
           }
           after {
             ["meals"] = new Timeout {
@@ -85,7 +85,7 @@ collaborativeStateMachine {
           on {
             ["think"] {
               to = "hungry"; provided = "meals < 16000"
-              yields { new Assign { expression = "++meals" } }
+              yields { new Eval { expression = "++meals" } }
               or = "sated"
             }
           }
@@ -100,9 +100,9 @@ collaborativeStateMachine {
 instances {
   ["arbitrator"] { stateMachineName = "arbitrator" }
   for (i in IntSeq(0, n - 1)) {
-    ["philosopher\(i)"] { 
+    ["\(i)"] { 
       stateMachineName = "philosopher"
-      data { ["id"] = "'philosopher\(i)'"; ["fid"] = "\(i)" } 
+      data { ["id"] = "\(i)" } 
     }
   }
 }
