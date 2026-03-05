@@ -1,4 +1,4 @@
-amends "https://raw.githubusercontent.com/Frnd-me/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 local n = 6
 
