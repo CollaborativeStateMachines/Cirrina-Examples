@@ -19,24 +19,24 @@ services:
 
   w0:
     <<: *worker-base
-    environment: { RUN: philosopher0 }
+    environment: { RUN: 0 }
 
   w1:
     <<: *worker-base
-    environment: { RUN: philosopher1 }
+    environment: { RUN: 1 }
 
   w2:
     <<: *worker-base
-    environment: { RUN: philosopher2 }
+    environment: { RUN: 2 }
 
   w3:
     <<: *worker-base
-    environment: { RUN: philosopher3 }
+    environment: { RUN: 3 }
 
   w4:
     <<: *worker-base
-    environment: { RUN: philosopher4 }
+    environment: { RUN: 4 }
 
   w5:
     <<: *worker-base
-    environment: { RUN: philosopher5 }
+    environment: { RUN: 5 }
