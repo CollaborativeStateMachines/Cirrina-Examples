@@ -9,7 +9,7 @@ collaborativeStateMachine {
       states {
         ["run"] = new Initial {
           entry {
-            new Assign { expression = "++count" }
+            new Eval { expression = "++count" }
             new Emit {
               event {
                 topic = "ping"
@@ -37,14 +37,13 @@ collaborativeStateMachine {
                     new Case {
                       of = "count == 20000"
                       yields {
-                        new Assign { expression = "++count" }
+                        new Eval { expression = "++count" }
                         new Emit { event { topic = "done" } }
                       }
                     }
                     new Case {
                       of = "count < 20000"
                       yields {
-                        new Assign { expression = "++count" }
                         new Emit {
                           event {
                             topic = "ping"
@@ -71,7 +70,7 @@ collaborativeStateMachine {
           on {
             ["done"] {
               to = "wait"
-              yields { new Assign { expression = "++count" } }
+              yields { new Eval { expression = "++count" } }
             }
           }
           always {

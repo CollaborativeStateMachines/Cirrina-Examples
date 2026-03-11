@@ -84,9 +84,8 @@ collaborativeStateMachine {
           }
           on {
             ["think"] {
-              to = "hungry"; provided = "meals < 16000"
+              to = "hungry"
               yields { new Eval { expression = "++meals" } }
-              or = "sated"
             }
           }
         }

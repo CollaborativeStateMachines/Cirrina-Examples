@@ -23,13 +23,12 @@ collaborativeStateMachine {
                   new Case { of = "count > 0"
                     yields {
                       new Emit { event { topic = "increment" } }
-                      new Assign { expression = "--count"}
                     }
                   }
                   new Case { of = "count == 0"
                     yields {
                       new Emit { event { topic = "retrieve" } }
-                      new Assign { expression = "--count"}
+                      new Eval { expression = "--count"}
                     }
                   }
                 }
@@ -46,7 +45,7 @@ collaborativeStateMachine {
       states {
         ["count"] = new Initial {
           on {
-            ["increment"] = new Transition { yields { new Assign { expression = "++count" } } }
+            ["increment"] = new Transition { yields { new Eval { expression = "++count" } } }
             ["retrieve"] = new Transition {
               to = "done"
               yields { new Emit { event {
