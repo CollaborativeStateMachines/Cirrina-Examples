@@ -49,13 +49,9 @@ collaborativeStateMachine {
           }
         }
         ["haircut"] = new State {
-          entry { new Assign { expression = "++counter" } }
+          entry { new Eval { expression = "++counter" } }
           on {
-            ["done"] = new Transition {
-              to = "request"
-              provided = "counter < 1000"
-              or = "leave"
-            }
+            ["done"] = new Transition { to = "request" }
           }
         }
         ["leave"] = new Terminal { entry { new Emit { event { topic = "finish" } } } }
@@ -80,33 +76,33 @@ collaborativeStateMachine {
                         event { topic = "sit"; data { ["customer"] = "$customer" } }
                         target = "'barber'"
                       }
-                      new Assign { expression = "barber = 'busy'" }
+                      new Eval { expression = "barber = 'busy'" }
                     }}
                     new Case { of = "barber == 'sleeping' && !waiting.isEmpty()"; yields {
-                      new Assign { expression = "waiting += [$customer]" }
+                      new Eval { expression = "waiting += [$customer]" }
                       new Emit {
                         event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
                         target = "'barber'"
                       }
-                      new Assign { expression = "barber = 'busy'" }
-                      new Assign { expression = "waiting -= [waiting.get(0)]" }
+                      new Eval { expression = "barber = 'busy'" }
+                      new Eval { expression = "waiting -= [waiting.get(0)]" }
                     }}
-                    new Case { of = "barber == 'busy' && waiting.size() < 3"; yields { new Assign { expression = "waiting += [$customer]" } }}
+                    new Case { of = "barber == 'busy' && waiting.size() < 3"; yields { new Eval { expression = "waiting += [$customer]" } }}
                   }
                 }
               }
             }
             ["ready"] = new Transition {
               yields {
-                new Assign { expression = "barber = 'sleeping'" }
+                new Eval { expression = "barber = 'sleeping'" }
                 new Match {
                   cases {
                     new Case { of = "!waiting.isEmpty()"; yields {
-                      new Assign { expression = "barber = 'busy'" }
+                      new Eval { expression = "barber = 'busy'" }
                       new Emit { event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
                         target = "'barber'"
                       }
-                      new Assign { expression = "waiting -= [waiting.get(0)]" }
+                      new Eval { expression = "waiting -= [waiting.get(0)]" }
                     }}
                   }
                 }
@@ -114,7 +110,7 @@ collaborativeStateMachine {
             }
             ["finish"] = new Transition {
               to = "process"; provided = "count < 11"
-              yields { new Assign { expression = "++count" } }
+              yields { new Eval { expression = "++count" } }
               or = "done"
             }
           }

@@ -12,7 +12,7 @@ collaborativeStateMachine {
       states {
         ["run"] = new Initial {
           entry {
-            new Assign { expression = "++count" }
+            new Eval { expression = "++count" }
             new Emit {
               event  {
                 topic = "provided"
@@ -21,11 +21,7 @@ collaborativeStateMachine {
             }
           }
           on {
-            ["finish"] = new Transition {
-              to = "run"
-              provided = "count < 20000"
-              or = "done"
-            }
+            ["finish"] = new Transition { to = "run" }
           }
         }
         ["done"] = new Terminal { entry { new Emit { event  { topic = "done" } } } }
