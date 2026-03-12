@@ -6,7 +6,13 @@ collaborativeStateMachine {
     ["producer"] {
       transient { ["count"] = "50000" }
       states {
-        ["send"] = new Initial {
+        ["init"] = new Initial {
+          entry {
+            new Emit { event = new Internal { topic = "send" } }
+          }
+          on { ["send"] = new Transition { to = "send" } }
+        }
+        ["send"] = new State {
           on {
             ["done"] = new Transition {
               to = "success"
@@ -15,7 +21,7 @@ collaborativeStateMachine {
             }
           }
           always { new Transition {
-            to = "send"
+            to = "init"
             provided = "count > -1"
             yields {
               new Match {
@@ -28,7 +34,7 @@ collaborativeStateMachine {
                   new Case { of = "count == 0"
                     yields {
                       new Emit { event { topic = "retrieve" } }
-                      new Eval { expression = "--count"}
+                      new Eval { expression = "--count" }
                     }
                   }
                 }
