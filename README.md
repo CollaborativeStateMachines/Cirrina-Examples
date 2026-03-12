@@ -30,3 +30,7 @@ This repository contains the following use case implementations:
   Message-passing benchmark demonstrating synchronous communication.
 
 Individual use case descriptions and usage instructions can be found in the corresponding README files.
+
+## Deployment
+
+The project provides local setups using Vagrant and Docker Compose for development. For large-scale scientific experimentation, it includes [Grid'5000](https://www.grid5000.fr/) deployment scripts that leverage [EnOSLib](https://discovery.gitlabpages.inria.fr/enoslib/) to ensure efficiency and reproducibility.
