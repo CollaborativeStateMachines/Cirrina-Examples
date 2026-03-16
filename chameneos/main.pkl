@@ -7,7 +7,6 @@ collaborativeStateMachine {
     ["chameneos"] {
       transient {
         ["color"] = "std:takeRandom([1,2,3,...])"
-        ["count"] = "0"
       }
       states {
         ["request"] = new Initial {
@@ -42,10 +41,8 @@ collaborativeStateMachine {
                 new Eval { expression = "++count" }
               }
             }
-            ["done"] = new Transition { to = "done" }
           }
         }
-        ["done"] = new Terminal {}
       }
     }
     ["mall"] {
@@ -62,11 +59,11 @@ collaborativeStateMachine {
                 new Match {
                   cases {
                     new Case {
-                      of = "waiting.isEmpty() && count < 20000"
+                      of = "waiting.isEmpty()"
                       yields { new Eval { expression = "waiting += [$id]" } }
                     }
                     new Case {
-                      of = "!waiting.isEmpty() && count < 20000"
+                      of = "!waiting.isEmpty()"
                       yields {
                         new Eval { expression = "++count" }
                         new Emit {
@@ -82,19 +79,13 @@ collaborativeStateMachine {
                         new Eval { expression = "waiting -= [waiting.get(0)]" }
                       }
                     }
-                    new Case { of = "count == 20000"; yields {
-                      new Emit { event { topic = "done" } }
-                      new Eval { expression = "++count" }
-                    }}
                   }
 
                 }
               }
             }
-            ["done"] = new Transition { to = "done" }
           }
         }
-        ["done"] = new Terminal {}
       }
     }
   }

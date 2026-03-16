@@ -24,7 +24,6 @@ collaborativeStateMachine {
             ["finish"] = new Transition { to = "run" }
           }
         }
-        ["done"] = new Terminal { entry { new Emit { event  { topic = "done" } } } }
       }
     }
     ["smoker"] {
@@ -35,7 +34,6 @@ collaborativeStateMachine {
               to = "smoking"
               provided = "!($ingredients.contains(id))"
             }
-            ["done"] = new Transition { to = "done" }
           }
         }
         ["smoking"] = new State {
@@ -49,7 +47,6 @@ collaborativeStateMachine {
             to = "wait"
             yields { new Emit { event { topic = "finish" } target = "'arbiter'"} } } }
         }
-        ["done"] = new Terminal {}
       }
     }
   }

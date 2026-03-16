@@ -13,37 +13,14 @@ collaborativeStateMachine {
           on { ["send"] = new Transition { to = "send" } }
         }
         ["send"] = new State {
-          on {
-            ["done"] = new Transition {
-              to = "success"
-              provided = "$count == 50000"
-              or = "failure"
-            }
-          }
           always { new Transition {
             to = "init"
-            provided = "count > -1"
             yields {
-              new Match {
-                cases {
-                  new Case { of = "count > 0"
-                    yields {
-                      new Emit { event { topic = "increment" } }
-                    }
-                  }
-                  new Case { of = "count == 0"
-                    yields {
-                      new Emit { event { topic = "retrieve" } }
-                      new Eval { expression = "--count" }
-                    }
-                  }
-                }
+              new Emit { event { topic = "increment" } }
               }
             }
-          } }
+          }
         }
-        ["success"] = new Terminal { entry { new Log {message = "'Count is correct: ' + $count"} } }
-        ["failure"] = new Terminal { entry { new Log {message = "'Count is incorrect: ' + $count"} } }
       }
     }
     ["counter"] {
@@ -52,18 +29,8 @@ collaborativeStateMachine {
         ["count"] = new Initial {
           on {
             ["increment"] = new Transition { yields { new Eval { expression = "++count" } } }
-            ["retrieve"] = new Transition {
-              to = "done"
-              yields { new Emit { event {
-                    topic = "done"
-                    data { ["count"] = "count" }
-                  }
-                }
-              }
-            }
           }
         }
-        ["done"] = new Terminal {}
       }
     }
   }
