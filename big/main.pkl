@@ -32,35 +32,18 @@ collaborativeStateMachine {
             }
             ["pong"] {
               yields {
-                new Match {
-                  cases {
-                    new Case {
-                      of = "count == 20000"
-                      yields {
-                        new Eval { expression = "++count" }
-                        new Emit { event { topic = "done" } }
-                      }
-                    }
-                    new Case {
-                      of = "count < 20000"
-                      yields {
-                        new Emit {
-                          event {
-                            topic = "ping"
-                            data { ["sender"] = "id" }
-                          }
-                          target = "std:takeRandom(peers)"
-                        }
-                      }
-                    }
+                new Eval { expression = "++count" }
+                new Emit {
+                  event {
+                    topic = "ping"
+                    data { ["sender"] = "id" }
                   }
+                  target = "std:takeRandom(peers)"
                 }
               }
             }
-            ["shutdown"] { to = "done" }
           }
         }
-        ["done"] = new Terminal {}
       }
     }
     ["sink"] = new StateMachine {
@@ -73,14 +56,7 @@ collaborativeStateMachine {
               yields { new Eval { expression = "++count" } }
             }
           }
-          always {
-            new Transition {
-              to = "done"
-              provided = "count == 12"
-            }
-          }
         }
-        ["done"] = new Terminal { entry { new Emit { event { topic = "shutdown" } } } }
       }
     }
   }
