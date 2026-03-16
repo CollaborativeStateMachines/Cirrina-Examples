@@ -1,42 +1,57 @@
 x-worker-base: &worker-base
-  image: cirrina
-  build:
-    context: .
+  image: collaborativestatemachines/cirrina:unstable
+  pull_policy: always
   depends_on:
     - arbitrator
-  volumes:
-    - ./:/app
 
 services:
   arbitrator:
-    image: cirrina
-    build:
-      context: .
+    image: collaborativestatemachines/cirrina:unstable
+    pull_policy: always
     environment:
       - RUN=arbitrator
     volumes:
       - ./:/app
+      - ./metrics_arbitrator:/metrics
 
   w0:
     <<: *worker-base
     environment: { RUN: 0 }
+    volumes:
+      - ./:/app
+      - ./metrics_w0:/metrics
 
   w1:
     <<: *worker-base
     environment: { RUN: 1 }
+    volumes:
+      - ./:/app
+      - ./metrics_w1:/metrics
 
   w2:
     <<: *worker-base
     environment: { RUN: 2 }
+    volumes:
+      - ./:/app
+      - ./metrics_w2:/metrics
 
   w3:
     <<: *worker-base
     environment: { RUN: 3 }
+    volumes:
+      - ./:/app
+      - ./metrics_w3:/metrics
 
   w4:
     <<: *worker-base
     environment: { RUN: 4 }
+    volumes:
+      - ./:/app
+      - ./metrics_w4:/metrics
 
   w5:
     <<: *worker-base
     environment: { RUN: 5 }
+    volumes:
+      - ./:/app
+      - ./metrics_w5:/metrics

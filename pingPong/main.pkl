@@ -3,33 +3,21 @@ amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/ref
 collaborativeStateMachine {
   stateMachines {
     ["ping"] {
-      transient { ["numPings"] = "50000" }
       states {
         ["ping"] = new Initial {
           entry {
             new Emit { event { topic = "ping" } }
-            new Assign { expression = "--numPings" }
+            new Ctr { counter = "ping.count" }
           }
-          on {
-            ["pong"] { 
-              to = "ping"; provided = "numPings != 0"; or = "done"
-            }
-          }
-        }
-        ["done"] = new Terminal {
-          entry { new Emit { event { topic = "done" } } }
+          on { ["pong"] { to = "ping" } }
         }
       }
     }
     ["pong"] = new StateMachine {
       states {
         ["pong"] = new Initial {
-          on {
-            ["ping"] { yields { new Emit { event { topic = "pong" } } } }
-            ["done"] { to = "done" }
-          }
+          on { ["ping"] { yields { new Emit { event { topic = "pong" } } } } }
         }
-        ["done"] = new Terminal {}
       }
     }
   }
