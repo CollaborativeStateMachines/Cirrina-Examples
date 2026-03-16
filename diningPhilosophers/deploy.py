@@ -25,6 +25,18 @@ d = en.Docker(
 )
 d.deploy()
 
+netem = en.NetemHTB()
+(
+    netem.add_constraints(
+        src=roles["worker"],
+        dest=roles["arbitrator"],
+        delay="40ms",
+        rate="1gbit",
+        symmetric=True,
+    )
+)
+netem.deploy()
+
 with en.actions(roles=roles["arbitrator"]) as a:
     a.docker_container(
         name="arbitrator",
