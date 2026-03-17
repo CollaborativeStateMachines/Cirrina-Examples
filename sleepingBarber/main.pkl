@@ -31,7 +31,6 @@ collaborativeStateMachine {
             }
           }
         }
-        ["done"] = new Terminal {}
       }
     }
     ["customer"] {

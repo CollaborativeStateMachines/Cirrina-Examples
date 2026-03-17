@@ -49,7 +49,6 @@ collaborativeStateMachine {
       transient {
         ["waiting"] = "[...]"
         ["count"] = "0"
-        ["terminated"] = "0"
       }
       states {
         ["wait"] = new Initial {
