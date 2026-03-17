@@ -1,65 +1,98 @@
 x-worker-base: &worker-base
-  image: cirrina
-  build:
-    context: .
+  image: collaborativestatemachines/cirrina:unstable
+  pull_policy: always
   depends_on:
     - mall
-  volumes:
-    - ./:/app
 
 services:
   mall:
-    image: cirrina
-    build:
-      context: .
+    image: collaborativestatemachines/cirrina:unstable
+    pull_policy: always
     environment:
       - RUN=mall
     volumes:
       - ./:/app
+      - ./metrics_mall:/metrics
   w0:
     <<: *worker-base
-    environment: { RUN: chameneos0 }
+    environment: { RUN: 0 }
+    volumes:
+      - ./:/app
+      - ./metrics_w0:/metrics
 
   w1:
     <<: *worker-base
-    environment: { RUN: chameneos1 }
+    environment: { RUN: 1 }
+    volumes:
+      - ./:/app
+      - ./metrics_w1:/metrics
 
   w2:
     <<: *worker-base
-    environment: { RUN: chameneos2 }
+    environment: { RUN: 2 }
+    volumes:
+      - ./:/app
+      - ./metrics_w2:/metrics
 
   w3:
     <<: *worker-base
-    environment: { RUN: chameneos3 }
+    environment: { RUN: 3 }
+    volumes:
+      - ./:/app
+      - ./metrics_w3:/metrics
 
   w4:
     <<: *worker-base
-    environment: { RUN: chameneos4 }
+    environment: { RUN: 4 }
+    volumes:
+      - ./:/app
+      - ./metrics_w4:/metrics
 
   w5:
     <<: *worker-base
-    environment: { RUN: chameneos5 }
+    environment: { RUN: 5 }
+    volumes:
+      - ./:/app
+      - ./metrics_w5:/metrics
 
   w6:
     <<: *worker-base
-    environment: { RUN: chameneos6 }
+    environment: { RUN: 6 }
+    volumes:
+      - ./:/app
+      - ./metrics_w6:/metrics
 
   w7:
     <<: *worker-base
-    environment: { RUN: chameneos7 }
+    environment: { RUN: 7 }
+    volumes:
+      - ./:/app
+      - ./metrics_w7:/metrics
 
   w8:
     <<: *worker-base
-    environment: { RUN: chameneos8 }
+    environment: { RUN: 8 }
+    volumes:
+      - ./:/app
+      - ./metrics_w8:/metrics
 
   w9:
     <<: *worker-base
-    environment: { RUN: chameneos9 }
+    environment: { RUN: 9 }
+    volumes:
+      - ./:/app
+      - ./metrics_w9:/metrics
 
   w10:
     <<: *worker-base
-    environment: { RUN: chameneos10 }
+    environment: { RUN: 10 }
+    volumes:
+      - ./:/app
+      - ./metrics_w10:/metrics
 
   w11:
     <<: *worker-base
-    environment: { RUN: chameneos11 }
+    environment: { RUN: 11 }
+    volumes:
+      - ./:/app
+      - ./metrics_w11:/metrics
