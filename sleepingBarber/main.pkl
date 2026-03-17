@@ -14,7 +14,6 @@ collaborativeStateMachine {
               to = "cutting"
               yields { new Emit { event { topic = "comeIn" }; target = "$customer" } }
             }
-            ["terminate"] = new Transition { to = "done" }
           }
         }
         ["cutting"] = new State {
@@ -48,7 +47,7 @@ collaborativeStateMachine {
           }
         }
         ["haircut"] = new State {
-          entry { new Eval { expression = "++counter" } }
+          entry { new Eval { expression = "++counter" }; new Ctr { counter = "customer.haircuts"; tags { ["id"] = "id" } } }
           on {
             ["done"] = new Transition { to = "request" }
           }
@@ -68,7 +67,7 @@ collaborativeStateMachine {
               yields {
                 new Match {
                   cases {
-                    new Case { of = "waiting.size() == 3"; yields { new Emit { event { topic = "full" }; target = "$customer" } } }
+                    new Case { of = "waiting.size() == 1"; yields { new Emit { event { topic = "full" }; target = "$customer" } } }
                     new Case { of = "barber == 'sleeping' && waiting.isEmpty()"; yields {
                       new Emit {
                         event { topic = "sit"; data { ["customer"] = "$customer" } }
@@ -116,9 +115,9 @@ instances {
   ["barber"]  { stateMachineName = "barber" }
   ["waitingRoom"]  { stateMachineName = "waitingRoom" }
   for (i in IntSeq(0, n - 1)) {
-    ["customer\(i)"] {
+    ["\(i)"] {
       stateMachineName = "customer"
-      data { ["id"] = "'customer\(i)'" }
+      data { ["id"] = "\(i)" }
     }
   }
 }
