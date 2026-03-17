@@ -10,12 +10,13 @@ collaborativeStateMachine {
         ["run"] = new Initial {
           entry {
             new Eval { expression = "++count" }
+            new Ctr { counter = "big.pings"; tags { ["id"] = "id" } }
             new Emit {
               event {
                 topic = "ping"
                 data { ["sender"] = "id" }
               }
-              target = "std:takeRandom(peers)"
+              target = "std:takeRandom(peers).toString()"
             }
           }
           on {
@@ -26,19 +27,20 @@ collaborativeStateMachine {
                     topic = "pong"
                     data { ["sender"] = "id" }
                   }
-                  target = "$sender"
+                  target = "$sender.toString()"
                 }
               }
             }
             ["pong"] {
               yields {
                 new Eval { expression = "++count" }
+                new Ctr { counter = "big.pings"; tags { ["id"] = "id" } }
                 new Emit {
                   event {
                     topic = "ping"
                     data { ["sender"] = "id" }
                   }
-                  target = "std:takeRandom(peers)"
+                  target = "std:takeRandom(peers).toString()"
                 }
               }
             }
@@ -64,11 +66,11 @@ collaborativeStateMachine {
 instances {
   ["sink"] { stateMachineName = "sink" }
   for (i in IntSeq(0, n - 1)) {
-    ["big\(i)"] {
+    ["\(i)"] {
       stateMachineName = "big"
       data {
-        ["id"] = "'big\(i)'"
-        ["peers"] = "['big0', 'big1', 'big2', 'big3', 'big4', 'big5', 'big6', 'big7', 'big8', 'big9', 'big10', 'big11'] - ['big\(i)']"
+        ["id"] = "\(i)"
+        ["peers"] = "[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11] - [\(i)]"
       }
     }
   }
