@@ -7,8 +7,7 @@ x-worker-base: &worker-base
 services:
   arbiter:
     image: collaborativestatemachines/cirrina:unstable
-    build:
-      context: .
+    pull_policy: always
     environment:
       - RUN=arbiter
     volumes:
