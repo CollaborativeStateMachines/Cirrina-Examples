@@ -24,13 +24,12 @@ collaborativeStateMachine {
               to = "request"
               yields {
                 new Eval { expression = "color = (function (x,y) { if (x == y) {x} else  {x ^ y} })(color, $color)" }
-                new Eval { expression = "++count" }
                 new Emit {
                   event {
                     topic = "change"
                     data { ["color"] = "color" }
                   }
-                  target = "$partner"
+                  target = "$partner.toString()"
                 }
               }
             }
@@ -38,7 +37,6 @@ collaborativeStateMachine {
               to = "request"
               yields {
                 new Eval { expression = "color = $color" }
-                new Eval { expression = "++count" }
               }
             }
           }
@@ -65,6 +63,7 @@ collaborativeStateMachine {
                       of = "!waiting.isEmpty()"
                       yields {
                         new Eval { expression = "++count" }
+                        new Ctr { counter = "mall.meetings" }
                         new Emit {
                           event {
                             topic = "matchMade"
@@ -73,7 +72,7 @@ collaborativeStateMachine {
                               ["color"] = "$color"
                             }
                           }
-                          target = "waiting.get(0)"
+                          target = "waiting.get(0).toString()"
                         }
                         new Eval { expression = "waiting -= [waiting.get(0)]" }
                       }
@@ -93,9 +92,9 @@ collaborativeStateMachine {
 instances {
   ["mall"] { stateMachineName = "mall" }
   for (i in IntSeq(0, n - 1)) {
-    ["chameneos\(i)"] {
+    ["\(i)"] {
       stateMachineName = "chameneos"
-      data { ["id"] = "'chameneos\(i)'" }
+      data { ["id"] = "\(i)" }
     }
   }
 }
