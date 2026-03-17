@@ -28,7 +28,7 @@ collaborativeStateMachine {
       states {
         ["count"] = new Initial {
           on {
-            ["increment"] = new Transition { yields { new Eval { expression = "++count" } } }
+            ["increment"] = new Transition { yields { new Eval { expression = "++count" }; new Ctr { counter = "counter.count" } } }
           }
         }
       }
