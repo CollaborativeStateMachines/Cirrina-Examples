@@ -51,14 +51,8 @@ collaborativeStateMachine {
                 }
               }
             }
-            ["done"] {
-              to = "serving"; provided = "count < \(n - 1)"
-              yields { new Eval { expression = "++count" } }
-              or = "done"
-            }
           }
         }
-        ["done"] = new Terminal {}
       }
     }
     ["philosopher"] {
@@ -91,9 +85,6 @@ collaborativeStateMachine {
               }
             }
           }
-        }
-        ["sated"] = new Terminal {
-          entry { new Emit { event { topic = "done" } } }
         }
       }
     }

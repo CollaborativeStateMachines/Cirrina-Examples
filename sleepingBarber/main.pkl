@@ -54,7 +54,6 @@ collaborativeStateMachine {
             ["done"] = new Transition { to = "request" }
           }
         }
-        ["leave"] = new Terminal { entry { new Emit { event { topic = "finish" } } } }
       }
     }
     ["waitingRoom"] {
@@ -108,14 +107,8 @@ collaborativeStateMachine {
                 }
               }
             }
-            ["finish"] = new Transition {
-              to = "process"; provided = "count < 11"
-              yields { new Eval { expression = "++count" } }
-              or = "done"
-            }
           }
         }
-        ["done"] = new Terminal {entry { new Emit { event { topic = "terminate" } } }}
       }
     }
   }
