@@ -81,7 +81,7 @@ collaborativeStateMachine {
               to = "hungry"
               yields { 
                 new Eval { expression = "++meals" }
-                new Ctr { counter = "philosopher.meals"; tags { ["id"] = "id" } }
+                new Ctr { counter = "philosopher.meals" }
               }
             }
           }
