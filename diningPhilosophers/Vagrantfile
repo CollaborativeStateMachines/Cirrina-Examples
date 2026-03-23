@@ -9,7 +9,6 @@ Vagrant.configure("2") do |config|
   nodes.each do |name, env_vars|
     config.vm.define name do |node|
     influx_metric_url = ENV['INFLUX_METRIC_URL']
-
       node.vm.box = "generic/ubuntu2004"
       
       ip_suffix = name == "arbitrator" ? 10 : 11 + name[1..-1].to_i
