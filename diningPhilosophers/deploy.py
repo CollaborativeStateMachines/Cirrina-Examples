@@ -4,33 +4,29 @@ import os
 import tarfile
 from pathlib import Path
 import enoslib as en
+from tqdm import tqdm
 
 en.init_logging(level=logging.INFO)
 
 # --- Experiment parameters ---
-CLUSTER           = "paradoxe"
 IMAGE             = "collaborativestatemachines/cirrina:unstable"
 MAIN_URI          = "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/diningPhilosophers/main.pkl"
-LOCAL_DEST        = "/tmp/fetched"
-TIME_BEFORE_FETCH = 60 * 15
-# -----------------------------
+LOCAL_ROOT        = Path("./results")
+TIME_BEFORE_FETCH = 60 * 20
+NUM_RUNS          = 5
+# -------------------------------------
 
-# Infrastructure reservation
+# Infrastructure Reservation
 conf = (
-    en.G5kConf.from_settings(job_name=Path(__file__).name, walltime="0:30:00")
-    .add_machine(roles=["arbitrator"], cluster=CLUSTER, nodes=1)
-    .add_machine(roles=["worker"], cluster=CLUSTER, nodes=6)
+    en.G5kConf.from_settings(job_name=Path(__file__).name, walltime="03:00:00")
+    .add_machine(roles=["arbitrator"], cluster="gros", nodes=1)
+    .add_machine(roles=["worker"], cluster="gros", nodes=6)
 )
 
 provider = en.G5k(conf)
 roles, networks = provider.init()
 
-# Pre-deployment: prepare metrics directory with write permissions
-with en.actions(roles=roles) as a:
-    a.file(path="/tmp/metrics", state="absent")
-    a.file(path="/tmp/metrics", state="directory", mode="0777")
-
-# Software deployment (Docker)
+# Initial Docker engine deployment
 registry_opts = dict(type="external", ip="docker-cache.grid5000.fr", port=80)
 d = en.Docker(
     agent=roles["arbitrator"] + roles["worker"],
@@ -42,73 +38,74 @@ d.deploy()
 # Network emulation
 netem = en.NetemHTB()
 netem.add_constraints(
-    src=roles["worker"],
-    dest=roles["arbitrator"],
-    delay="40ms",
-    rate="1gbit",
-    symmetric=True,
+    src=roles["worker"], dest=roles["arbitrator"],
+    delay="40ms", rate="1gbit", symmetric=True
 )
 netem.deploy()
 
-# Start containers:
-# Start arbitrator
-with en.actions(roles=roles["arbitrator"]) as a:
-    a.docker_container(
-        name="arbitrator",
-        image=IMAGE,
-        network_mode="host",
-        volumes=["/tmp/metrics:/metrics:rw"],
-        env={"RUN": "arbitrator", "MAIN_URI": MAIN_URI}
-    )
+for run_idx in range(1, NUM_RUNS + 1):
+    run_label = f"run{run_idx}"
+    print(f"\n>>> Starting {run_label}...")
 
-# Start workers
-for i, host in enumerate(roles["worker"]):
-    with en.actions(pattern_hosts=host.address, roles=roles) as a:
+    # Ensure a fresh metrics directory on every node
+    with en.actions(roles=roles) as a:
+        a.file(path="/tmp/metrics", state="absent")
+        a.file(path="/tmp/metrics", state="directory", mode="0777")
+
+    # Deploy Containers
+    with en.actions(roles=roles["arbitrator"]) as a:
         a.docker_container(
-            name=f"w{i}",
-            image=IMAGE,
-            network_mode="host",
+            name="arbitrator", image=IMAGE, network_mode="host",
             volumes=["/tmp/metrics:/metrics:rw"],
-            env={"RUN": str(i), "MAIN_URI": MAIN_URI}
+            env={"RUN": "arbitrator", "MAIN_URI": MAIN_URI},
+            state="started"
         )
 
-# Wait for data generation
-print(f"--- Sleeping for {TIME_BEFORE_FETCH} seconds ---")
-time.sleep(TIME_BEFORE_FETCH)
+    for i, host in enumerate(roles["worker"]):
+        with en.actions(pattern_hosts=host.address, roles=roles) as a:
+            a.docker_container(
+                name=f"w{i}", image=IMAGE, network_mode="host",
+                volumes=["/tmp/metrics:/metrics:rw"],
+                env={"RUN": str(i), "MAIN_URI": MAIN_URI},
+                state="started"
+            )
 
-# Fetch Results
-os.makedirs(LOCAL_DEST, exist_ok=True)
+    # Wait for data collection
+    print(f"--- {run_label}: Collecting data for {TIME_BEFORE_FETCH}s ---")
+    for _ in tqdm(range(TIME_BEFORE_FETCH), desc=run_label, unit="s", mininterval=60):
+        time.sleep(1)
 
-with en.actions(roles=roles) as a:
-    # Bundle remote files
-    a.archive(
-        path="/tmp/metrics",
-        dest="/tmp/metrics.tar.gz",
-        format="gz"
-    )
-    # Pull to local
-    a.fetch(
-        src="/tmp/metrics.tar.gz",
-        dest=LOCAL_DEST,
-        flat=False
-    )
+    # Fetch and Organize Results locally into run1, run2, etc.
+    run_dest = LOCAL_ROOT / run_label
+    run_dest.mkdir(parents=True, exist_ok=True)
 
-# Flatten and extract
-print("--- Cleaning up local directory structure ---")
-for host in en.get_hosts(roles):
-    host_dir = Path(LOCAL_DEST) / host.address
-    tar_path = host_dir / "tmp" / "metrics.tar.gz"
+    with en.actions(roles=roles) as a:
+        a.archive(path="/tmp/metrics", dest="/tmp/metrics.tar.gz", format="gz")
+        a.fetch(src="/tmp/metrics.tar.gz", dest=str(run_dest), flat=False)
+
+    # Local extraction and Remote Container Cleanup
+    print(f"--- {run_label}: Cleaning up and extracting ---")
     
-    if tar_path.exists():
-        with tarfile.open(tar_path, "r:gz") as tar:
-            tar.extractall(path=host_dir)
+    # Remove containers so they can be re-created in the next iteration
+    with en.actions(roles=roles) as a:
+        a.shell("docker rm -f arbitrator || true")
+        for i in range(len(roles["worker"])):
+            a.shell(f"docker rm -f w{i} || true")
+
+    # Local file flattening
+    for host in en.get_hosts(roles):
+        host_dir = run_dest / host.address
+        tar_path = host_dir / "tmp" / "metrics.tar.gz"
         
-        tar_path.unlink()
-        try:
-            (host_dir / "tmp").rmdir()
-        except OSError:
-            pass # Directory not empty or already gone
+        if tar_path.exists():
+            with tarfile.open(tar_path, "r:gz") as tar:
+                tar.extractall(path=host_dir)
+                
+            tar_path.unlink()
+            try:
+                (host_dir / "tmp").rmdir()
+            except OSError:
+                pass 
 
-print(f"--- Done. Metrics are in {LOCAL_DEST} ---")
-
+print(f"\n--- SUCCESS: All {NUM_RUNS} runs finished. Data in {LOCAL_ROOT} ---")
 provider.destroy()
