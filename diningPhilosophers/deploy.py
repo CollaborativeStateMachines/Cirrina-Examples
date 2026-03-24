@@ -11,7 +11,7 @@ en.init_logging(level=logging.INFO)
 # --- Experiment parameters ---
 IMAGE             = "collaborativestatemachines/cirrina:unstable"
 MAIN_URI          = "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/diningPhilosophers/main.pkl"
-LOCAL_ROOT        = Path("./results")
+LOCAL_ROOT        = Path("./results/diningPhilosophers/cirrina")
 TIME_BEFORE_FETCH = 60 * 20
 NUM_RUNS          = 5
 # -------------------------------------
