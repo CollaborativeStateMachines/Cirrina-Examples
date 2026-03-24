@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
-  <component name="ProjectRootManager" version="2" languageLevel="JDK_24" default="true" project-jdk-name="24" project-jdk-type="JavaSDK">
+  <component name="Black">
+    <option name="enabledOnReformat" value="true" />
+    <option name="enabledOnSave" value="true" />
+    <option name="pathToExecutable" value="$USER_HOME$/.local/bin/black" />
+    <option name="sdkName" value="Poetry (Cirrina-Examples)" />
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_24" default="true" project-jdk-name="Poetry (Cirrina-Examples)" project-jdk-type="Python SDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
 </project>
