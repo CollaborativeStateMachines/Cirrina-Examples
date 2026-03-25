@@ -41,16 +41,9 @@ netem = en.NetemHTB()
 netem.add_constraints(
     src=roles["worker"],
     dest=roles["arbitrator"],
-    delay="30ms",
-    rate="50mbit",
-    symmetric=False,
-)
-netem.add_constraints(
-    src=roles["arbitrator"],
-    dest=roles["worker"],
     delay="10ms",
     rate="1gbit",
-    symmetric=False,
+    symmetric=True,
 )
 netem.deploy()
 
