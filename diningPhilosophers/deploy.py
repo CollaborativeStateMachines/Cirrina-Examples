@@ -27,6 +27,12 @@ provider = en.G5k(conf)
 roles, networks = provider.init()
 roles = en.sync_info(roles, networks)
 
+print(">>> Installing and configuring Chrony on all nodes...")
+with en.actions(roles=roles) as a:
+    a.apt(name=["chrony"], state="present", update_cache=True)
+    a.service(name="chrony", state="started", enabled=True)
+    a.shell("chronyc makestep")
+
 # Initial Docker engine deployment
 registry_opts = dict(type="external", ip="docker-cache.grid5000.fr", port=80)
 d = en.Docker(
@@ -39,8 +45,8 @@ d.deploy()
 # Network emulation
 netem = en.NetemHTB()
 netem.add_constraints(
-    src=roles["worker"],
-    dest=roles["arbitrator"],
+    src=roles["worker"] + roles["arbitrator"],
+    dest=roles["worker"] + roles["arbitrator"],
     delay="10ms",
     rate="1gbit",
     symmetric=True,
@@ -56,7 +62,7 @@ for run_idx in range(1, NUM_RUNS + 1):
         a.file(path="/tmp/metrics", state="absent")
         a.file(path="/tmp/metrics", state="directory", mode="0777")
 
-    # Deploy Containers
+    # Deploy containers
     with en.actions(roles=roles["arbitrator"]) as a:
         a.docker_container(
             name="arbitrator",
@@ -83,11 +89,12 @@ for run_idx in range(1, NUM_RUNS + 1):
     for _ in tqdm(range(TIME_BEFORE_FETCH), desc=run_label, unit="s", mininterval=60):
         time.sleep(1)
 
-    # Capture NTP timing data on all nodes
+    # Capture Chrony tracking data
     with en.actions(roles=roles) as a:
-        a.shell("ntpq -p > /tmp/metrics/ntp_stats.txt")
+        a.shell("chronyc tracking > /tmp/metrics/chrony_tracking.txt")
+        a.shell("chronyc sources -v > /tmp/metrics/chrony_sources.txt")
 
-    # Fetch and Organize Results locally into run1, run2, etc.
+    # Fetch and organize results
     run_dest = LOCAL_ROOT / run_label
     run_dest.mkdir(parents=True, exist_ok=True)
 
@@ -95,14 +102,10 @@ for run_idx in range(1, NUM_RUNS + 1):
         a.archive(path="/tmp/metrics", dest="/tmp/metrics.tar.gz", format="gz")
         a.fetch(src="/tmp/metrics.tar.gz", dest=str(run_dest), flat=False)
 
-    # Local extraction and Remote Container Cleanup
     print(f"--- {run_label}: Cleaning up and extracting ---")
 
-    # Remove containers so they can be re-created in the next iteration
     with en.actions(roles=roles) as a:
-        a.shell("docker rm -f arbitrator || true")
-        for i in range(len(roles["worker"])):
-            a.shell(f"docker rm -f w{i} || true")
+        a.shell("docker rm -f $(docker ps -aq) || true")
 
     # Local file flattening
     for host in en.get_hosts(roles):
