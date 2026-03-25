@@ -59,7 +59,7 @@ collaborativeStateMachine {
       states {
         ["hungry"] = new Initial {
           entry {
-            new Emit { event { topic = "hungry"; data { ["id"] = "id" } } }
+            new Emit { event { topic = "hungry"; data { ["id"] = "id" } }; target = "'arbitrator'" }
           }
           on {
             ["acquire"] { to = "eating" }
@@ -68,7 +68,7 @@ collaborativeStateMachine {
         ["eating"] {
           static { ["meals"] = "0" }
           exit {
-            new Emit { event { topic = "release"; data { ["id"] = "id" } } }
+            new Emit { event { topic = "release"; data { ["id"] = "id" } }; target = "'arbitrator'" }
           }
           after {
             ["meals"] = new Timeout {
