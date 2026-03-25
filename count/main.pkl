@@ -4,7 +4,6 @@ amends
 collaborativeStateMachine {
   stateMachines {
     ["producer"] {
-      transient { ["count"] = "50000" }
       states {
         ["init"] = new Initial {
           entry {
