@@ -12,12 +12,14 @@ collaborativeStateMachine {
           on { ["send"] = new Transition { to = "send" } }
         }
         ["send"] = new State {
-          always { new Transition {
-            to = "init"
-            yields {
-              new Emit { event { topic = "increment" } }
-              }
+          after {
+            ["send"] = new Timeout {
+              delay = "10"
+              triggers = new Emit { event = new Internal { topic = "send" } }
             }
+          }
+          on {
+            ["send"] = new Transition { to = "init" yields { new Emit { event { topic = "increment"} } } }
           }
         }
       }
