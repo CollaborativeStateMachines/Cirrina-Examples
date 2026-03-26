@@ -1,5 +1,5 @@
 amends
-"https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 collaborativeStateMachine {
   stateMachines {
@@ -14,12 +14,15 @@ collaborativeStateMachine {
         ["send"] = new State {
           after {
             ["send"] = new Timeout {
-              delay = "10"
+              delay = "std:randomAround(10,2)"
               triggers = new Emit { event = new Internal { topic = "send" } }
             }
           }
           on {
-            ["send"] = new Transition { to = "init" yields { new Emit { event { topic = "increment"} } } }
+            ["send"] = new Transition {
+              to = "init"
+              yields { new Emit { event { topic = "increment" } } }
+            }
           }
         }
       }
@@ -29,7 +32,12 @@ collaborativeStateMachine {
       states {
         ["count"] = new Initial {
           on {
-            ["increment"] = new Transition { yields { new Eval { expression = "++count" }; new Ctr { counter = "counter.count" } } }
+            ["increment"] = new Transition {
+              yields {
+                new Eval { expression = "++count" }
+                new Ctr { counter = "counter.count" }
+              }
+            }
           }
         }
       }
@@ -37,6 +45,6 @@ collaborativeStateMachine {
   }
 }
 instances {
-  ["counter"]  { stateMachineName = "counter" }
-  ["producer"]  { stateMachineName = "producer" }
+  ["counter"] { stateMachineName = "counter" }
+  ["producer"] { stateMachineName = "producer" }
 }
