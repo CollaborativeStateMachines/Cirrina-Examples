@@ -72,7 +72,7 @@ collaborativeStateMachine {
           }
           after {
             ["meals"] = new Timeout {
-              delay = "10"
+              delay = "std:randomAround(10,2)"
               triggers = new Emit { event = new Internal { topic = "think" } }
             }
           }
