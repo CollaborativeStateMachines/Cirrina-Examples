@@ -1,4 +1,5 @@
-amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+amends
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 local n = 12
 
@@ -10,7 +11,7 @@ collaborativeStateMachine {
         ["run"] = new Initial {
           entry {
             new Eval { expression = "++count" }
-            new Ctr { counter = "big.pings"; tags { ["id"] = "id" } }
+            new Ctr { counter = "big.pings" }
             new Emit {
               event {
                 topic = "ping"
@@ -33,8 +34,18 @@ collaborativeStateMachine {
             }
             ["pong"] {
               yields {
+                new Match {
+                  cases {
+                    new Case {
+                      of = "count % 1000 == 0"
+                      yields {
+                        new Emit { event { topic = "report" } }
+                      }
+                    }
+                  }
+                }
                 new Eval { expression = "++count" }
-                new Ctr { counter = "big.pings"; tags { ["id"] = "id" } }
+                new Ctr { counter = "big.pings" }
                 new Emit {
                   event {
                     topic = "ping"
@@ -49,13 +60,15 @@ collaborativeStateMachine {
       }
     }
     ["sink"] = new StateMachine {
-      transient { ["count"] = "0" }
+      transient { ["total"] = "0" }
       states {
         ["wait"] = new Initial {
           on {
-            ["done"] {
-              to = "wait"
-              yields { new Eval { expression = "++count" } }
+            ["report"] {
+              yields {
+                new Eval { expression = "total += 1000" }
+                new Ctr { counter = "sink.total"; by = 1000 }
+              }
             }
           }
         }

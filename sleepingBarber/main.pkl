@@ -19,7 +19,7 @@ collaborativeStateMachine {
         ["cutting"] = new State {
           after {
             ["wait"] = new Timeout {
-              delay = "0"
+              delay = "std:randomAround(10,2)"
               triggers = new Emit { event = new Internal { topic = "continue" } }
             }
           }
@@ -37,7 +37,8 @@ collaborativeStateMachine {
       states {
         ["request"] = new Initial {
           entry {
-            new Emit { event { topic = "enter"; data { ["customer"] = "id" } }
+            new Emit {
+              event { topic = "enter"; data { ["customer"] = "id" } }
               target = "'waitingRoom'"
             }
           }
@@ -47,7 +48,10 @@ collaborativeStateMachine {
           }
         }
         ["haircut"] = new State {
-          entry { new Eval { expression = "++counter" }; new Ctr { counter = "customer.haircuts"; tags { ["id"] = "id" } } }
+          entry {
+            new Eval { expression = "++counter" }
+            new Ctr { counter = "customer.haircuts"; tags { ["id"] = "id" } }
+          }
           on {
             ["done"] = new Transition { to = "request" }
           }
@@ -67,24 +71,36 @@ collaborativeStateMachine {
               yields {
                 new Match {
                   cases {
-                    new Case { of = "waiting.size() == 1"; yields { new Emit { event { topic = "full" }; target = "$customer" } } }
-                    new Case { of = "barber == 'sleeping' && waiting.isEmpty()"; yields {
-                      new Emit {
-                        event { topic = "sit"; data { ["customer"] = "$customer" } }
-                        target = "'barber'"
+                    new Case {
+                      of = "waiting.size() == 3"
+                      yields { new Emit { event { topic = "full" }; target = "$customer" } }
+                    }
+                    new Case {
+                      of = "barber == 'sleeping' && waiting.isEmpty()"
+                      yields {
+                        new Emit {
+                          event { topic = "sit"; data { ["customer"] = "$customer" } }
+                          target = "'barber'"
+                        }
+                        new Eval { expression = "barber = 'busy'" }
                       }
-                      new Eval { expression = "barber = 'busy'" }
-                    }}
-                    new Case { of = "barber == 'sleeping' && !waiting.isEmpty()"; yields {
-                      new Eval { expression = "waiting += [$customer]" }
-                      new Emit {
-                        event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
-                        target = "'barber'"
+                    }
+                    new Case {
+                      of = "barber == 'sleeping' && !waiting.isEmpty()"
+                      yields {
+                        new Eval { expression = "waiting += [$customer]" }
+                        new Emit {
+                          event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
+                          target = "'barber'"
+                        }
+                        new Eval { expression = "barber = 'busy'" }
+                        new Eval { expression = "waiting -= [waiting.get(0)]" }
                       }
-                      new Eval { expression = "barber = 'busy'" }
-                      new Eval { expression = "waiting -= [waiting.get(0)]" }
-                    }}
-                    new Case { of = "barber == 'busy' && waiting.size() < 3"; yields { new Eval { expression = "waiting += [$customer]" } }}
+                    }
+                    new Case {
+                      of = "barber == 'busy' && waiting.size() < 3"
+                      yields { new Eval { expression = "waiting += [$customer]" } }
+                    }
                   }
                 }
               }
@@ -94,13 +110,17 @@ collaborativeStateMachine {
                 new Eval { expression = "barber = 'sleeping'" }
                 new Match {
                   cases {
-                    new Case { of = "!waiting.isEmpty()"; yields {
-                      new Eval { expression = "barber = 'busy'" }
-                      new Emit { event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
-                        target = "'barber'"
+                    new Case {
+                      of = "!waiting.isEmpty()"
+                      yields {
+                        new Eval { expression = "barber = 'busy'" }
+                        new Emit {
+                          event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
+                          target = "'barber'"
+                        }
+                        new Eval { expression = "waiting -= [waiting.get(0)]" }
                       }
-                      new Eval { expression = "waiting -= [waiting.get(0)]" }
-                    }}
+                    }
                   }
                 }
               }
@@ -112,8 +132,8 @@ collaborativeStateMachine {
   }
 }
 instances {
-  ["barber"]  { stateMachineName = "barber" }
-  ["waitingRoom"]  { stateMachineName = "waitingRoom" }
+  ["barber"] { stateMachineName = "barber" }
+  ["waitingRoom"] { stateMachineName = "waitingRoom" }
   for (i in IntSeq(0, n - 1)) {
     ["\(i)"] {
       stateMachineName = "customer"
