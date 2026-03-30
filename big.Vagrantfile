@@ -4,6 +4,9 @@ Vagrant.configure("2") do |config|
     "w0" => { "RUN" => "0" }, "w1" => { "RUN" => "1" },
     "w2" => { "RUN" => "2" }, "w3" => { "RUN" => "3" },
     "w4" => { "RUN" => "4" }, "w5" => { "RUN" => "5" },
+    "w6" => { "RUN" => "6" }, "w7" => { "RUN" => "7" },
+    "w8" => { "RUN" => "8" }, "w9" => { "RUN" => "9" },
+    "w10" => { "RUN" => "10" }, "w11" => { "RUN" => "11" }
   }
 
   nodes.each do |name, env_vars|
