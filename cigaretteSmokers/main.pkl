@@ -7,7 +7,7 @@ collaborativeStateMachine {
   stateMachines {
     ["arbiter"] {
       transient {
-        ["ingredients"] = "[0, 1, 2]"
+        ["ingredients"] = "[0, 1, 2, ...]"
         ["count"] = "0"
       }
       states {
