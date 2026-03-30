@@ -8,7 +8,15 @@ collaborativeStateMachine {
     ["big"] {
       transient { ["count"] = "0" }
       states {
-        ["run"] = new Initial {
+        ["register"] = new Initial {
+          entry { new Emit { event { topic = "register" }; target = "'sink'" } }
+          on {
+            ["initial"] = new Transition {
+              to = "run"
+            }
+          }
+        }
+        ["run"] = new State {
           entry {
             new Eval { expression = "++count" }
             new Ctr { counter = "big.pings" }
@@ -60,10 +68,28 @@ collaborativeStateMachine {
       }
     }
     ["sink"] = new StateMachine {
-      transient { ["total"] = "0" }
+      transient {
+        ["total"] = "0"
+        ["registered"] = "0"
+      }
       states {
         ["wait"] = new Initial {
           on {
+            ["register"] = new Transition {
+              yields {
+                new Eval { expression = "++registered" }
+                new Match {
+                  cases {
+                    new Case {
+                      of = "registered == 12"
+                      yields {
+                        new Emit { event { topic = "initial" } }
+                      }
+                    }
+                  }
+                }
+              }
+            }
             ["report"] {
               yields {
                 new Eval { expression = "total += 1000" }
