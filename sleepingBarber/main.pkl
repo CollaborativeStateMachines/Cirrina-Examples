@@ -43,14 +43,25 @@ collaborativeStateMachine {
             }
           }
           on {
-            ["full"] = new Transition { to = "request" }
+            ["full"] = new Transition { to = "backoff" }
             ["comeIn"] = new Transition { to = "haircut" }
+          }
+        }
+        ["backoff"] = new State {
+          after {
+            ["retry"] = new Timeout {
+              delay = "std:randomAround(10,2)"
+              triggers = new Emit { event = new Internal { topic = "retry" } }
+            }
+          }
+          on {
+            ["retry"] = new Transition { to = "request" }
           }
         }
         ["haircut"] = new State {
           entry {
             new Eval { expression = "++counter" }
-            new Ctr { counter = "customer.haircuts"; tags { ["id"] = "id" } }
+            new Ctr { counter = "customer.haircuts" }
           }
           on {
             ["done"] = new Transition { to = "request" }
