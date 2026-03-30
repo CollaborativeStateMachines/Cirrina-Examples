@@ -1,19 +1,17 @@
 Vagrant.configure("2") do |config|
   nodes = {
-    "arbitrator" => { "RUN" => "arbitrator" },
-    "w0" => { "RUN" => "0" }, "w1" => { "RUN" => "1" },
-    "w2" => { "RUN" => "2" }, "w3" => { "RUN" => "3" },
-    "w4" => { "RUN" => "4" }, "w5" => { "RUN" => "5" }
+    "counter" => { "RUN" => "counter" },
+    "producer" => { "RUN" => "producer" }
   }
 
   nodes.each do |name, env_vars|
     config.vm.define name do |node|
-    influx_metric_url = ENV['INFLUX_METRIC_URL']
+      influx_metric_url = ENV['INFLUX_METRIC_URL']
       node.vm.box = "generic/ubuntu2004"
-      
-      ip_suffix = name == "arbitrator" ? 10 : 11 + name[1..-1].to_i
+
+      ip_suffix = name == "producer" ? 10 : 11
       node.vm.network "private_network", ip: "192.168.56.#{ip_suffix}"
-      node.vm.synced_folder ".", "/app"
+      node.vm.synced_folder "./count", "/app/count"
 
       node.vm.provision "shell", inline: <<-SHELL
         apt-get update -qq && apt-get install -y docker.io
@@ -25,7 +23,8 @@ Vagrant.configure("2") do |config|
           --network host \
           -e RUN=#{env_vars['RUN']} \
           -e INFLUX_METRIC_URL=#{influx_metric_url} \
-          -v /app:/app \
+          -e METRICS_DIRECTORY="/app/run/metrics_#{name}" \
+          -v /app/count:/app \
           collaborativestatemachines/cirrina:unstable
       SHELL
     end
