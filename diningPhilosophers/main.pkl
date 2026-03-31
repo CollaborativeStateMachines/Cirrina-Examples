@@ -68,17 +68,32 @@ collaborativeStateMachine {
         ["eating"] {
           static { ["meals"] = "0" }
           after {
-            ["meals"] = new Timeout {
+            ["eating"] = new Timeout {
               delay = "std:randomAround(10,2)"
               triggers = new Emit { event = new Internal { topic = "think" } }
             }
           }
           on {
             ["think"] {
-              to = "hungry"
+              to = "thinking"
               yields { 
                 new Eval { expression = "++meals" }
-                new Ctr { counter = "philosopher.meals" }
+                new Ctr { counter = "philosopher.meals"; tags { ["id"] = "id" } }
+              }
+            }
+          }
+        }
+        ["thinking"] {
+          after {
+            ["thinking"] = new Timeout {
+              delay = "std:randomAround(10,2)"
+              triggers = new Emit { event = new Internal { topic = "release" } }
+            }
+          }
+          on {
+            ["release"] {
+              to = "hungry"
+              yields { 
                 new Emit { event { topic = "release"; data { ["id"] = "id" } }; target = "'arbitrator'" }
               }
             }
