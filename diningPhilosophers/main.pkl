@@ -78,30 +78,15 @@ collaborativeStateMachine {
           after {
             ["eating"] = new Timeout {
               delay = "std:randomAround(10,2)"
-              triggers = new Emit { event = new Internal { topic = "think" } }
+              triggers = new Emit { event = new Internal { topic = "ate" } }
             }
           }
           on {
-            ["think"] {
+            ["ate"] {
               to = "thinking"
               yields {
                 new Eval { expression = "++meals" }
                 new Ctr { counter = "philosopher.meals" }
-              }
-            }
-          }
-        }
-        ["thinking"] {
-          after {
-            ["thinking"] = new Timeout {
-              delay = "std:randomAround(10,2)"
-              triggers = new Emit { event = new Internal { topic = "release" } }
-            }
-          }
-          on {
-            ["release"] {
-              to = "hungry"
-              yields {
                 new Emit {
                   event { topic = "release"; data { ["id"] = "id" } }
                   target = "'arbitrator'"
@@ -110,10 +95,24 @@ collaborativeStateMachine {
             }
           }
         }
+        ["thinking"] {
+          after {
+            ["thinking"] = new Timeout {
+              delay = "std:randomAround(10,2)"
+              triggers = new Emit { event = new Internal { topic = "thought" } }
+            }
+          }
+          on {
+            ["thought"] {
+              to = "hungry"
+            }
+          }
+        }
       }
     }
   }
 }
+
 instances {
   ["arbitrator"] { stateMachineName = "arbitrator" }
   for (i in IntSeq(0, n - 1)) {
