@@ -12,7 +12,7 @@ collaborativeStateMachine {
           on {
             ["sit"] = new Transition {
               to = "cutting"
-              yields { new Emit { event { topic = "comeIn" }; target = "$customer" } }
+              yields { new Emit { event { topic = "comeIn" }; target = "$customer.toString()" } }
             }
           }
         }
@@ -26,7 +26,7 @@ collaborativeStateMachine {
           on {
             ["continue"] = new Transition {
               to = "sleeping"
-              yields { new Emit { event { topic = "done" }; target = "$customer" } }
+              yields { new Emit { event { topic = "done" }; target = "$customer.toString()" } }
             }
           }
         }
@@ -84,7 +84,9 @@ collaborativeStateMachine {
                   cases {
                     new Case {
                       of = "waiting.size() == 3"
-                      yields { new Emit { event { topic = "full" }; target = "$customer" } }
+                      yields {
+                        new Emit { event { topic = "full" }; target = "$customer.toString()" }
+                      }
                     }
                     new Case {
                       of = "barber == 'sleeping' && waiting.isEmpty()"
