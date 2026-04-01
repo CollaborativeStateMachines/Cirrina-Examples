@@ -1,4 +1,5 @@
-amends "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+amends
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 local n = 6
 
@@ -21,7 +22,7 @@ collaborativeStateMachine {
                       of = "!(forks[$id] || forks[($id + 1) % 6])"
                       yields {
                         new Eval { expression = "forks[$id] = forks[($id + 1) % 6] = true" }
-                        new Emit { event { topic = "acquire" }; target = "$id" }
+                        new Emit { event { topic = "acquire" }; target = "$id.toString()" }
                       }
                     }
                   }
@@ -32,8 +33,12 @@ collaborativeStateMachine {
             ["release"] {
               yields {
                 new Eval { expression = "forks[$id] = forks[($id + 1) % 6] = false" }
-                new Emit { event = new Internal { topic = "test"; data { ["nid"] = "($id + 5) % 6" } } }
-                new Emit { event = new Internal { topic = "test"; data { ["nid"] = "($id + 1) % 6" } } }
+                new Emit {
+                  event = new Internal { topic = "test"; data { ["nid"] = "($id + 5) % 6" } }
+                }
+                new Emit {
+                  event = new Internal { topic = "test"; data { ["nid"] = "($id + 1) % 6" } }
+                }
               }
             }
             ["test"] {
@@ -43,8 +48,11 @@ collaborativeStateMachine {
                     new Case {
                       of = "waiting[$nid] && !(forks[$nid] || forks[($nid + 1) % 6])"
                       yields {
-                        new Eval { expression = "waiting[$nid] = false; forks[$nid] = forks[($nid + 1) % 6] = true" }
-                        new Emit { event { topic = "acquire" }; target = "$nid" }
+                        new Eval {
+                          expression =
+                            "waiting[$nid] = false; forks[$nid] = forks[($nid + 1) % 6] = true"
+                        }
+                        new Emit { event { topic = "acquire" }; target = "$nid.toString()" }
                       }
                     }
                   }
@@ -76,9 +84,9 @@ collaborativeStateMachine {
           on {
             ["think"] {
               to = "thinking"
-              yields { 
+              yields {
                 new Eval { expression = "++meals" }
-                new Ctr { counter = "philosopher.meals"; tags { ["id"] = "id" } }
+                new Ctr { counter = "philosopher.meals" }
               }
             }
           }
@@ -93,8 +101,11 @@ collaborativeStateMachine {
           on {
             ["release"] {
               to = "hungry"
-              yields { 
-                new Emit { event { topic = "release"; data { ["id"] = "id" } }; target = "'arbitrator'" }
+              yields {
+                new Emit {
+                  event { topic = "release"; data { ["id"] = "id" } }
+                  target = "'arbitrator'"
+                }
               }
             }
           }
@@ -106,9 +117,9 @@ collaborativeStateMachine {
 instances {
   ["arbitrator"] { stateMachineName = "arbitrator" }
   for (i in IntSeq(0, n - 1)) {
-    ["\(i)"] { 
+    ["\(i)"] {
       stateMachineName = "philosopher"
-      data { ["id"] = "\(i)" } 
+      data { ["id"] = "\(i)" }
     }
   }
 }
