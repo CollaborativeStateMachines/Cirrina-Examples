@@ -1,5 +1,5 @@
 amends
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+"https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 local n = 12
 
@@ -8,7 +8,6 @@ collaborativeStateMachine {
     ["barber"] {
       states {
         ["sleeping"] = new Initial {
-          entry { new Emit { event { topic = "ready" }; target = "'waitingRoom'" } }
           on {
             ["sit"] = new Transition {
               to = "cutting"
@@ -26,7 +25,10 @@ collaborativeStateMachine {
           on {
             ["continue"] = new Transition {
               to = "sleeping"
-              yields { new Emit { event { topic = "done" }; target = "$customer.toString()" } }
+              yields {
+                new Emit { event { topic = "done" }; target = "$customer.toString()" }
+                new Emit { event { topic = "ready" }; target = "'waitingRoom'" }
+              }
             }
           }
         }
@@ -72,8 +74,7 @@ collaborativeStateMachine {
     ["waitingRoom"] {
       transient {
         ["waiting"] = "[...]"
-        ["barber"] = "'sleeping'"
-        ["count"] = "0"
+        ["isBarberSleeping"] = "true"
       }
       states {
         ["process"] = new Initial {
@@ -83,55 +84,45 @@ collaborativeStateMachine {
                 new Match {
                   cases {
                     new Case {
-                      of = "waiting.size() == 3"
+                      of = "waiting.size() < 3"
                       yields {
-                        new Emit { event { topic = "full" }; target = "$customer.toString()" }
-                      }
-                    }
-                    new Case {
-                      of = "barber == 'sleeping' && waiting.isEmpty()"
-                      yields {
-                        new Emit {
-                          event { topic = "sit"; data { ["customer"] = "$customer" } }
-                          target = "'barber'"
+                        new Eval { expression = "waiting.add($customer)" }
+                        new Match {
+                          cases {
+                            new Case {
+                              of = "isBarberSleeping"
+                              yields {
+                                new Eval { expression = "isBarberSleeping = false" }
+                                new Emit {
+                                  event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
+                                  target = "'barber'"
+                                }
+                                new Eval { expression = "waiting.remove(0)" }
+                              }
+                            }
+                          }
                         }
-                        new Eval { expression = "barber = 'busy'" }
                       }
-                    }
-                    new Case {
-                      of = "barber == 'sleeping' && !waiting.isEmpty()"
-                      yields {
-                        new Eval { expression = "waiting += [$customer]" }
-                        new Emit {
-                          event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
-                          target = "'barber'"
-                        }
-                        new Eval { expression = "barber = 'busy'" }
-                        new Eval { expression = "waiting -= [waiting.get(0)]" }
-                      }
-                    }
-                    new Case {
-                      of = "barber == 'busy' && waiting.size() < 3"
-                      yields { new Eval { expression = "waiting += [$customer]" } }
                     }
                   }
+                  default = new Emit { event { topic = "full" }; target = "$customer.toString()" }
                 }
               }
             }
             ["ready"] = new Transition {
               yields {
-                new Eval { expression = "barber = 'sleeping'" }
+                new Eval { expression = "isBarberSleeping = true" }
                 new Match {
                   cases {
                     new Case {
                       of = "!waiting.isEmpty()"
                       yields {
-                        new Eval { expression = "barber = 'busy'" }
+                        new Eval { expression = "isBarberSleeping = false" }
                         new Emit {
                           event { topic = "sit"; data { ["customer"] = "waiting.get(0)" } }
                           target = "'barber'"
                         }
-                        new Eval { expression = "waiting -= [waiting.get(0)]" }
+                        new Eval { expression = "waiting.remove(0)" }
                       }
                     }
                   }
