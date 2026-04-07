@@ -1,19 +1,33 @@
 amends
   "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
-import "buildingSchedule/buildingSchedule.pkl"
-import "buildingSchedule/roomSchedule.pkl"
-import "electricalSafety/electricalSafety.pkl"
-import "energyManagement/energyManagement.pkl"
-import "fire/fire.pkl"
-import "fire/fireDoor.pkl"
-import "gasSafety/gasSafety.pkl"
-import "hvac/hvac.pkl"
-import "lighting/lighting.pkl"
-import "roomOccupancy/roomOccupancy.pkl"
-import "security/accessControl.pkl"
-import "security/securityManager.pkl"
-import "shading/shading.pkl"
-import "tempSafety/tempSafety.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/buildingSchedule/buildingSchedule.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/buildingSchedule/roomSchedule.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/electricalSafety/electricalSafety.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/energyManagement/energyManagement.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/fire/fire.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/fire/fireDoor.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/gasSafety/gasSafety.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/hvac/hvac.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/lighting/lighting.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/roomOccupancy/roomOccupancy.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/security/accessControl.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/security/securityManager.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/shading/shading.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina-Examples/refs/heads/develop/smartBuilding/tempSafety/tempSafety.pkl"
 
 collaborativeStateMachine {
   stateMachines {
