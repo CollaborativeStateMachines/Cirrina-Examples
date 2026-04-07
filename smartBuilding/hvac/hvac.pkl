@@ -1,0 +1,350 @@
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient = new Mapping {
+    ["indoorTemp"] = "21.0"
+    ["businessHoursTemp"] = "21.0"
+    ["afterHoursTemp"] = "17.0"
+    ["tempTolerance"] = "1.0"
+    ["defaultTolerance"] = "1.0"
+    ["energySavingTolerance"] = "3.0"
+    ["drasticSaving"] = "false"
+  }
+  states {
+    ["off"] = new csml.Initial {
+      entry {
+        new csml.Invoke {
+          type = "setHvacService"
+          input { ["mode"] = "'off'"; ["roomId"] = "roomId" }
+        }
+      }
+      on {
+        ["occupancyDetected"] { to = "fanOnly" }
+        ["zoneActive"] { to = "fanOnly" }
+        ["enterBusinessHours"] { yields { new csml.Eval { expression = "desiredTemp = businessHoursTemp" } } }
+        ["enterAfterHours"] { yields { new csml.Eval { expression = "desiredTemp = afterHoursTemp" } } }
+        ["enterWeekend"] { yields { new csml.Eval { expression = "desiredTemp = afterHoursTemp" } } }
+        ["energyShutdown"] { to = "emergency" }
+        ["fireAlarm"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+        ["smokeAlert"] { to = "emergency" }
+        ["arcFaultDetected"] { to = "emergency" }
+      }
+    }
+    ["fanOnly"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "setHvacService"
+          input { ["mode"] = "'fan'"; ["roomId"] = "roomId" }
+        }
+        new csml.Eval { expression = "tempTolerance = defaultTolerance" }
+        new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+      }
+      after {
+        ["tempPoll"] = new csml.Timeout {
+          delay = "300000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+        }
+      }
+      on {
+        ["startTempCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "getRoomTempService"
+              input { ["roomId"] = "roomId" }
+              emits { new csml.Internal { topic = "tempCheckDone" } }
+            }
+          }
+        }
+        ["tempCheckDone"] {
+          yields {
+            new csml.Eval { expression = "indoorTemp = $indoorTemp" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "indoorTemp < (desiredTemp - tempTolerance)"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goHeating" } } }
+                }
+                new csml.Case {
+                  of = "indoorTemp > (desiredTemp + tempTolerance)"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goCooling" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goHeating"] { to = "heating" }
+        ["goCooling"] { to = "cooling" }
+        ["occupancyVacant"] { to = "off" }
+        ["zoneInactive"] { to = "off" }
+        ["enterBusinessHours"] {
+          yields {
+            new csml.Eval { expression = "desiredTemp = businessHoursTemp" }
+            new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+          }
+        }
+        ["enterAfterHours"] {
+          yields {
+            new csml.Eval { expression = "desiredTemp = afterHoursTemp" }
+            new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+          }
+        }
+        ["enterWeekend"] {
+          yields {
+            new csml.Eval { expression = "desiredTemp = afterHoursTemp" }
+            new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+          }
+        }
+        ["energySaving"] { to = "energySaving" }
+        ["drasticEnergySaving"] { to = "energySaving" }
+        ["energyShutdown"] { to = "emergency" }
+        ["fireAlarm"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+        ["smokeAlert"] { to = "emergency" }
+        ["arcFaultDetected"] { to = "emergency" }
+      }
+    }
+    ["heating"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "setHvacService"
+          input { ["mode"] = "'heat'"; ["roomId"] = "roomId" }
+        }
+        new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+      }
+      after {
+        ["tempPoll"] = new csml.Timeout {
+          delay = "600000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+        }
+      }
+      on {
+        ["startTempCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "getRoomTempService"
+              input { ["roomId"] = "roomId" }
+              emits { new csml.Internal { topic = "tempCheckDone" } }
+            }
+          }
+        }
+        ["tempCheckDone"] {
+          yields {
+            new csml.Eval { expression = "indoorTemp = $indoorTemp" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of =
+                    "indoorTemp >= (desiredTemp - tempTolerance) && indoorTemp <= (desiredTemp + tempTolerance)"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goFanOnly" } } }
+                }
+                new csml.Case {
+                  of = "indoorTemp > (desiredTemp + tempTolerance)"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goCooling" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goFanOnly"] { to = "fanOnly" }
+        ["goCooling"] { to = "cooling" }
+        ["occupancyVacant"] { to = "off" }
+        ["zoneInactive"] { to = "off" }
+        ["enterBusinessHours"] {
+          yields {
+            new csml.Eval { expression = "desiredTemp = businessHoursTemp" }
+            new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+          }
+        }
+        ["enterAfterHours"] {
+          yields {
+            new csml.Eval { expression = "desiredTemp = afterHoursTemp" }
+            new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+          }
+        }
+        ["enterWeekend"] {
+          yields {
+            new csml.Eval { expression = "desiredTemp = afterHoursTemp" }
+            new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+          }
+        }
+        ["energySaving"] { to = "energySaving" }
+        ["drasticEnergySaving"] { to = "energySaving" }
+        ["energyShutdown"] { to = "emergency" }
+        ["fireAlarm"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+        ["smokeAlert"] { to = "emergency" }
+        ["arcFaultDetected"] { to = "emergency" }
+      }
+    }
+    ["cooling"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "setHvacService"
+          input { ["mode"] = "'cool'"; ["roomId"] = "roomId" }
+        }
+        new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+      }
+      after {
+        ["tempPoll"] = new csml.Timeout {
+          delay = "600000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+        }
+      }
+      on {
+        ["startTempCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "getRoomTempService"
+              input { ["roomId"] = "roomId" }
+              emits { new csml.Internal { topic = "tempCheckDone" } }
+            }
+          }
+        }
+        ["tempCheckDone"] {
+          yields {
+            new csml.Eval { expression = "indoorTemp = $indoorTemp" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "indoorTemp >= (desiredTemp - tempTolerance) && indoorTemp <= (desiredTemp + tempTolerance)"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goFanOnly" } } }
+                }
+                new csml.Case {
+                  of = "indoorTemp < (desiredTemp - tempTolerance)"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goHeating" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goFanOnly"] { to = "fanOnly" }
+        ["goHeating"] { to = "heating" }
+        ["occupancyVacant"] { to = "off" }
+        ["zoneInactive"] { to = "off" }
+        ["enterBusinessHours"] {
+          yields {
+            new csml.Eval { expression = "desiredTemp = businessHoursTemp" }
+            new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+          }
+        }
+        ["enterAfterHours"] {
+          yields {
+            new csml.Eval { expression = "desiredTemp = afterHoursTemp" }
+            new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+          }
+        }
+        ["enterWeekend"] {
+          yields {
+            new csml.Eval { expression = "desiredTemp = afterHoursTemp" }
+            new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+          }
+        }
+        ["energySaving"] { to = "energySaving" }
+        ["drasticEnergySaving"] { to = "energySaving" }
+        ["energyShutdown"] { to = "emergency" }
+        ["fireAlarm"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+        ["smokeAlert"] { to = "emergency" }
+        ["arcFaultDetected"] { to = "emergency" }
+      }
+    }
+    ["energySaving"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "setHvacService"
+          input { ["mode"] = "'fan'"; ["roomId"] = "roomId" }
+        }
+        new csml.Eval { expression = "tempTolerance = energySavingTolerance" }
+        new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+      }
+      after {
+        ["tempPoll"] = new csml.Timeout {
+          delay = "900000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+        }
+      }
+      on {
+        ["startTempCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "getRoomTempService"
+              input { ["roomId"] = "roomId" }
+              emits { new csml.Internal { topic = "tempCheckDone" } }
+            }
+          }
+        }
+        ["tempCheckDone"] {
+          provided = "!drasticSaving"
+          yields {
+            new csml.Eval { expression = "indoorTemp = $indoorTemp" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "indoorTemp < (desiredTemp - tempTolerance)"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goHeating" } } }
+                }
+                new csml.Case {
+                  of = "indoorTemp > (desiredTemp + tempTolerance)"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goCooling" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goHeating"] { to = "heating" }
+        ["goCooling"] { to = "cooling" }
+        ["drasticEnergySaving"] {
+          yields {
+            new csml.Eval { expression = "drasticSaving = true" }
+          }
+        }
+        ["deactivateEnergySaving"] { to = "fanOnly" }
+        ["occupancyVacant"] { to = "off" }
+        ["zoneInactive"] { to = "off" }
+        ["enterBusinessHours"] {
+          yields { new csml.Eval { expression = "desiredTemp = businessHoursTemp" } }
+        }
+        ["enterAfterHours"] {
+          yields { new csml.Eval { expression = "desiredTemp = afterHoursTemp" } }
+        }
+        ["enterWeekend"] {
+          yields { new csml.Eval { expression = "desiredTemp = afterHoursTemp" } }
+        }
+        ["energyShutdown"] { to = "emergency" }
+        ["fireAlarm"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+        ["smokeAlert"] { to = "emergency" }
+        ["arcFaultDetected"] { to = "emergency" }
+      }
+    }
+    ["emergency"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "setHvacService"
+          input { ["mode"] = "'off'"; ["roomId"] = "roomId" }
+        }
+        new csml.Eval { expression = "drasticSaving = false" }
+        new csml.Eval { expression = "tempTolerance = defaultTolerance" }
+      }
+      on {
+        ["disarmFireAlarm"] {
+          to = "off"
+          provided = "!isFireAlarm && !isGasActive && !isSmokeAlert && !arcFault"
+        }
+        ["gasPurged"] {
+          to = "off"
+          provided = "!isFireAlarm && !isGasActive && !isSmokeAlert && !arcFault"
+        }
+        ["disarmSmokeAlert"] {
+          to = "off"
+          provided = "!isFireAlarm && !isGasActive && !isSmokeAlert && !arcFault"
+        }
+        ["electricalReset"] {
+          to = "off"
+          provided = "!isFireAlarm && !isGasActive && !isSmokeAlert && !arcFault"
+        }
+      }
+    }
+  }
+}

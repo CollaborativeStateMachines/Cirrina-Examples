@@ -1,0 +1,235 @@
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  states {
+    ["off"] = new csml.Initial {
+      entry {
+        new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } }
+      }
+      on {
+        ["occupancyDetected"] {
+          to = "on"
+          provided = "!isEnergySaving"
+          or = "dim"
+        }
+        ["userLightLevel"] { to = "userLevel" }
+        ["flashAllLights"] { to = "flashingAlarm_On" }
+        ["fireAlarm"] {
+          to = "safetyOff"
+          yields {
+            new csml.Invoke {
+              type = "evacuationLightsService"
+              input { ["emergencyRoomId"] = "$emergencyInRoom"; ["roomId"] = "roomId" }
+            }
+          }
+        }
+        ["gasLeakDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["arcFaultDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["energySaving"] {
+          yields { new csml.Eval { expression = "isEnergySaving = true" } }
+        }
+        ["deactivateEnergySaving"] {
+          yields { new csml.Eval { expression = "isEnergySaving = false" } }
+        }
+      }
+    }
+    ["on"] = new csml.State {
+      entry {
+        new csml.Invoke { type = "turnLightsOnService"; input { ["roomId"] = "roomId" } }
+      }
+      on {
+        ["occupancyTransient"] { to = "dim" }
+        ["occupancyVacant"] { to = "off" }
+        ["userLightLevel"] { to = "userLevel" }
+        ["flashAllLights"] { to = "flashingAlarm_On" }
+        ["fireAlarm"] {
+          to = "safetyOff"
+          yields {
+            new csml.Invoke {
+              type = "evacuationLightsService"
+              input { ["emergencyRoomId"] = "$emergencyInRoom"; ["roomId"] = "roomId" }
+            }
+          }
+        }
+        ["gasLeakDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["arcFaultDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+      }
+    }
+    ["dim"] = new csml.State {
+      entry {
+        new csml.Invoke { type = "turnLightsDimService"; input { ["roomId"] = "roomId" } }
+      }
+      on {
+        ["occupancyDetected"] {
+          to = "on"
+          provided = "!isEnergySaving"
+        }
+        ["occupancyVacant"] { to = "off" }
+        ["userLightLevel"] { to = "userLevel" }
+        ["flashAllLights"] { to = "flashingAlarm_On" }
+        ["fireAlarm"] {
+          to = "safetyOff"
+          yields {
+            new csml.Invoke {
+              type = "evacuationLightsService"
+              input { ["emergencyRoomId"] = "$emergencyInRoom"; ["roomId"] = "roomId" }
+            }
+          }
+        }
+        ["gasLeakDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["arcFaultDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["energySaving"] {
+          yields { new csml.Eval { expression = "isEnergySaving = true" } }
+        }
+        ["deactivateEnergySaving"] {
+          yields { new csml.Eval { expression = "isEnergySaving = false" } }
+        }
+      }
+    }
+    ["userLevel"] = new csml.State {
+      static { ["userLightLevel"] = "0" }
+      entry {
+        new csml.Eval {
+          expression =
+            "userLightLevel == (($lightLevel == -1) ? userLightLevel : $lightLevel)"
+        }
+        new csml.Invoke {
+          type = "turnLightsUserLevelService"
+          input { ["lightLevel"] = "userLightLevel"; ["roomId"] = "roomId" }
+        }
+      }
+      on {
+        ["deactivateUserLightLevel"] { to = "off" }
+        ["flashAllLights"] { to = "flashingAlarm_On" }
+        ["fireAlarm"] {
+          to = "safetyOff"
+          yields {
+            new csml.Invoke {
+              type = "evacuationLightsService"
+              input { ["emergencyRoomId"] = "$emergencyInRoom"; ["roomId"] = "roomId" }
+            }
+          }
+        }
+        ["gasLeakDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["arcFaultDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+      }
+    }
+    ["safetyOff"] = new csml.State {
+      on {
+        ["fireAlarm"] {
+          to = "safetyOff"
+          yields {
+            new csml.Invoke {
+              type = "evacuationLightsService"
+              input { ["emergencyRoomId"] = "$emergencyInRoom"; ["roomId"] = "roomId" }
+            }
+          }
+        }
+        ["gasLeakDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["arcFaultDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["disarmFireAlarm"] {
+          to = "off"
+          provided = "!isGasActive && !isFireAlarm && !arcFault"
+        }
+        ["gasPurged"] {
+          to = "off"
+          provided = "!isGasActive && !isFireAlarm && !arcFault"
+        }
+        ["electricalReset"] {
+          to = "off"
+          provided = "!isGasActive && !isFireAlarm && !arcFault"
+        }
+      }
+    }
+    ["flashingAlarm_Off"] = new csml.State {
+      entry { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+      after {
+        ["flashTimer"] = new csml.Timeout {
+          delay = "1000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "flashOn" } }
+        }
+      }
+      on {
+        ["flashOn"] { to = "flashingAlarm_On" }
+        ["clearSecurityAlert"] { to = "off" }
+        ["fireAlarm"] {
+          to = "safetyOff"
+          yields {
+            new csml.Invoke {
+              type = "evacuationLightsService"
+              input { ["emergencyRoomId"] = "$emergencyInRoom"; ["roomId"] = "roomId" }
+            }
+          }
+        }
+        ["gasLeakDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["arcFaultDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+      }
+    }
+    ["flashingAlarm_On"] = new csml.State {
+      entry { new csml.Invoke { type = "turnLightsOnService"; input { ["roomId"] = "roomId" } } }
+      after {
+        ["flashTimer"] = new csml.Timeout {
+          delay = "500"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "flashOff" } }
+        }
+      }
+      on {
+        ["flashOff"] { to = "flashingAlarm_Off" }
+        ["clearSecurityAlert"] { to = "off" }
+        ["fireAlarm"] {
+          to = "safetyOff"
+          yields {
+            new csml.Invoke {
+              type = "evacuationLightsService"
+              input { ["emergencyRoomId"] = "$emergencyInRoom"; ["roomId"] = "roomId" }
+            }
+          }
+        }
+        ["gasLeakDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+        ["arcFaultDetected"] {
+          to = "safetyOff"
+          yields { new csml.Invoke { type = "turnLightsOffService"; input { ["roomId"] = "roomId" } } }
+        }
+      }
+    }
+  }
+}

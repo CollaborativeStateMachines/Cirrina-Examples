@@ -1,0 +1,94 @@
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient = new Mapping { ["currentSchedule"] = "''" }
+  states {
+    ["evaluating"] = new csml.Initial {
+      entry {
+        new csml.Invoke {
+          type = "getScheduleModeService"
+          emits { new csml.Internal { topic = "scheduleCheckDone" } }
+        }
+      }
+      on {
+        ["scheduleCheckDone"] {
+          yields {
+            new csml.Eval { expression = "currentSchedule = $currentSchedule" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "currentSchedule == 'weekendClosed'"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goWeekend" } } }
+                }
+                new csml.Case {
+                  of = "currentSchedule == 'businessHours'"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goBusiness" } } }
+                }
+              }
+              default = new csml.Emit { event = new csml.Internal { topic = "goAfterHours" } }
+            }
+          }
+        }
+        ["goWeekend"] { to = "weekendClosed" }
+        ["goBusiness"] { to = "businessHours" }
+        ["goAfterHours"] { to = "afterHours" }
+        ["fireAlarm"] { to = "emergencyOverride" }
+        ["gasLeakDetected"] { to = "emergencyOverride" }
+      }
+    }
+    ["businessHours"] = new csml.State {
+      entry { new csml.Emit { event { topic = "enterBusinessHours" } } }
+      after {
+        ["scheduleCheck"] = new csml.Timeout {
+          delay = "900000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startScheduleCheck" } }
+        }
+      }
+      on {
+        ["startScheduleCheck"] { to = "evaluating" }
+        ["fireAlarm"] { to = "emergencyOverride" }
+        ["gasLeakDetected"] { to = "emergencyOverride" }
+      }
+    }
+    ["afterHours"] = new csml.State {
+      entry { new csml.Emit { event { topic = "enterAfterHours"; } } }
+      after {
+        ["scheduleCheck"] = new csml.Timeout {
+          delay = "900000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startScheduleCheck" } }
+        }
+      }
+      on {
+        ["startScheduleCheck"] { to = "evaluating" }
+        ["fireAlarm"] { to = "emergencyOverride" }
+        ["gasLeakDetected"] { to = "emergencyOverride" }
+      }
+    }
+    ["weekendClosed"] = new csml.State {
+      entry { new csml.Emit { event { topic = "enterWeekend" } } }
+      after {
+        ["scheduleCheck"] = new csml.Timeout {
+          delay = "7200000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startScheduleCheck" } }
+        }
+      }
+      on {
+        ["startScheduleCheck"] { to = "evaluating" }
+        ["fireAlarm"] { to = "emergencyOverride" }
+        ["gasLeakDetected"] { to = "emergencyOverride" }
+      }
+    }
+    ["emergencyOverride"] = new csml.State {
+      on {
+        ["disarmFireAlarm"] {
+          to = "evaluating"
+          provided = "!isFireAlarm && !isGasActive"
+        }
+        ["gasPurged"] {
+          to = "evaluating"
+          provided = "!isFireAlarm && !isGasActive"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+import
+"https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  states {
+    ["idle"] = new csml.Initial {
+      on { ["sensorOccupancyReceived"] { to = "monitoring" } }
+    }
+    ["monitoring"] = new csml.State {
+      after {
+        ["serviceTimeout"] = new csml.Timeout {
+          delay = "5000"
+          triggers = new csml.Emit { event { topic = "maintenanceRequired" } }
+        }
+      }
+      on {
+        ["maintenanceRequired"] { to = "maintenance" }
+        ["detectionDone"] { to = "idle" }
+      }
+    }
+    ["maintenance"] = new csml.State {
+      entry {
+        new csml.Invoke { type = "maintenanceService"; input { ["roomId"] = "roomId" } }
+      }
+      on {
+        ["maintenanceDone"] { to = "idle" }
+      }
+    }
+  }
+}
