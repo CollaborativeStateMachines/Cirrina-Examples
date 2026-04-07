@@ -1,0 +1,69 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient = new Mapping { ["arcFaultLocation"] = "'none'" }
+  states {
+    ["monitoring"] = new csml.Initial {
+      entry { new csml.Emit { event = new csml.Internal { topic = "startCheck" } } }
+      after {
+        ["arcFaultPoll"] = new csml.Timeout {
+          delay = "30000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startCheck" } }
+        }
+      }
+      on {
+        ["startCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "checkArcFaultService"
+              emits { new csml.Internal { topic = "checkDone" } }
+            }
+          }
+        }
+        ["checkDone"] {
+          yields {
+            new csml.Eval { expression = "arcFaultLocation = $arcFaultLocation" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "arcFaultLocation != 'none'"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goArcFault" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goArcFault"] { to = "arcFault" }
+      }
+    }
+    ["arcFault"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "tripCircuitBreakerService"
+          input { ["arcFaultLocation"] = "arcFaultLocation" }
+        }
+        new csml.Emit {
+          event {
+            topic = "arcFaultDetected"
+            data { ["arcFaultLocation"] = "arcFaultLocation" }
+          }
+        }
+        new csml.Eval { expression = "arcFault = true" }
+      }
+      on {
+        ["electricalReset"] { to = "acknowledged" }
+      }
+    }
+    ["acknowledged"] = new csml.State {
+      entry {
+        new csml.Eval { expression = "arcFault = false" }
+        new csml.Invoke {
+          type = "arcFaultAckService"
+          emits { new csml.Internal { topic = "ackComplete" } }
+        }
+      }
+      on { ["ackComplete"] { to = "monitoring" } }
+    }
+  }
+}

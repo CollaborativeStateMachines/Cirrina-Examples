@@ -1,0 +1,71 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient = new Mapping { ["gasLeakLocation"] = "'none'" }
+  states {
+    ["monitoring"] = new csml.Initial {
+      after {
+        ["gasLeakPoll"] = new csml.Timeout {
+          delay = "30000"
+          triggers = new csml.Emit {
+            event = new csml.Internal { topic = "startGasLeakDetection" }
+          }
+        }
+      }
+      on {
+        ["startGasLeakDetection"] {
+          yields {
+            new csml.Invoke {
+              type = "checkGasLeakService"
+              emits { new csml.Internal { topic = "checkDone" } }
+            }
+          }
+        }
+        ["checkDone"] {
+          yields {
+            new csml.Eval { expression = "gasLeakLocation = $gasLeakLocation" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "gasLeakLocation != 'none'"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goGasLeak" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goGasLeak"] { to = "gasLeak" }
+      }
+    }
+    ["gasLeak"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "closeGasValveService"
+          input { ["gasLeakLocation"] = "gasLeakLocation" }
+        }
+        new csml.Invoke {
+          type = "cutPowerService"
+          input { ["gasLeakLocation"] = "gasLeakLocation" }
+        }
+        new csml.Emit {
+          event {
+            topic = "gasLeakDetected"
+            data { ["gasLeakLocation"] = "gasLeakLocation" }
+          }
+        }
+        new csml.Eval { expression = "isGasActive = true" }
+      }
+      on {
+        ["gasPurged"] { to = "acknowledged" }
+      }
+    }
+    ["acknowledged"] = new csml.State {
+      entry {
+        new csml.Invoke { type = "gasLeakPurgedService" }
+        new csml.Eval { expression = "isGasActive = false" }
+      }
+      always { new csml.Transition { to = "monitoring" } }
+    }
+  }
+}

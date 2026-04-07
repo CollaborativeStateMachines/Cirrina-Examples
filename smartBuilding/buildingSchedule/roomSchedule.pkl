@@ -1,0 +1,77 @@
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  states {
+    ["init"] = new csml.Initial {
+      entry {
+        new csml.Invoke {
+          type = "getDoorRouteTypeService"
+          emits { new csml.Internal { topic = "zoneInitialized" } }
+        }
+      }
+      on { ["zoneInitialized"] { to = "inactive" } }
+    }
+    ["active"]= new csml.State {
+      entry { new csml.Emit { event { topic = "zoneActive" } } }
+      on {
+        ["enterAfterHours"] { to = "warning" }
+        ["enterWeekend"] { to = "warning" }
+        ["fireAlarm"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+      }
+    }
+    ["inactive"]= new csml.State {
+      entry { new csml.Emit { event { topic = "zoneInactive" } } }
+      on {
+        ["enterBusinessHours"] { to = "active" }
+        ["requestStay"] { to = "authorizedStay" }
+        ["fireAlarm"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+      }
+    }
+    ["warning"] = new csml.State {
+      entry { new csml.Emit { event { topic = "zoneWarning" } } }
+      after {
+        ["gracePeriod"] = new csml.Timeout {
+          delay = "300000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "shutdownRoom" } }
+        }
+      }
+      on {
+        ["shutdownRoom"] { to = "inactive" }
+        ["requestStay"] { to = "authorizedStay" }
+        ["enterBusinessHours"] { to = "active" }
+        ["fireAlarm"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+      }
+    }
+    ["authorizedStay"] = new csml.State {
+      entry { new csml.Emit { event { topic = "zoneActive" } } }
+      after {
+        ["overrideLease"] = new csml.Timeout {
+          delay = "7200000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "recheckOverride" } }
+        }
+      }
+      on {
+        ["recheckOverride"] { to = "warning" }
+        ["userLeftZone"] { to = "inactive" }
+        ["enterBusinessHours"] { to = "active" }
+        ["fireAlarm"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+      }
+    }
+    ["emergency"] = new csml.State {
+      on {
+        ["disarmFireAlarm"] {
+          to = "inactive"
+          provided = "!isFireAlarm && !isGasActive"
+        }
+        ["gasPurged"] {
+          to = "inactive"
+          provided = "!isFireAlarm && !isGasActive"
+        }
+      }
+    }
+  }
+}

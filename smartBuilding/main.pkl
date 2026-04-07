@@ -1,0 +1,413 @@
+amends
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+import "buildingSchedule/buildingSchedule.pkl"
+import "buildingSchedule/roomSchedule.pkl"
+import "electricalSafety/electricalSafety.pkl"
+import "energyManagement/energyManagement.pkl"
+import "fire/fire.pkl"
+import "fire/fireDoor.pkl"
+import "gasSafety/gasSafety.pkl"
+import "hvac/hvac.pkl"
+import "lighting/lighting.pkl"
+import "roomOccupancy/roomOccupancy.pkl"
+import "security/accessControl.pkl"
+import "security/securityManager.pkl"
+import "shading/shading.pkl"
+import "tempSafety/tempSafety.pkl"
+
+collaborativeStateMachine {
+  stateMachines {
+    ["buildingSchedule"] = buildingSchedule.sm
+    ["roomSchedule"] = roomSchedule.sm
+    ["electricalSafety"] = electricalSafety.sm
+    ["energyManagement"] = energyManagement.sm
+    ["fire"] = fire.sm
+    ["fireDoor"] = fireDoor.sm
+    ["gasSafety"] = gasSafety.sm
+    ["hvac"] = hvac.sm
+    ["lighting"] = lighting.sm
+    ["roomOccupancy"] = roomOccupancy.sm
+    ["securityManager"] = securityManager.sm
+    ["accessControl"] = accessControl.sm
+    ["shading"] = shading.sm
+    ["tempSafety"] = tempSafety.sm
+  }
+  persistent {
+    ["isEnergySaving"] = "false"
+    ["currentOccupancy"] = "'vacant'"
+    ["isFireAlarm"] = "false"
+    ["isGasActive"] = "false"
+    ["isSmokeAlert"] = "false"
+    ["arcFault"] = "false"
+    ["desiredTemp"] = "21.0"
+    ["tempThreshold"] = "60"
+    ["maxEnergyPrice"] = "45.0"
+  }
+}
+
+instances {
+  ["buildingSchedule"] { stateMachineName = "buildingSchedule" }
+  ["roomSchedule"] { stateMachineName = "roomSchedule"; data { ["roomId"] = "'Room 0'" } }
+  ["electricalSafety"] { stateMachineName = "electricalSafety" }
+  ["energyManagement"] { stateMachineName = "energyManagement" }
+  ["fire"] { stateMachineName = "fire" }
+  for (i in IntSeq(0, 100)) {
+    ["fireDoor\(i)"] {
+      stateMachineName = "fireDoor"
+      data { ["doorId"] = "'Door \(i)'" }
+    }
+  }
+  ["gasSafety"] { stateMachineName = "gasSafety" }
+  ["hvac"] { stateMachineName = "hvac"; data { ["roomId"] = "'Room 0'" } }
+  ["lighting"] { stateMachineName = "lighting"; data { ["roomId"] = "'Room 0'" } }
+  ["roomOccupancy"] { stateMachineName = "roomOccupancy"; data { ["roomId"] = "'Room 0'" } }
+  ["securityManager"] { stateMachineName = "securityManager" }
+  ["accessControl"] { stateMachineName = "accessControl"; data { ["doorId"] = "'Door 0'" } }
+  ["shading"] { stateMachineName = "shading"; data { ["roomId"] = "'Room 0'" } }
+  ["tempSafety"] { stateMachineName = "tempSafety"; data { ["roomId"] = "'Room 0'" } }
+}
+
+bindings {
+  new HttpServiceImplementationBinding {
+    name = "checkArcFaultService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/checkArcFault"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "tripCircuitBreakerService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/tripCircuitBreaker"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "arcFaultAckService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/ackEletrical"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "cutPowerService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/cutPower"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "checkGasLeakService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/checkGasFault"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "closeGasValveService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/closeGasValve"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "gasLeakPurgedService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/gasLeakPurged"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "getEnergyPriceService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/getEnergyPrice"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "checkGridStatusService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/checkGridStatus"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "gridNormal"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/normal"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "gridReponse"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/response"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "peak"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/peak"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "detectOccupancyService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/detectOccupancy"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "maintenanceService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/maintenance"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "blindsHalfService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/blindsHalf"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "blindsOpenService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/blindsOpen"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "blindCloseService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/blindsClose"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "blindsUserLevelService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/userLevelBlinds"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "turnLightsOnService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/turnOn"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "turnLightsOffService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/turnOff"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "turnLightsDimService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/dim"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "turnLightsUserLevelService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/userLevelLight"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "detectFireService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/detectFire"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "closeFireDoorService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/closeFireDoor"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "openFireDoorService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/openFireDoor"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "equipmentTempService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/getRoomTemp"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "equipmentTempHighRiskService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/highRiskTemp"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "getScheduleModeService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/getScheduleMode"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "authenticateUserService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/authenticateUser"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "controlDoorLockService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/controlDoorLock"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "checkAccessRuleService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/checkAccessRule"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "notifySecurityPersonnelService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/notifySecurity"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "initializeZoneService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/initializeZone"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "getDoorRouteTypeService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/getDoorRouteType"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "setHvacService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/setHVAC"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "getRoomTempService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/getIndoorTemp"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "evacuationLightsService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/evacuationLights"
+    method = "POST"
+  }
+  new HttpServiceImplementationBinding {
+    name = "getOutdoorTempService"
+    `local` = false
+    scheme = "http"
+    host = "localhost"
+    port = 8005
+    endPoint = "/getOutdoorTemp"
+    method = "POST"
+  }
+}

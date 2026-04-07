@@ -1,0 +1,128 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+import "occupancyMonitor.pkl"
+
+sm = new csml.StateMachine {
+  transient = new Mapping { ["occupancyDetected"] = "false" }
+  nested {
+    ["occupancyMonitor"] = occupancyMonitor.sm
+  }
+  states {
+    ["vacant"] = new csml.Initial {
+      entry {
+        new csml.Eval { expression = "currentOccupancy = 'vacant'" }
+      }
+      on {
+        ["sensorOccupancyReceived"] {
+          yields {
+            new csml.Invoke {
+              type = "detectOccupancyService"
+              input { ["imageData"] = "$imageData" }
+              emits { new csml.Internal { topic = "detectionDone" } }
+            }
+          }
+        }
+        ["detectionDone"] {
+          yields {
+            new csml.Eval { expression = "occupancyDetected = $occupancyDetected" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "occupancyDetected"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goOccupied" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goOccupied"] {
+          to = "occupied"
+          yields { new csml.Emit { event { topic = "occupancyDetected" } } }
+        }
+      }
+    }
+    ["occupied"] = new csml.State {
+      entry {
+        new csml.Eval { expression = "currentOccupancy = 'occupied'" }
+      }
+      on {
+        ["sensorOccupancyReceived"] {
+          yields {
+            new csml.Invoke {
+              type = "detectOccupancyService"
+              input { ["imageData"] = "$imageData" }
+              emits { new csml.Internal { topic = "detectionDone" } }
+            }
+          }
+        }
+        ["detectionDone"] {
+          yields {
+            new csml.Eval { expression = "occupancyDetected = $occupancyDetected" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "occupancyDetected"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goOccupied" } } }
+                }
+              }
+              default = new csml.Emit { event = new csml.Internal { topic = "goTransient" } }
+            }
+          }
+        }
+        ["goOccupied"] {
+          to = "occupied"
+          yields { new csml.Emit { event { topic = "occupancyDetected" } } }
+        }
+        ["goTransient"] { to = "transient" }
+
+        ["energySaving"] {
+          to = "transient"
+          yields {
+            new csml.Eval { expression = "isEnergySaving = true" }
+            new csml.Emit { event { topic = "occupancyTransient" } }
+          }
+        }
+      }
+    }
+    ["transient"] = new csml.State {
+      entry {
+        new csml.Eval { expression = "currentOccupancy = 'transient'" }
+        new csml.Emit { event { topic = "occupancyTransient" } }
+      }
+      on {
+        ["sensorOccupancyReceived"] {
+          yields {
+            new csml.Invoke {
+              type = "detectOccupancyService"
+              input { ["imageData"] = "$imageData" }
+              emits { new csml.Internal { topic = "detectionDone" } }
+            }
+          }
+        }
+        ["detectionDone"] {
+          yields {
+            new csml.Eval { expression = "occupancyDetected = $occupancyDetected" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "occupancyDetected"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goOccupied" } } }
+                }
+              }
+              default = new csml.Emit { event = new csml.Internal { topic = "goVacant" } }
+            }
+          }
+        }
+        ["goOccupied"] {
+          to = "occupied"
+          yields { new csml.Emit { event { topic = "occupancyDetected" } } }
+        }
+        ["goVacant"] {
+          to = "vacant"
+          yields { new csml.Emit { event { topic = "occupancyVacant" } } }
+        }
+      }
+    }
+  }
+}

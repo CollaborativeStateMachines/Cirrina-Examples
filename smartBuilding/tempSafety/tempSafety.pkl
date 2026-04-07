@@ -1,0 +1,53 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient = new Mapping { ["roomTemp"] = "'0'" }
+  states {
+    ["monitoring"] = new csml.Initial {
+      after {
+        ["tempPoll"] = new csml.Timeout {
+          delay = "30000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startTempCheck" } }
+        }
+      }
+      on {
+        ["startTempCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "equipmentTempService"
+              input { ["roomId"] = "roomId" }
+              emits { new csml.Internal { topic = "tempCheckDone" } }
+            }
+          }
+        }
+        ["tempCheckDone"] {
+          yields {
+            new csml.Eval { expression = "roomTemp = $roomTemp" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "roomTemp > tempThreshold"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goHighRisk" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goHighRisk"] { to = "highRisk" }
+      }
+    }
+    ["highRisk"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "equipmentTempHighRiskService"
+          input { ["roomId"] = "roomId" }
+        }
+      }
+      on {
+        ["tempRiskCleared"] { to = "monitoring" }
+      }
+    }
+  }
+}
+

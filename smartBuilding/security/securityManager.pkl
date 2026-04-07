@@ -1,0 +1,132 @@
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient = new Mapping {
+    ["failedAttemptsCount"] = "'0'"
+    ["lastFailedAttemptTime"] = "'0'"
+    ["alertDetails"] = "''"
+  }
+  states {
+    ["secure"] = new csml.Initial {
+      entry {
+        new csml.Eval { expression = "failedAttemptsCount = 0" }
+        new csml.Eval { expression = "alertDetails = ''" }
+      }
+      on {
+        ["forcedEntry"] {
+          to = "intrusionAlert"
+          yields {
+            new csml.Eval {
+              expression =
+                "alertDetails = 'Forced entry detected at door ' + $doorId + ' in zone ' + $zoneId"
+            }
+          }
+        }
+        ["tamperDetected"] {
+          to = "intrusionAlert"
+          yields {
+            new csml.Eval {
+              expression =
+                "alertDetails = 'Tamper detected on device ' + $deviceId + ' at ' + $location"
+            }
+          }
+        }
+        ["manualSecurityAlert"] { to = "intrusionAlert" }
+        ["accessDenied"] {
+          yields {
+            new csml.Eval {
+              expression = "failedAttemptsCount = failedAttemptsCount + 1"
+            }
+            new csml.Eval {
+              expression =
+                "alertDetails = 'Repeated access denied at door ' + $doorId + '. User: ' + $user"
+            }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "failedAttemptsCount >= 3"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goElevated" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goElevated"] { to = "elevatedRisk" }
+        ["fireAlarm"] { to = "emergencyResponse" }
+        ["gasLeakDetected"] { to = "emergencyResponse" }
+      }
+    }
+    ["elevatedRisk"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "notifySecurityPersonnelService"
+          input { ["message"] = "alertDetails" }
+        }
+      }
+      after {
+        ["riskDecay"] = new csml.Timeout {
+          delay = "1800000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "decayRisk" } }
+        }
+      }
+      on {
+        ["decayRisk"] { to = "secure" }
+        ["accessDenied"] {
+          yields {
+            new csml.Eval {
+              expression = "failedAttemptsCount = failedAttemptsCount + 1"
+            }
+            new csml.Eval {
+              expression =
+                "alertDetails = 'Escalation: Further access denied at door ' + $doorId + '. User: ' + $user"
+            }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "failedAttemptsCount >= 5"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goIntrusion" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goIntrusion"] { to = "intrusionAlert" }
+        ["forcedEntry"] { to = "intrusionAlert" }
+        ["tamperDetected"] { to = "intrusionAlert" }
+        ["manualSecurityAlert"] { to = "intrusionAlert" }
+        ["clearSecurityAlert"] { to = "secure" }
+        ["fireAlarm"] { to = "emergencyResponse" }
+        ["gasLeakDetected"] { to = "emergencyResponse" }
+      }
+    }
+    ["intrusionAlert"] = new csml.State {
+      entry {
+        new csml.Emit { event { topic = "flashAllLights" } }
+        new csml.Invoke {
+          type = "notifySecurityPersonnelService"
+          input { ["message"] = "'INTRUSION ALERT: ' + alertDetails" }
+        }
+      }
+      on {
+        ["clearSecurityAlert"] { to = "secure" }
+        ["fireAlarm"] { to = "emergencyResponse" }
+        ["gasLeakDetected"] { to = "emergencyResponse" }
+      }
+    }
+    ["emergencyResponse"] = new csml.State {
+      entry {
+        new csml.Emit { event { topic = "unlockEvacuationRoutes" } }
+      }
+      on {
+        ["disarmFireAlarm"] {
+          to = "secure"
+          provided = "!isFireAlarm && !isGasActive"
+        }
+        ["gasPurged"] {
+          to = "secure"
+          provided = "!isFireAlarm && !isGasActive"
+        }
+      }
+    }
+  }
+}

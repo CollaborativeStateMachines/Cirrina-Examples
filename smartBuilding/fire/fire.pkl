@@ -1,0 +1,106 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient = new Mapping {
+    ["fireDetectionResult"] = "'none'"
+    ["emergencyInRoom"] = "'none'"
+  }
+  states {
+    ["detecting"] = new csml.Initial {
+      on {
+        ["sensorFireDataReceived"] {
+          yields {
+            new csml.Invoke {
+              type = "detectFireService"
+              input {
+                ["imageData"] = "$imageData"
+                ["zoneId"] = "$zoneId"
+              }
+              emits { new csml.Internal { topic = "detectionDone" } }
+            }
+          }
+        }
+        ["detectionDone"] {
+          yields {
+            new csml.Eval { expression = "fireDetectionResult = $fireDetectionResult" }
+            new csml.Eval { expression = "emergencyInRoom = $emergencyInRoom" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "fireDetectionResult == 'fire'"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goFireAlarm" } } }
+                }
+                new csml.Case {
+                  of = "fireDetectionResult == 'smoke'"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goSmokeAlert" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goFireAlarm"] { to = "fireAlarm" }
+        ["goSmokeAlert"] { to = "smokeAlert" }
+      }
+    }
+    ["fireAlarm"] = new csml.State {
+      entry {
+        new csml.Eval { expression = "isFireAlarm = true" }
+        new csml.Emit {
+          event {
+            topic = "fireAlarm"
+            data { ["emergencyInRoom"] = "emergencyInRoom" }
+          }
+        }
+      }
+      on {
+        ["disarmFireAlarm"] {
+          to = "detecting"
+          yields { new csml.Eval { expression = "isFireAlarm = false" } }
+        }
+      }
+    }
+    ["smokeAlert"] = new csml.State {
+      entry {
+        new csml.Eval { expression = "isSmokeAlert = true" }
+        new csml.Emit { event { topic = "smokeAlert" } }
+      }
+      on {
+        ["disarmSmokeAlert"] {
+          to = "detecting"
+          yields { new csml.Eval { expression = "isSmokeAlert = false" } }
+        }
+        ["sensorFireDataReceived"] {
+          yields {
+            new csml.Invoke {
+              type = "detectFireService"
+              input {
+                ["imageData"] = "$imageData"
+                ["zoneId"] = "$zoneId"
+              }
+              emits { new csml.Internal { topic = "escalationCheckDone" } }
+            }
+          }
+        }
+        ["escalationCheckDone"] {
+          yields {
+            new csml.Eval { expression = "fireDetectionResult = $fireDetectionResult" }
+            new csml.Eval { expression = "emergencyInRoom = $emergencyInRoom" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "fireDetectionResult == 'fire'"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goFireAlarm" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goFireAlarm"] {
+          to = "fireAlarm"
+          yields { new csml.Eval { expression = "isSmokeAlert = false" } }
+        }
+      }
+    }
+  }
+}

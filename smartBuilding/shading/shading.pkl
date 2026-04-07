@@ -1,0 +1,260 @@
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+
+sm = new csml.StateMachine {
+  transient = new Mapping {
+    ["isLocked"] = "false"
+    ["outdoorTemperature"] = "'0'"
+  }
+  states {
+    ["half"] = new csml.Initial {
+      entry {
+        new csml.Invoke {
+          type = "blindsHalfService"
+          input { ["roomId"] = "roomId" }
+        }
+      }
+      after {
+        ["tempPoll"] = new csml.Timeout {
+          delay = "60000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startOutdoorCheck" } }
+        }
+      }
+      on {
+        ["startOutdoorCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "getOutdoorTempService"
+              emits { new csml.Internal { topic = "outdoorCheckDone" } }
+            }
+          }
+        }
+        ["outdoorCheckDone"] {
+          provided = "isLocked == false"
+          yields {
+            new csml.Eval { expression = "outdoorTemperature = $outdoorTemp" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "outdoorTemperature < 15"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goFullyOpen" } } }
+                }
+                new csml.Case {
+                  of = "outdoorTemperature >= 22"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goClose" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goFullyOpen"] { to = "fullyOpen" }
+        ["goClose"] { to = "close" }
+        ["userLevelBlinds"] { to = "userLevel" }
+        ["lockBlinds"] { yields { new csml.Eval { expression = "isLocked = true" } } }
+        ["unlockBlinds"] { yields { new csml.Eval { expression = "isLocked = false" } } }
+        ["zoneInactive"] { to = "close" }
+        ["lockdownZone"] { to = "close" }
+        ["fireAlarm"] { to = "emergency" }
+        ["smokeAlert"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+        ["arcFaultDetected"] { to = "emergency" }
+      }
+    }
+    ["fullyOpen"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "blindsOpenService"
+          input { ["roomId"] = "roomId" }
+        }
+      }
+      after {
+        ["tempPoll"] = new csml.Timeout {
+          delay = "60000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startOutdoorCheck" } }
+        }
+      }
+      on {
+        ["startOutdoorCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "getOutdoorTempService"
+              emits { new csml.Internal { topic = "outdoorCheckDone" } }
+            }
+          }
+        }
+        ["outdoorCheckDone"] {
+          provided = "isLocked == false"
+          yields {
+            new csml.Eval { expression = "outdoorTemperature = $outdoorTemp" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "outdoorTemperature >= 15 && outdoorTemperature < 22"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goHalf" } } }
+                }
+                new csml.Case {
+                  of = "outdoorTemperature >= 22"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goClose" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goHalf"] { to = "half" }
+        ["goClose"] { to = "close" }
+        ["userLevelBlinds"] { to = "userLevel" }
+        ["lockBlinds"] { yields { new csml.Eval { expression = "isLocked = true" } } }
+        ["unlockBlinds"] { yields { new csml.Eval { expression = "isLocked = false" } } }
+        ["zoneInactive"] { to = "close" }
+        ["lockdownZone"] { to = "close" }
+        ["fireAlarm"] { to = "emergency" }
+        ["smokeAlert"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+        ["arcFaultDetected"] { to = "emergency" }
+      }
+    }
+    ["close"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "blindCloseService"
+          input { ["roomId"] = "roomId" }
+        }
+      }
+      after {
+        ["tempPoll"] = new csml.Timeout {
+          delay = "60000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startOutdoorCheck" } }
+        }
+      }
+      on {
+        ["startOutdoorCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "getOutdoorTempService"
+              emits { new csml.Internal { topic = "outdoorCheckDone" } }
+            }
+          }
+        }
+        ["outdoorCheckDone"] {
+          provided = "isLocked == false"
+          yields {
+            new csml.Eval { expression = "outdoorTemperature = $outdoorTemp" }
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "outdoorTemperature < 15"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goFullyOpen" } } }
+                }
+                new csml.Case {
+                  of = "outdoorTemperature >= 15 && outdoorTemperature < 22"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goHalf" } } }
+                }
+              }
+            }
+          }
+        }
+        ["goFullyOpen"] { to = "fullyOpen" }
+        ["goHalf"] { to = "half" }
+        ["userLevelBlinds"] { to = "userLevel" }
+        ["lockBlinds"] { yields { new csml.Eval { expression = "isLocked = true" } } }
+        ["unlockBlinds"] { yields { new csml.Eval { expression = "isLocked = false" } } }
+        ["zoneActive"] { to = "half" }
+        ["clearSecurityAlert"] { to = "half" }
+        ["fireAlarm"] { to = "emergency" }
+        ["smokeAlert"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+        ["arcFaultDetected"] { to = "emergency" }
+      }
+    }
+    ["userLevel"] = new csml.State {
+      static { ["userBlindLevel"] = "0" }
+      entry {
+        new csml.Eval {
+          expression =
+            "userBlindLevel == (($blindLevel == -1) ? userBlindLevel : $blindLevel)"
+        }
+        new csml.Invoke {
+          type = "blindsUserLevelService"
+          input { ["blindLevel"] = "userBlindLevel"; ["roomId"] = "roomId" }
+        }
+        new csml.Invoke {
+          type = "getOutdoorTempService"
+          emits { new csml.Internal { topic = "outdoorCheckDone" } }
+        }
+      }
+      after {
+        ["tempPoll"] = new csml.Timeout {
+          delay = "60000"
+          triggers = new csml.Emit { event = new csml.Internal { topic = "startOutdoorCheck" } }
+        }
+      }
+      on {
+        ["startOutdoorCheck"] {
+          yields {
+            new csml.Invoke {
+              type = "getOutdoorTempService"
+              emits { new csml.Internal { topic = "outdoorCheckDone" } }
+            }
+          }
+        }
+        ["outdoorCheckDone"] {
+          yields { new csml.Eval { expression = "outdoorTemperature = $outdoorTemp" } }
+        }
+        ["deactivateUserLevelBlinds"] {
+          yields {
+            new csml.Match {
+              cases {
+                new csml.Case {
+                  of = "outdoorTemperature < 15"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goFullyOpen" } } }
+                }
+                new csml.Case {
+                  of = "outdoorTemperature >= 22"
+                  yields { new csml.Emit { event = new csml.Internal { topic = "goClose" } } }
+                }
+              }
+              default = new csml.Emit { event = new csml.Internal { topic = "goHalf" } }
+            }
+          }
+        }
+        ["goFullyOpen"] { to = "fullyOpen" }
+        ["goClose"] { to = "close" }
+        ["goHalf"] { to = "half" }
+        ["lockBlinds"] { yields { new csml.Eval { expression = "isLocked = true" } } }
+        ["unlockBlinds"] { yields { new csml.Eval { expression = "isLocked = false" } } }
+        ["zoneInactive"] { to = "close" }
+        ["lockdownZone"] { to = "close" }
+        ["fireAlarm"] { to = "emergency" }
+        ["smokeAlert"] { to = "emergency" }
+        ["gasLeakDetected"] { to = "emergency" }
+        ["arcFaultDetected"] { to = "emergency" }
+      }
+    }
+    ["emergency"] = new csml.State {
+      entry {
+        new csml.Invoke {
+          type = "blindsUserLevelService"
+          input { ["blindLevel"] = "100"; ["roomId"] = "roomId" }
+        }
+      }
+      on {
+        ["disarmFireAlarm"] {
+          to = "half"
+          provided = "!isFireAlarm && !isGasActive && !isSmokeAlert && !arcFault"
+        }
+        ["gasPurged"] {
+          to = "half"
+          provided = "!isFireAlarm && !isGasActive && !isSmokeAlert && !arcFault"
+        }
+        ["disarmSmokeAlert"] {
+          to = "half"
+          provided = "!isFireAlarm && !isGasActive && !isSmokeAlert && !arcFault"
+        }
+        ["electricalReset"] {
+          to = "half"
+          provided = "!isFireAlarm && !isGasActive && !isSmokeAlert && !arcFault"
+        }
+      }
+    }
+  }
+}
