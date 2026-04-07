@@ -52,7 +52,7 @@ instances {
   ["energyManagement"] { stateMachineName = "energyManagement" }
   ["fire"] { stateMachineName = "fire" }
   for (i in IntSeq(0, 100)) {
-    ["fireDoor\(i)"] {
+    ["\(i)"] {
       stateMachineName = "fireDoor"
       data { ["doorId"] = "'Door \(i)'" }
     }
