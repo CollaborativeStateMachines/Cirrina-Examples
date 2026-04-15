@@ -16,17 +16,17 @@ sm = new csml.StateMachine {
         new csml.Invoke {
           type = "getDoorRouteTypeService"
           input { ["doorId"] = "doorId" }
-          emits { new csml.Internal { topic = "doorTypeDetermined" } }
+          output {
+            "isEvacuationRoute"
+            "zoneId"
+          }
+          emits {
+            new csml.ConditionalEvent { event = new csml.Internal { topic = "doorTypeDetermined" } }
+          }
         }
       }
       on {
-        ["doorTypeDetermined"] {
-          to = "locked"
-          yields {
-            new csml.Eval { expression = "isEvacuationRoute = $isEvacuationRoute" }
-            new csml.Eval { expression = "zoneId = $zoneId" }
-          }
-        }
+        ["doorTypeDetermined"] { to = "locked" }
       }
     }
     ["locked"] = new csml.State {
@@ -40,7 +40,7 @@ sm = new csml.StateMachine {
         }
         ["lockdownZone"] {}
         ["doorForcedOpen"] { to = "forcedOpenAlarm" }
-        [ "physicalTamper"] { to = "forcedOpenAlarm" }
+        ["physicalTamper"] { to = "forcedOpenAlarm" }
         ["forceUnlockRequest"] { to = "unlocked" }
         ["enterBusinessHours"] {
           yields { new csml.Eval { expression = "currentSchedule = 'businessHours'" } }
@@ -58,31 +58,26 @@ sm = new csml.StateMachine {
         new csml.Invoke {
           type = "authenticateUserService"
           input { ["cardId"] = "$cardId" }
-          emits { new csml.Internal { topic = "authDone" } }
-        }
-      }
-      on {
-        ["authDone"] {
-          yields {
-            new csml.Eval { expression = "userId = $userId" }
-            new csml.Eval { expression = "userRole = $userRole" }
-            new csml.Eval { expression = "authenticationStatus = $authenticationStatus" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "authenticationStatus == 'Success'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goCheckRules" } } }
-                }
-              }
-              default = new csml.Emit { event = new csml.Internal { topic = "goDeniedAuth" } }
+          output {
+            "userId"
+            "userRole"
+            "authenticationStatus"
+          }
+          emits {
+            new csml.ConditionalEvent {
+              provided = "authenticationStatus == 'Success'"
+              event = new csml.Internal { topic = "goCheckRules" }
+            }
+            new csml.ConditionalEvent {
+              provided = "authenticationStatus != 'Success'"
+              event = new csml.Internal { topic = "goDeniedAuth" }
             }
           }
         }
+      }
+      on {
         ["goCheckRules"] { to = "checkingRules" }
-        ["goDeniedAuth"] {
-          to = "accessDenied"
-        }
-
+        ["goDeniedAuth"] { to = "accessDenied" }
         ["fireAlarm"] { to = "emergencyUnlock" }
       }
     }
@@ -95,24 +90,20 @@ sm = new csml.StateMachine {
             ["zoneId"] = "zoneId"
             ["currentScheduleMode"] = "currentSchedule"
           }
-          emits { new csml.Internal { topic = "rulesDone" } }
-        }
-      }
-      on {
-        ["rulesDone"] {
-          yields {
-            new csml.Eval { expression = "accessDecision = $accessDecision" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "accessDecision == 'Allow'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goUnlocked" } } }
-                }
-              }
-              default = new csml.Emit { event = new csml.Internal { topic = "goDeniedRule" } }
+          output { "accessDecision" }
+          emits {
+            new csml.ConditionalEvent {
+              provided = "accessDecision == 'Allow'"
+              event = new csml.Internal { topic = "goUnlocked" }
+            }
+            new csml.ConditionalEvent {
+              provided = "accessDecision != 'Allow'"
+              event = new csml.Internal { topic = "goDeniedRule" }
             }
           }
         }
+      }
+      on {
         ["goUnlocked"] { to = "unlocked" }
         ["goDeniedRule"] {
           to = "accessDenied"
@@ -151,7 +142,7 @@ sm = new csml.StateMachine {
         ["lockdownZone"] { to = "locked" }
         ["fireAlarm"] { to = "emergencyUnlock" }
         ["doorForcedOpen"] { to = "forcedOpenAlarm" }
-        [ "physicalTamper"] { to = "forcedOpenAlarm" }
+        ["physicalTamper"] { to = "forcedOpenAlarm" }
       }
     }
     ["accessDenied"] = new csml.State {

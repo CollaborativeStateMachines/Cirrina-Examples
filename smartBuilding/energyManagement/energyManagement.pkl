@@ -1,4 +1,5 @@
-import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+import
+  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient = new Mapping {
@@ -14,7 +15,7 @@ sm = new csml.StateMachine {
       }
       after {
         ["energyPoll"] = new csml.Timeout {
-          delay = "30000"
+          delay = "300000"
           triggers = new csml.Emit { event = new csml.Internal { topic = "startEnergyCheck" } }
         }
       }
@@ -23,31 +24,26 @@ sm = new csml.StateMachine {
           yields {
             new csml.Invoke {
               type = "getEnergyPriceService"
-              emits { new csml.Internal { topic = "priceCheckDone" } }
+              output { "energyPrice" }
+              emits {
+                new csml.ConditionalEvent { event = new csml.Internal { topic = "priceCheckDone" } }
+              }
             }
           }
         }
         ["priceCheckDone"] {
           yields {
-            new csml.Eval { expression = "energyPrice = $energyPrice" }
             new csml.Invoke {
               type = "checkGridStatusService"
-              emits { new csml.Internal { topic = "gridCheckDone" } }
-            }
-          }
-        }
-        ["gridCheckDone"] {
-          yields {
-            new csml.Eval { expression = "gridStatus = $gridStatus" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "gridStatus == 'demandResponse'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goGridResponse" } } }
+              output { "gridStatus" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "gridStatus == 'demandResponse'"
+                  event = new csml.Internal { topic = "goGridResponse" }
                 }
-                new csml.Case {
-                  of = "energyPrice > maxEnergyPrice"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goPeak" } } }
+                new csml.ConditionalEvent {
+                  provided = "energyPrice > maxEnergyPrice"
+                  event = new csml.Internal { topic = "goPeak" }
                 }
               }
             }
@@ -92,34 +88,32 @@ sm = new csml.StateMachine {
           yields {
             new csml.Invoke {
               type = "getEnergyPriceService"
-              emits { new csml.Internal { topic = "priceCheckDone" } }
+              output { "energyPrice" }
+              emits {
+                new csml.ConditionalEvent { event = new csml.Internal { topic = "priceCheckDone" } }
+              }
             }
           }
         }
         ["priceCheckDone"] {
           yields {
-            new csml.Eval { expression = "energyPrice = $energyPrice" }
             new csml.Invoke {
               type = "checkGridStatusService"
-              emits { new csml.Internal { topic = "gridCheckDone" } }
-            }
-          }
-        }
-        ["gridCheckDone"] {
-          yields {
-            new csml.Eval { expression = "gridStatus = $gridStatus" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "gridStatus == 'demandResponse'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goGridResponse" } } }
+              output { "gridStatus" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "gridStatus == 'demandResponse'"
+                  event = new csml.Internal { topic = "goGridResponse" }
                 }
-                new csml.Case {
-                  of = "energyPrice > maxEnergyPrice"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "stayPeak" } } }
+                new csml.ConditionalEvent {
+                  provided = "energyPrice > maxEnergyPrice"
+                  event = new csml.Internal { topic = "goPeak" }
+                }
+                new csml.ConditionalEvent {
+                  provided = "!(energyPrice > maxEnergyPrice) && !(gridStatus == 'demandResponse')"
+                  event = new csml.Internal { topic = "goNormal" }
                 }
               }
-              default = new csml.Emit { event = new csml.Internal { topic = "goNormal" } }
             }
           }
         }
@@ -154,7 +148,7 @@ sm = new csml.StateMachine {
       }
       after {
         ["energyPoll"] = new csml.Timeout {
-          delay = "30000"
+          delay = "300000"
           triggers = new csml.Emit { event = new csml.Internal { topic = "startEnergyCheck" } }
         }
       }
@@ -163,34 +157,32 @@ sm = new csml.StateMachine {
           yields {
             new csml.Invoke {
               type = "getEnergyPriceService"
-              emits { new csml.Internal { topic = "priceCheckDone" } }
+              output { "energyPrice" }
+              emits {
+                new csml.ConditionalEvent { event = new csml.Internal { topic = "priceCheckDone" } }
+              }
             }
           }
         }
         ["priceCheckDone"] {
           yields {
-            new csml.Eval { expression = "energyPrice = $energyPrice" }
             new csml.Invoke {
               type = "checkGridStatusService"
-              emits { new csml.Internal { topic = "gridCheckDone" } }
-            }
-          }
-        }
-        ["gridCheckDone"] {
-          yields {
-            new csml.Eval { expression = "gridStatus = $gridStatus" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "gridStatus == 'demandResponse'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "stayGrid" } } }
+              output { "gridStatus" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "gridStatus == 'demandResponse'"
+                  event = new csml.Internal { topic = "goGridResponse" }
                 }
-                new csml.Case {
-                  of = "energyPrice > maxEnergyPrice"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goPeak" } } }
+                new csml.ConditionalEvent {
+                  provided = "energyPrice > maxEnergyPrice"
+                  event = new csml.Internal { topic = "goPeak" }
+                }
+                new csml.ConditionalEvent {
+                  provided = "!(energyPrice > maxEnergyPrice) && !(gridStatus == 'demandResponse')"
+                  event = new csml.Internal { topic = "goNormal" }
                 }
               }
-              default = new csml.Emit { event = new csml.Internal { topic = "goNormal" } }
             }
           }
         }
@@ -229,12 +221,8 @@ sm = new csml.StateMachine {
       }
     }
     ["gasShutdown"] = new csml.State {
-      entry {
-        new csml.Emit { event { topic = "energyShutdown" } }
-      }
-      on {
-        ["gasPurged"] { to = "normal" }
-      }
+      entry { new csml.Emit { event { topic = "energyShutdown" } } }
+      on { ["gasPurged"] { to = "normal" } }
     }
   }
 }

@@ -1,5 +1,4 @@
-import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient = new Mapping { ["arcFaultLocation"] = "'none'" }
@@ -17,18 +16,11 @@ sm = new csml.StateMachine {
           yields {
             new csml.Invoke {
               type = "checkArcFaultService"
-              emits { new csml.Internal { topic = "checkDone" } }
-            }
-          }
-        }
-        ["checkDone"] {
-          yields {
-            new csml.Eval { expression = "arcFaultLocation = $arcFaultLocation" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "arcFaultLocation != 'none'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goArcFault" } } }
+              output { "arcFaultLocation" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "arcFaultLocation != 'none'"
+                  event = new csml.Internal { topic = "goArcFault" }
                 }
               }
             }
@@ -60,7 +52,9 @@ sm = new csml.StateMachine {
         new csml.Eval { expression = "arcFault = false" }
         new csml.Invoke {
           type = "arcFaultAckService"
-          emits { new csml.Internal { topic = "ackComplete" } }
+          emits {
+            new csml.ConditionalEvent { event = new csml.Internal { topic = "ackComplete" } }
+          }
         }
       }
       on { ["ackComplete"] { to = "monitoring" } }

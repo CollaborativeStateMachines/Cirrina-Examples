@@ -1,5 +1,4 @@
-import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient = new Mapping { ["gasLeakLocation"] = "'none'" }
@@ -18,18 +17,11 @@ sm = new csml.StateMachine {
           yields {
             new csml.Invoke {
               type = "checkGasLeakService"
-              emits { new csml.Internal { topic = "checkDone" } }
-            }
-          }
-        }
-        ["checkDone"] {
-          yields {
-            new csml.Eval { expression = "gasLeakLocation = $gasLeakLocation" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "gasLeakLocation != 'none'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goGasLeak" } } }
+              output { "gasLeakLocation" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "gasLeakLocation != 'none'"
+                  event = new csml.Internal { topic = "goGasLeak" }
                 }
               }
             }

@@ -1,5 +1,4 @@
-import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient = new Mapping {
@@ -25,23 +24,15 @@ sm = new csml.StateMachine {
           yields {
             new csml.Invoke {
               type = "getOutdoorTempService"
-              emits { new csml.Internal { topic = "outdoorCheckDone" } }
-            }
-          }
-        }
-        ["outdoorCheckDone"] {
-          provided = "isLocked == false"
-          yields {
-            new csml.Eval { expression = "outdoorTemperature = $outdoorTemp" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "outdoorTemperature < 15"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goFullyOpen" } } }
+              output { "outdoorTemperature" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "outdoorTemperature < 15 && !isLocked"
+                  event = new csml.Internal { topic = "goFullyOpen" }
                 }
-                new csml.Case {
-                  of = "outdoorTemperature >= 22"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goClose" } } }
+                new csml.ConditionalEvent {
+                  provided = "outdoorTemperature >= 22 && !isLocked"
+                  event = new csml.Internal { topic = "goClose" }
                 }
               }
             }
@@ -78,23 +69,15 @@ sm = new csml.StateMachine {
           yields {
             new csml.Invoke {
               type = "getOutdoorTempService"
-              emits { new csml.Internal { topic = "outdoorCheckDone" } }
-            }
-          }
-        }
-        ["outdoorCheckDone"] {
-          provided = "isLocked == false"
-          yields {
-            new csml.Eval { expression = "outdoorTemperature = $outdoorTemp" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "outdoorTemperature >= 15 && outdoorTemperature < 22"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goHalf" } } }
+              output { "outdoorTemperature" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "outdoorTemperature >= 15 && outdoorTemperature < 22 && !isLocked"
+                  event = new csml.Internal { topic = "goHalf" }
                 }
-                new csml.Case {
-                  of = "outdoorTemperature >= 22"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goClose" } } }
+                new csml.ConditionalEvent {
+                  provided = "outdoorTemperature >= 22 && !isLocked"
+                  event = new csml.Internal { topic = "goClose" }
                 }
               }
             }
@@ -131,23 +114,15 @@ sm = new csml.StateMachine {
           yields {
             new csml.Invoke {
               type = "getOutdoorTempService"
-              emits { new csml.Internal { topic = "outdoorCheckDone" } }
-            }
-          }
-        }
-        ["outdoorCheckDone"] {
-          provided = "isLocked == false"
-          yields {
-            new csml.Eval { expression = "outdoorTemperature = $outdoorTemp" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "outdoorTemperature < 15"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goFullyOpen" } } }
+              output { "outdoorTemperature" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "outdoorTemperature < 15 && !isLocked"
+                  event = new csml.Internal { topic = "goFullyOpen" }
                 }
-                new csml.Case {
-                  of = "outdoorTemperature >= 15 && outdoorTemperature < 22"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goHalf" } } }
+                new csml.ConditionalEvent {
+                  provided = "outdoorTemperature >= 15 && outdoorTemperature < 22 && !isLocked"
+                  event = new csml.Internal { topic = "goHalf" }
                 }
               }
             }
@@ -170,8 +145,7 @@ sm = new csml.StateMachine {
       static { ["userBlindLevel"] = "0" }
       entry {
         new csml.Eval {
-          expression =
-            "userBlindLevel == (($blindLevel == -1) ? userBlindLevel : $blindLevel)"
+          expression = "userBlindLevel == (($blindLevel == -1) ? userBlindLevel : $blindLevel)"
         }
         new csml.Invoke {
           type = "blindsUserLevelService"
@@ -179,7 +153,7 @@ sm = new csml.StateMachine {
         }
         new csml.Invoke {
           type = "getOutdoorTempService"
-          emits { new csml.Internal { topic = "outdoorCheckDone" } }
+          output { "outdoorTemperature" }
         }
       }
       after {
@@ -193,12 +167,9 @@ sm = new csml.StateMachine {
           yields {
             new csml.Invoke {
               type = "getOutdoorTempService"
-              emits { new csml.Internal { topic = "outdoorCheckDone" } }
+              output { "outdoorTemperature" }
             }
           }
-        }
-        ["outdoorCheckDone"] {
-          yields { new csml.Eval { expression = "outdoorTemperature = $outdoorTemp" } }
         }
         ["deactivateUserLevelBlinds"] {
           yields {

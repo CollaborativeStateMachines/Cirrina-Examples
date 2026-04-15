@@ -21,9 +21,15 @@ sm = new csml.StateMachine {
       on {
         ["occupancyDetected"] { to = "fanOnly" }
         ["zoneActive"] { to = "fanOnly" }
-        ["enterBusinessHours"] { yields { new csml.Eval { expression = "desiredTemp = businessHoursTemp" } } }
-        ["enterAfterHours"] { yields { new csml.Eval { expression = "desiredTemp = afterHoursTemp" } } }
-        ["enterWeekend"] { yields { new csml.Eval { expression = "desiredTemp = afterHoursTemp" } } }
+        ["enterBusinessHours"] {
+          yields { new csml.Eval { expression = "desiredTemp = businessHoursTemp" } }
+        }
+        ["enterAfterHours"] {
+          yields { new csml.Eval { expression = "desiredTemp = afterHoursTemp" } }
+        }
+        ["enterWeekend"] {
+          yields { new csml.Eval { expression = "desiredTemp = afterHoursTemp" } }
+        }
         ["energyShutdown"] { to = "emergency" }
         ["fireAlarm"] { to = "emergency" }
         ["gasLeakDetected"] { to = "emergency" }
@@ -52,22 +58,15 @@ sm = new csml.StateMachine {
             new csml.Invoke {
               type = "getRoomTempService"
               input { ["roomId"] = "roomId" }
-              emits { new csml.Internal { topic = "tempCheckDone" } }
-            }
-          }
-        }
-        ["tempCheckDone"] {
-          yields {
-            new csml.Eval { expression = "indoorTemp = $indoorTemp" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "indoorTemp < (desiredTemp - tempTolerance)"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goHeating" } } }
+              output { "indoorTemp" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "indoorTemp < (desiredTemp - tempTolerance)"
+                  event = new csml.Internal { topic = "goHeating" }
                 }
-                new csml.Case {
-                  of = "indoorTemp > (desiredTemp + tempTolerance)"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goCooling" } } }
+                new csml.ConditionalEvent {
+                  provided = "indoorTemp > (desiredTemp + tempTolerance)"
+                  event = new csml.Internal { topic = "goCooling" }
                 }
               }
             }
@@ -124,23 +123,16 @@ sm = new csml.StateMachine {
             new csml.Invoke {
               type = "getRoomTempService"
               input { ["roomId"] = "roomId" }
-              emits { new csml.Internal { topic = "tempCheckDone" } }
-            }
-          }
-        }
-        ["tempCheckDone"] {
-          yields {
-            new csml.Eval { expression = "indoorTemp = $indoorTemp" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of =
+              output { "indoorTemp" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided =
                     "indoorTemp >= (desiredTemp - tempTolerance) && indoorTemp <= (desiredTemp + tempTolerance)"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goFanOnly" } } }
+                  event = new csml.Internal { topic = "goFanOnly" }
                 }
-                new csml.Case {
-                  of = "indoorTemp > (desiredTemp + tempTolerance)"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goCooling" } } }
+                new csml.ConditionalEvent {
+                  provided = "indoorTemp > (desiredTemp + tempTolerance)"
+                  event = new csml.Internal { topic = "goCooling" }
                 }
               }
             }
@@ -197,22 +189,16 @@ sm = new csml.StateMachine {
             new csml.Invoke {
               type = "getRoomTempService"
               input { ["roomId"] = "roomId" }
-              emits { new csml.Internal { topic = "tempCheckDone" } }
-            }
-          }
-        }
-        ["tempCheckDone"] {
-          yields {
-            new csml.Eval { expression = "indoorTemp = $indoorTemp" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "indoorTemp >= (desiredTemp - tempTolerance) && indoorTemp <= (desiredTemp + tempTolerance)"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goFanOnly" } } }
+              output { "indoorTemp" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided =
+                    "indoorTemp >= (desiredTemp - tempTolerance) && indoorTemp <= (desiredTemp + tempTolerance)"
+                  event = new csml.Internal { topic = "goFanOnly" }
                 }
-                new csml.Case {
-                  of = "indoorTemp < (desiredTemp - tempTolerance)"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goHeating" } } }
+                new csml.ConditionalEvent {
+                  provided = "indoorTemp < (desiredTemp - tempTolerance)"
+                  event = new csml.Internal { topic = "goHeating" }
                 }
               }
             }
@@ -270,23 +256,15 @@ sm = new csml.StateMachine {
             new csml.Invoke {
               type = "getRoomTempService"
               input { ["roomId"] = "roomId" }
-              emits { new csml.Internal { topic = "tempCheckDone" } }
-            }
-          }
-        }
-        ["tempCheckDone"] {
-          provided = "!drasticSaving"
-          yields {
-            new csml.Eval { expression = "indoorTemp = $indoorTemp" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "indoorTemp < (desiredTemp - tempTolerance)"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goHeating" } } }
+              output { "indoorTemp" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "indoorTemp < (desiredTemp - tempTolerance) && !drasticSaving"
+                  event = new csml.Internal { topic = "goHeating" }
                 }
-                new csml.Case {
-                  of = "indoorTemp > (desiredTemp + tempTolerance)"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goCooling" } } }
+                new csml.ConditionalEvent {
+                  provided = "indoorTemp > (desiredTemp + tempTolerance) && !drasticSaving"
+                  event = new csml.Internal { topic = "goCooling" }
                 }
               }
             }
@@ -295,9 +273,7 @@ sm = new csml.StateMachine {
         ["goHeating"] { to = "heating" }
         ["goCooling"] { to = "cooling" }
         ["drasticEnergySaving"] {
-          yields {
-            new csml.Eval { expression = "drasticSaving = true" }
-          }
+          yields { new csml.Eval { expression = "drasticSaving = true" } }
         }
         ["deactivateEnergySaving"] { to = "fanOnly" }
         ["occupancyVacant"] { to = "off" }
