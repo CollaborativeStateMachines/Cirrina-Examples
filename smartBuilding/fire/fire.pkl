@@ -1,5 +1,4 @@
-import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 
 sm = new csml.StateMachine {
   transient = new Mapping {
@@ -17,23 +16,18 @@ sm = new csml.StateMachine {
                 ["imageData"] = "$imageData"
                 ["zoneId"] = "$zoneId"
               }
-              emits { new csml.Internal { topic = "detectionDone" } }
-            }
-          }
-        }
-        ["detectionDone"] {
-          yields {
-            new csml.Eval { expression = "fireDetectionResult = $fireDetectionResult" }
-            new csml.Eval { expression = "emergencyInRoom = $emergencyInRoom" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "fireDetectionResult == 'fire'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goFireAlarm" } } }
+              output {
+                "fireDetectionResult"
+                "emergencyInRoom"
+              }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "fireDetectionResult == 'fire'"
+                  event = new csml.Internal { topic = "goFireAlarm" }
                 }
-                new csml.Case {
-                  of = "fireDetectionResult == 'smoke'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goSmokeAlert" } } }
+                new csml.ConditionalEvent {
+                  provided = "fireDetectionResult == 'smoke'"
+                  event = new csml.Internal { topic = "goSmokeAlert" }
                 }
               }
             }
@@ -78,7 +72,11 @@ sm = new csml.StateMachine {
                 ["imageData"] = "$imageData"
                 ["zoneId"] = "$zoneId"
               }
-              emits { new csml.Internal { topic = "escalationCheckDone" } }
+              emits {
+                new csml.ConditionalEvent {
+                  event = new csml.Internal { topic = "escalationCheckDone" }
+                }
+              }
             }
           }
         }

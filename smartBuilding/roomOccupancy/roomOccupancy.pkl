@@ -1,6 +1,4 @@
-import
-  "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
-
+import "https://raw.githubusercontent.com/CollaborativeStateMachines/Cirrina/refs/heads/develop/src/main/resources/pkl/csm/csml.pkl"
 import "occupancyMonitor.pkl"
 
 sm = new csml.StateMachine {
@@ -19,18 +17,11 @@ sm = new csml.StateMachine {
             new csml.Invoke {
               type = "detectOccupancyService"
               input { ["imageData"] = "$imageData" }
-              emits { new csml.Internal { topic = "detectionDone" } }
-            }
-          }
-        }
-        ["detectionDone"] {
-          yields {
-            new csml.Eval { expression = "occupancyDetected = $occupancyDetected" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "occupancyDetected"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goOccupied" } } }
+              output { "occupancyDetected" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "occupancyDetected"
+                  event = new csml.Internal { topic = "goOccupied" }
                 }
               }
             }
@@ -52,21 +43,17 @@ sm = new csml.StateMachine {
             new csml.Invoke {
               type = "detectOccupancyService"
               input { ["imageData"] = "$imageData" }
-              emits { new csml.Internal { topic = "detectionDone" } }
-            }
-          }
-        }
-        ["detectionDone"] {
-          yields {
-            new csml.Eval { expression = "occupancyDetected = $occupancyDetected" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "occupancyDetected"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goOccupied" } } }
+              output { "occupancyDetected" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "occupancyDetected"
+                  event = new csml.Internal { topic = "goOccupied" }
+                }
+                new csml.ConditionalEvent {
+                  provided = "!occupancyDetected"
+                  event = new csml.Internal { topic = "goTransient" }
                 }
               }
-              default = new csml.Emit { event = new csml.Internal { topic = "goTransient" } }
             }
           }
         }
@@ -75,7 +62,6 @@ sm = new csml.StateMachine {
           yields { new csml.Emit { event { topic = "occupancyDetected" } } }
         }
         ["goTransient"] { to = "transient" }
-
         ["energySaving"] {
           to = "transient"
           yields {
@@ -96,21 +82,17 @@ sm = new csml.StateMachine {
             new csml.Invoke {
               type = "detectOccupancyService"
               input { ["imageData"] = "$imageData" }
-              emits { new csml.Internal { topic = "detectionDone" } }
-            }
-          }
-        }
-        ["detectionDone"] {
-          yields {
-            new csml.Eval { expression = "occupancyDetected = $occupancyDetected" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "occupancyDetected"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goOccupied" } } }
+              output { "occupancyDetected" }
+              emits {
+                new csml.ConditionalEvent {
+                  provided = "occupancyDetected"
+                  event = new csml.Internal { topic = "goOccupied" }
+                }
+                new csml.ConditionalEvent {
+                  provided = "!occupancyDetected"
+                  event = new csml.Internal { topic = "goVacant" }
                 }
               }
-              default = new csml.Emit { event = new csml.Internal { topic = "goVacant" } }
             }
           }
         }

@@ -7,28 +7,24 @@ sm = new csml.StateMachine {
       entry {
         new csml.Invoke {
           type = "getScheduleModeService"
-          emits { new csml.Internal { topic = "scheduleCheckDone" } }
-        }
-      }
-      on {
-        ["scheduleCheckDone"] {
-          yields {
-            new csml.Eval { expression = "currentSchedule = $currentSchedule" }
-            new csml.Match {
-              cases {
-                new csml.Case {
-                  of = "currentSchedule == 'weekendClosed'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goWeekend" } } }
-                }
-                new csml.Case {
-                  of = "currentSchedule == 'businessHours'"
-                  yields { new csml.Emit { event = new csml.Internal { topic = "goBusiness" } } }
-                }
-              }
-              default = new csml.Emit { event = new csml.Internal { topic = "goAfterHours" } }
+          output { "currentSchedule" }
+          emits {
+            new csml.ConditionalEvent {
+              provided = "currentSchedule == 'weekendClosed'"
+              event = new csml.Internal { topic = "goWeekend" }
+            }
+            new csml.ConditionalEvent {
+              provided = "currentSchedule == 'businessHours'"
+              event = new csml.Internal { topic = "goBusiness" }
+            }
+            new csml.ConditionalEvent {
+              provided = "currentSchedule == 'afterHours'"
+              event = new csml.Internal { topic = "goAfterHours" }
             }
           }
         }
+      }
+      on {
         ["goWeekend"] { to = "weekendClosed" }
         ["goBusiness"] { to = "businessHours" }
         ["goAfterHours"] { to = "afterHours" }
@@ -51,7 +47,7 @@ sm = new csml.StateMachine {
       }
     }
     ["afterHours"] = new csml.State {
-      entry { new csml.Emit { event { topic = "enterAfterHours"; } } }
+      entry { new csml.Emit { event { topic = "enterAfterHours" } } }
       after {
         ["scheduleCheck"] = new csml.Timeout {
           delay = "900000"

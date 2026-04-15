@@ -6,12 +6,14 @@ sm = new csml.StateMachine {
       entry {
         new csml.Invoke {
           type = "getDoorRouteTypeService"
-          emits { new csml.Internal { topic = "zoneInitialized" } }
+          emits {
+            new csml.ConditionalEvent { event = new csml.Internal { topic = "zoneInitialized" } }
+          }
         }
       }
       on { ["zoneInitialized"] { to = "inactive" } }
     }
-    ["active"]= new csml.State {
+    ["active"] = new csml.State {
       entry { new csml.Emit { event { topic = "zoneActive" } } }
       on {
         ["enterAfterHours"] { to = "warning" }
@@ -20,7 +22,7 @@ sm = new csml.StateMachine {
         ["gasLeakDetected"] { to = "emergency" }
       }
     }
-    ["inactive"]= new csml.State {
+    ["inactive"] = new csml.State {
       entry { new csml.Emit { event { topic = "zoneInactive" } } }
       on {
         ["enterBusinessHours"] { to = "active" }
